@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十二章-线程控制 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十二章-线程控制</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十二章-线程控制</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/Rjda5W3hkUS8xJZ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/MkIO6hoADusfBpy.png" alt="" loading="lazy"></figure>
+<p>可能有些限制没有提供可访问的方法，但不代表该限制不存在，可能只是单纯的因为系统实现没有为sysconf访问这些值提供方法。</p>
+<p>线程属性</p>
+<p>pthread允许我们对每个线程设置不同的线程属性来细调线程和同步对象的行为。</p>
+<p>线程属性类型为pthread_attr_t，是一个结构体，含有多个属性设置。</p>
+<p>每次使用线程属性对象之前，需要进行初始化，之后该对象被设置为默认值，且其中的每一个属性都有一个get和set函数，来获取和设置其值。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_attr_init(pthread_attr_t*attr);</p>
+<p>int pthread_attr_destroy(pthread_attr_t*attr); 成功0，出错返回错误码</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/U5vHaSAjDtulzKZ.png" alt="" loading="lazy"></figure>
+<p>在使用完attr后，可以destoy它。</p>
+<p>反初始化线程属性对象， 使用destroy函数，如果init的实现涉及到了动态分配空间，则destroy会释放该空间。所谓反初始化，是会用无效的值来初始化属性对象，因此如果使用反初始化之后的属性对象来pthread_create则会出错。</p>
+<p>pthread_attr_destroy函数对于应用程序时不透明的，应用程序只有这个接口来反初始化属性对象，如果该函数出错了，那么必须销毁刚新建的线程，且如果无法正常destroy可能会有内存泄漏，因为attr对象可能存在动态分配的空间。该函数是对线程属性结构进行清理的唯一方法。</p>
+<p>pthread_attr_t结构中有的属性：</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/YfwP8RDzgOElLNT.png" alt="" loading="lazy"></figure>
+<p>detachstate有两种：PTHREAD_CREATE_DETAHCED和PTHREAD_CREATE_JOINABLE。前者表明线程是以分离状态创建的，所以不能用pthread_join函数获取其终止状态，而后者为以正常的方式启动线程，所以可以join获取线程的终止状态。</p>
+<pre><code>在任何一个时间点上，线程是可结合的（joinable），或者是分离的（detached）。一个可结合的线程能够被其他线程收回其资源和杀死；在被其他线程回收之前，它的存储器资源（如栈）是不释放的。相反，一个分离的线程是不能被其他线程回收或杀死的，它的存储器资源在它终止时由系统自动释放。
+
+线程的分离状态决定一个线程以什么样的方式来终止自己。在默认情况下线程是非分离状态的，这种情况下，原有的线程等待创建的线程结束。只有当pthread_join（）函数返回时，创建的线程才算终止，才能释放自己占用的系统资源。而分离线程不是这样子的，它没有被其他的线程所等待，自己运行结束了，线程也就终止了，马上释放系统资源。程序员应该根据自己的需要，选择适当的分离状态。所以如果我们在创建线程时就知道不需要了解线程的终止状态，则可以pthread_attr_t结构中的detachstate线程属性，让线程以分离状态启动。
+</code></pre>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_attr_getdetachstate(pthread_attr_t<em>attr,int</em>detachstate);</p>
+<p>int pthread_attr_setdetachstate(pthread_attr_t<em>attr,int</em>detachstate);</p>
+<p>前者从属性对象中获取detachstate，并存入detachstate参数中，后者用detachstate参数来设置该属性</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/GDlCUXWJSLHz7qk.png" alt="" loading="lazy"></figure>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_attr_getstack(pthread_attr_t<em>attr,void**stackaddr,size_t</em>stacksize);</p>
+<p>int pthread_attr_setstack(pthread_attr_t<em>attr,void**stackaddr,size_t</em>stacksize);</p>
+<p>前者获取属性对象中的栈地址和栈大小，后者则设置这两者。</p>
+<p>对于进程而言，虚地址空间是固定的，栈只有一个；而对线程而言，虚地址空间需要被所有线程的栈共享，所以在该虚地址空间上有多个线程的栈。</p>
+<p>如果线程栈的虚地址空间用完了，可以使用malloc或mmap来为可替代的栈分配空间。</p>
+<p>stackaddr参数指定的是最低的可寻址地址，如果系统实现的栈是从高地址往低地址增长的，那么stackaddr是某个线程的栈的末尾地址，而不是开始地址。</p>
+<p>如果只想设置线程栈的大小而不想自己管理线程栈的地址，则可以使用：</p>
+<p>int pthread_attr_getstacksize(pthread_attr_t<em>attr,size_t</em>stacksize);</p>
+<p>int pthread_attr_setstacksize(pthread_attr_t<em>attr,size_t</em>stacksize);</p>
+<p>只需要给出自己想要的栈大小即可，不需要管地址的设置，注意设置的stacksize不能小于PTHREAD_STACK_MIN限制。</p>
+<p>线程属性guardsize是控制着线程栈末尾之后用以避免栈溢出的扩展内存大小，如果一个线程的栈用到了该内存，应用程序可以通过接收信号来处理。</p>
+<p>int pthread_attr_getguardsize(pthread_attr_t<em>attr,size_t</em>guardsize);</p>
+<p>int pthread_attr_setguardsize(pthread_attr_t<em>attr,size_t</em>guardsize);</p>
+<p>可以设置guardsize为0，代表没有警戒区域，不提供警戒缓冲区。一般不设置时，默认值是系统页大小，如果设置了则会取为系统页大小的整数倍。</p>
+<p>如果我们指定了stackaddr，那么系统会认为我们要自己管理栈，则此时警戒缓冲区无效，相当于设置了guardsize为0.</p>
+<p>同步属性</p>
+<p>同步属性是指所有用于同步的对象的属性，例如互斥量，条件变量，读写锁。</p>
+<p>互斥量属性</p>
+<p>互斥量有三种属性：1.进程共享属性 2.健壮属性 3.类型属性</p>
+<p>互斥量属性类型为pthread_mutexattr_t。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_mutexattr_init(pthread_mutexattr_t*attr);</p>
+<p>int pthread_mutexattr_destroy(pthread_mutexattr_t*attr);</p>
+<p>每个互斥量属性对象都要被初始化后才能使用，初始化后，该对象的所有属性设置均为默认值。</p>
+<p>使用完后进行反初始化destroy。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/t4D35nxqmXpS9Pb.png" alt="" loading="lazy"></figure>
+<p>int pthread_mutexattr_getpshared(pthread_mutexattr_t*attr,int *pshared);</p>
+<p>int pthread_mutexattr_setpshared(pthread_mutexattr_t*attr,int pshared);</p>
+<p>进程共享属性pshared，有两种状态：PTHREAD_PROCESS_PRIVATE和PTHREAD_PROCESS_SHARED</p>
+<p>前者代表使用该属性的互斥量为进程私有的，不会被其他的进程所使用，而后者代表该互斥量可以被多个进程共用，一般用于多个进程访问同一块内存时的同步。前者是属性对象的默认值。</p>
+<p>Linux支持进程共享属性。</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/L7M4yBo9ptvT2hx.png" alt="" loading="lazy"></figure>
+<p>int pthread_mutexattr_getrobust(pthread_mutexattr_t*attr,int *robust);</p>
+<p>int pthread_mutexattr_setrobust(pthread_mutexattr_t*attr,int pshared);</p>
+<p>互斥量的健壮属性与多个进程间共享互斥量有关，如果占用互斥量的进程在解锁前终止了，那么需要解决互斥量的恢复，否则其他的进程一直会被阻塞占用该互斥量。</p>
+<p>健壮属性有两种：PTHREAD_MUTEX_STALLED和PTHREAD_MUTEX_ROBUST</p>
+<p>前者是默认值，表明持有互斥量的进程终止时，不会采取特别的动作，其他想要占有该互斥量的进程将会一直阻塞；后者表明如果当一个进程占有该互斥量，且未解锁前终止，其他进程想要获取该互斥量pthread_mutex_lock时，不会出错返回错误码，而是成功返回，但返回的不是0而是EOWNERDEAD，进程可以通过该特殊返回值来获知情况，若有可能，需要进行恢复。</p>
+<p>所以设置了robust属性后，我们在调用pthread_mutex_lock函数时就要检查三个返回值：成功返回0，成功返回EOWNERDEAD和失败返回错误码。如果对EOWNERDEAD不感兴趣也还是可以像以前那样只检查两个返回值。</p>
+<p>Linux支持健壮属性。</p>
+<p>int pthread_mutexattr_consistent(pthread_mutex_t*mutex);</p>
+<p>如果互斥量设置了健壮属性，那么当该线程在解锁前终止后，别的线程视图对该互斥量的加锁不会阻塞，会直接返回EOWNERDEAD，那么该线程可以根据这个返回值，调用consistent函数，恢复该互斥量的一致性，然后再调用pthread_mutex_unlock来解锁该互斥量，后续便能正常使用。</p>
+<p>如果已经EOWNERDEAD了，但对该互斥量调用解锁函数前没有调用consistent函数，则后续该互斥量不可用，需要先destroy，再重新init该互斥量后才能正常使用。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/EuDnoqmyl7K5AI2.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/NfmVLhxvj6wyEBW.png" alt="" loading="lazy"></figure>
+<p>int pthread_mutexattr_gettype(pthread_mutexattr_t*attr,int *type);</p>
+<p>int pthread_mutexattr_settype(pthread_mutexattr_t*attr,int pshared);</p>
+<p>类型属性表明该互斥量是一把什么锁，一共有四个属性设置：</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/RYKXq3C2ElNcxs9.png" alt="" loading="lazy"></figure>
+<p>其中要特别注意PTHREAD_MUTEX_RECURSIVE，使用该属性的互斥量是递归锁，已经占有该互斥量的线程可以对其进行多次加锁操作，相应的系统会维护一个锁的计数，如果解锁的次数小于加锁的次数，那么该锁并不会解锁。NORMAL属性的锁，对同一把锁再次加锁会死锁。</p>
+<p>递归锁也要满足一个前提，是已经占用了该锁的线程才能多次加锁，其他线程尝试加锁则会阻塞。</p>
+<p>递归锁一般不用于使用条件变量的情况下，因为如果在调用pthread_cond_wait之前，有多次加锁，而该函数原本是将线程加入等待列表后解锁，其他线程可以继续加入等待列表，但在这种情况下，由于解锁的次数不够，实质上该锁并没有解开，其他线程无法使用条件变量。</p>
+<p>PTHREAD_MUTEX_ERRORCHECK提供类型检查，可以避免死锁。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/Ck81AMRydm4ENSK.png" alt="" loading="lazy"></figure>
+<p>上图中的不占用时解锁是指没有获得锁的线程对互斥量进行解锁的操作。ERRORCHECK能在出错的情况下返回错误。可用于检查和调试。</p>
+<p>读写锁属性</p>
+<p>POSIX标准中的读写锁属性只有一种，就是进程共享属性，这个与互斥量的进程共享属性相似。</p>
+<p>int pthread_rwlockattr_init(pthread_rwlockattr_t*attr);</p>
+<p>int pthread_rwlockattr_destroy(pthread_rwlockattr_t*attr);</p>
+<p>int pthread_rwlockattr_getpshared(pthread_rwlockattr_t*attr,int *pshared);</p>
+<p>int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*attr,int pshared);</p>
+<p>条件变量属性</p>
+<p>条件变量有两种属性：进程共享属性和时钟属性；进程共享属性与互斥量、读写锁的进程共享属性一样。</p>
+<p>int pthread_condattr_init(pthread_condattr_t*attr);</p>
+<p>int pthread_condattr_destroy(pthread_condattr_t*attr);</p>
+<p>int pthread_condattr_getpshared(pthread_condattr_t<em>attr,int</em> pshared);</p>
+<p>int pthread_condattr_setpshared(pthread_condattr_t*attr,int pshared);</p>
+<p>时钟属性是指定pthread_cond_timedwait函数使用的是哪个时钟，clock_id必须为系统内给定的时钟。</p>
+<p>int pthread_condattr_getclock(pthread_condattr_t* attr,clockid_t* clock_id);</p>
+<p>int pthread_condattr_setclockpthread_condattr_t* attr,clockid_t clock_id);</p>
+<p>屏障属性</p>
+<p>屏障只有进程共享属性</p>
+<p>int pthread_barrierattr_init(pthread_barrierattr_t*attr);</p>
+<p>int pthread_barrierattr_destroy(pthread_barrierattr_t*attr);</p>
+<p>int pthread_barrierattr_getpshared(pthread_barrierattr_t<em>attr,int</em> pshared);</p>
+<p>int pthread_barrierattr_setpshared(pthread_barrierattr_t*attr,int pshared);</p>
+<p>所有的同步对象中的进程共享属性的值都为:PTHREAD_PROCESS_SHARED和PTHREAD_PROCESS_PRIVATE两者中的一个。</p>
+<p>重入</p>
+<p>线程也存在和进程一样的重入问题，如果多个线程同时对同一个函数的调用是安全的，那么称该函数是线程安全的。这类函数是可重入的。</p>
+<p>可重入代表某个对象对该函数的调用并不会影响其他对象对该函数的调用。</p>
+<p>可重入函数，对于多个线程同时调用时，其是安全的并且不会产生冲突c（例如读写冲突），而从单个线程的角度来说，一般只有在正在调用该函数时，被信号中断了，而信号处理程序中又调用了该函数，才可能出现不可重入的现象。</p>
+<p>很多函数都不是线程安全的，例如他们使用了堆或段上数据，或者将返回值写到了静态空间上，可以通过改变接口，让用户提供返回值的输出位置。</p>
+<p>一般不可重入的函数是其修改了堆或段上的数据，导致下次调用冲突了。</p>
+<p>线程安全的函数肯定是保证了同步的问题，例如使用了互斥量，但不能保证对信号处理程序而言是可重入的。</p>
+<p>！！！线程安全</p>
+<p>一个函数被称为线程安全的，当且仅当被多个并发线程反复的调用时，它会一直产生正确的结果。可以简单理解为做好了线程的同步控制。</p>
+<p>！！！可重入性</p>
+<p>有一类重要的线程安全函数，叫做可重入函数，其特点在于它们具有一种属性：当它们被多个线程调用时，不会引用任何共享的数据。</p>
+<p>！！！异步信号安全</p>
+<p>如果一个函数对多个线程来说是可重入的（多个线程都调用该函数，相互之间不会产生干扰），则说这个函数是线程安全的，但这并不能说明对信号处理程序来说该函数也是可重入的。</p>
+<p>举例：若一个函数对数据的操作加锁了，那么他对于每个线程去执行他的时候既是线程安全的，也是可重入，因为有同步对象保证；但如果在执行过程中，没有解锁前，被信号中断了，而信号处理程序又执行了该函数，那么就会产生死锁，这就出现了异步信号不安全，所以可重入的函数不一定是异步信号安全的。</p>
+<p>如果函数对异步信号处理程序的重入是安全的，那么就可以说函数是&quot;异步-信号安全&quot;的。</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/Eml3pTtWCNRSHqB.png" alt="" loading="lazy"></figure>
+<p>系统实现提供了以_r结尾得到函数，表名是可重入的/线程安全的函数。</p>
+<p>标准I/O提供了对FILE对象的上锁和解锁的函数，这个锁是递归锁，因为标准I/O的函数一般都是内部默认调用了上锁和解锁的函数，所以必须是递归锁。</p>
+<p>#include&lt;stdio.h&gt;</p>
+<p>int flockfile(FILE* fp);</p>
+<p>int ftrylockfile(FILE* fp);</p>
+<p>int funlockfile(FILE* fp);</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/Wh3SGfzskMTBKtJ.png" alt="" loading="lazy"></figure>
+<p>系统提供了flockfile这几个函数是让我们把对多个标准I/O的调用组合成一个原子操作，需要注意锁的序列，避免死锁。</p>
+<p>如果在调用了flockfile之后和funlockfile之前，为了避免每次读写一个字符使用putc，getc函数每次都要上锁和解锁，降低性能；可以使用下列函数，操作时不会进行上锁解锁操作：</p>
+<p>#include&lt;stdio.h&gt;</p>
+<p>int getchar_unlocked();</p>
+<p>int getc_unlocked(FILE* fp);</p>
+<p>int putchar_unlocked(int c);</p>
+<p>int putc_unlocked(int c,FILE* fp);</p>
+<p>不能在flockfile和funlockfile之外调用这些函数，会导致不可预期的结果。</p>
+<p>除了系统调用以外，一般的函数如果被信号中断了，从信号处理程序返回后会继续在原本执行的位置继续向下执行，这也是所谓的保护现场；而如果是系统调用被中断了，需要看该系统调用是否会自动重启动，会的话则在函数调用点自动重启动该函数调用。</p>
+<p>不可能使用一个异步信号不安全的函数来企图实现一个异步信号安全的函数。</p>
+<p>线程特定数据</p>
+<p>线程特定数据也称为线程私有数据，是存储和查询与某个线程相关数据的一种机制。</p>
+<p>每个线程都有自己私有的数据，不需要担心其他线程的同步访问问题。</p>
+<p>errno就是一个明显的实例，每个线程都有自己的errno，不会被其他线程干扰到。</p>
+<p>使用线程特定数据提供了让基于进程的接口适应多线程环境的机制，例如errno，很多对于进程的函数失败后会设置errno，那么现在线程有errno后，便可以使用进程的一些接口了。</p>
+<p>线程的寄存器是不可能被其他线程访问到的，但线程特定数据可以被其他线程访问到，但管理线程特定数据的函数可以提高线程间的数据独立性，使得线程不太容易访问到别的线程的线程特定数据。</p>
+<p>在分配线程特定数据之前需要创建与之相关联的键：</p>
+<p>int pthread_key_create(pthread_ket_t* keyp,void(<em>destructor)(void</em>));</p>
+<p>可以理解为初始化一个key，因为是先声明了一个pthread_key_t类型后再调用create函数的。</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/TjnpWKb3MGVdqBx.png" alt="" loading="lazy"></figure>
+<p>注意进程中的所有线程都可以访问到该键，但每个线程可以将该键关联到不同的特定数据。这个键值对的类型可以理解为&lt;pthread_key_t,void*priData&gt;.</p>
+<p>将创建的键存储在keyp指定的内存中，destructor参数指定了该键对应的线程特定数据的析构函数，除了在线程调用_exit,_Exit、exit或abort，以及一些异常退出以外，在线程退出时都会调用该析构函数对线程特定数据进行析构。destructor为空代表没有析构函数与该键对应。</p>
+<p>线程可以为线程特定数据分配多个键，每个键都可以由不同的析构函数对应，系统实现对每个进程可以创建的键的个数有限制：PTHREAD_KEY_MAX。</p>
+<figure data-type="image" tabindex="15"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589257101745.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>int pthread_key_delete(pthread_key_t key);</p>
+<p>用来取消键与特定数据的关联，调用该函数并不会调用析构函数，所以需要自己在调用前做好内存析构。</p>
+<p>int pthread_once(pthread_once_t* initflag, void (*initfn) ());</p>
+<p>pthread_once函数可以保证每个线程调用该函数时，initfn都只会被执行一次。要注意这个的逻辑顺序。</p>
+<p>pthread_once_t类型的对象不能是局部变量，必须是静态或者全局变量。</p>
+<p>且pthread_once_t对象必须初始化为PTHREAD_ONCE_INIT.</p>
+<figure data-type="image" tabindex="16"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589257663728.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>键被创建之后，就可以调用pthread_setspecific函数将键与特定数据关联起来：</p>
+<p>void* pthread_getspecific(pthread_key_t key);</p>
+<p>返回key关联的特定数据类型的空指针，再进行类型转换。</p>
+<p>int pthread_setspecific(pthread_key_t key, const void* value);</p>
+<p>如果该键没有特定数据与其关联，则get返回空指针。</p>
+<p>每个key都可以被不同的线程使用，每个线程将该key关联到自己的特定数据，即使修改该数据也不会影响其他线程的可以key对应的数据。</p>
+<figure data-type="image" tabindex="17"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589260742031.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>从上图可知:当调用pthread_key_create 后会产生一个所有线程都可见的线程特定数据（TSD）的键值(如上图中所有的线程都会得到一个pkey[1]的值), 但是这个键所指向的真实数据却是不同的,虽然都是pkey[1], 但是他们并不是指向同一块内存,而是指向了只属于自己的实际数据, 因此, 如果线程0更改了pkey[1]所指向的数据, 而并不能够影像到线程n;</p>
+<p>在线程调用pthread_setspecific后会将每个线程的特定数据与thread_key_t绑定起来，虽然只有一个pthread_key_t，但每个线程的特定数据是独立的内存空间，当线程退出时会执行destructor 函数。</p>
+<figure data-type="image" tabindex="18"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589261117711.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>这里再次给出pthread_key_create的原型：int pthread_key_create(pthread_key_t* keyp,void(*destructor)(void *));</p>
+<p>每一个进程都有一个大小为128的key结构数组，我们在pthread_key_create时，系统会在该进程的这个数组中找到一个未使用的返回给我们的keyp参数，所以如果我们只有一个pthread_key_t类型的对象，有多个线程调用了在其上调用了create函数，那么对应不同的线程，他们得到的key是不一样的，因为会在key数组中找到未使用的一个返回给它。</p>
+<p>我们说同一个key，也即在key结构数组中的元素，对于每个线程，可以用其来指向线程自己的特定数据，这是因为除了key结构数组外，线程有一个pthread结构：</p>
+<figure data-type="image" tabindex="19"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589261369563.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>所以可以理解成：key结构数组中的每个元素都指向了用到它的每个线程中的pkey，每个线程的pkey再指向自己的特定数据，这样才实现了看似多个线程可以使用同一个键值的key；但其本质是因为多个结构之间的链表结构。</p>
+<p>取消选项</p>
+<p>属于线程属性的两个属性：可取消状态和取消类型并不在pthread_attr_t中，需要单独进行设置。</p>
+<p>可取消状态表明该线程是否会响应取消请求（取消请求通过pthread_cancel函数给出），分为PTHREAD_CANCEL_ENABLE和PTHREAD_CANCEL_DISABLE两种。</p>
+<p>取消类型表明在响应取消请求时，是延迟响应还是异步响应，对应两种状态：PTHREAD_CANCEL_DEFERRED和PTHREAD_CANCEL_ASYNCHRONOUS，前者为延迟响应，后者为异步响应。</p>
+<p>这两个属性的默认值分别为PTHREAD_CANCEL_ENABLE和PTHREAD_CANCEL_DEFERRED。</p>
+<p>默认情况下，一个线程响应取消请求，必须在取消点内才能响应，否则不会响应；而所谓的取消点是线程检查它是否被取消的位置，一般而言取消点都是线程出于阻塞的时候。</p>
+<p>以下是标准中定义的取消点，一般调用后线程可能出于阻塞状态：</p>
+<figure data-type="image" tabindex="20"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589271092591.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>如果线程很久的时间内都没有调用这些取消点函数，可以调用pthread_testcancel函数</p>
+<p>int pthread_testcancel();</p>
+<p>这样，如果已经有取消请求被挂起了且没有被置为无效，调用该函数之后线程会被取消。</p>
+<p>虽然线程出于PTHREAD_CANCEL_DISABLE状态时不会响应取消请求，但是该取消请求会被挂起，等到线程变成可被取消状态时，它会响应该取消请求。</p>
+<p>int pthread_setcancelstate(int state,int* oldstate);设置可取消状态</p>
+<p>int pthread_setcanceltype(int type,int* oldtype);设置取消类型</p>
+<p>将state、type对应的属性设置到该线程的属性中，并把旧的属性返回到oldstate、oldtype中</p>
+<p>异步取消的线程不需要一定在取消点才能被取消，在任一位置都可以响应取消请求。</p>
+<p>线程和信号</p>
+<p>每个线程都有自己单独的信号屏蔽字，且会继承创建该线程的线程的信号屏蔽字。但是所有的线程共享信号处理程序。所以如果某个线程调用了signal函数更改了信号处理程序，所有的线程都会受影响，又或者如果某个线程调用signal函数想忽略信号，其他的线程可以再调用signal函数恢复信号的处理方式。</p>
+<p>信号是递送到单个线程的，如果是由于某个线程自身引起的信号，该信号会被递送到该线程，否则其他的信号会递送到任一线程，没有选择性。</p>
+<p>类似于sigprocmask函数:</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int pthread_sigmask(int how, sigset_t* newmask, sigset_t* oldmask);</p>
+<p>来设置线程自身的信号屏蔽字，how有：SIG_BLOCK,SIG_UNBLOCK,SIG_SETMASK三种，分别为阻塞信号，解除阻塞和设置新的信号屏蔽字。</p>
+<p>可以通过将newmask置为空，可以获得当前线程的信号屏蔽字且存入oldmask对象上，此时how参数会被忽略。</p>
+<p>类似于进程信号中的kill函数，线程中也有类似函数：</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int pthread_kill(pthread_t tid,int signo);</p>
+<figure data-type="image" tabindex="21"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589339136877.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>注意，如果某个信号的处理程序是终止该进程，则捕获该信号后，整个进程被杀死，终止。</p>
+<p>线程可以调用sigwait函数来指定等待某些信号的到来：</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigwait(sigset_t* mask,int* signop);</p>
+<p>mask指定了要等待的信号，signop存放了等到的信号类型，例如SIGINT。</p>
+<p>sigwait函数在没有等到信号之前都是一直阻塞的。</p>
+<figure data-type="image" tabindex="22"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589340156488.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>wait函数只是用来等待信号的，然后根据signop的值来进行下一步想要的操作，而不是等到信号到之后执行信号的信号处理程序。</p>
+<p>为了避免错误，调用sigwait之前要阻塞mask指定的信号，因为：原本调用sigwait就是为了等待指定的信号，如果再调用前没有阻塞该信号的话，可能在调用前已经收到该信号并处理了，那么sigwait就会一直阻塞着，达不到想要的效果。</p>
+<p>在sigwait返回之前，会恢复线程原来的信号屏蔽字。</p>
+<p>使用sigwait的好处在于，异步的信号可以用其实现同步的处理，因为异步信号到来之前都是阻塞的，知道线程想要调用sigwait了，才会去处理，实现对信号的同步处理。</p>
+<figure data-type="image" tabindex="23"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589340267034.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>多个线程调用sigwait等待相同信号，信号到时，会递送给任一线程，只有该线程的sigwait函数会返回，其他的会继续阻塞。</p>
+<p>如果对于某个信号设置了信号处理程序，而有一个线程在sigwait该信号，且另外一个线程捕获到该信号了，那么具体是先执行信号处理程序还是sigwait返回，由系统实现进行调度，不会同时执行。经过测试，在Linux上，即使调用sigwait的线程和其他线程都捕捉到了SIGINT，但每次执行的是信号处理程序而不是sigwait。</p>
+<p>重点指出：</p>
+<p>使用sigwait函数的程序的本意应当是所有线程应当阻塞想要wait的信号，这样这些信号到来后在没有调用sigwait之前都是pending未决的，等到处理线程调用了sigwait之后，sigwait会从信号队列中取出该信号。</p>
+<p>如果其他的线程没有阻塞该信号，那么可能在处理线程调用sigwait之前已经被其他的线程捕捉到，并执行了信号处理程序，或者可能sigwait和其他线程同时捕捉到该信号，那么先执行信号处理程序还是sigwait函数，则由系统实现进行调度。</p>
+<p>sigwait函数使用的本意是想要同步处理信号，一般情况下的信号都是异步的，也即信号产生，被捕捉，中断程序，转向执行信号处理程序。</p>
+<p>线程和fork</p>
+<p>当一个线程调用fork后，会生成一个进程，该进程只有一个线程，为调用fork的线程的副本，子进程有父进程的所有资源的副本，且继承了父进程中互斥量，条件变量，读写锁状态，也就是说如果fork之前，父进程中有线程占有了这些同步对象，那么子进程也会占有这些对象，例如子进程中的这些对象和父进程一样都上锁了。</p>
+<p>但是由于子进程只有一个线程，该线程不一定就是原本占有锁的线程，那么子进程就不知道它占用了哪些锁，需要释放什么锁，因此子进程无法使用被锁上的变量，即我不知道你已经被锁了，我还使用你就会一直阻塞。</p>
+<p>如果子进程没有访问这些被锁上的数据，而是直接调用exec了，那么这些锁就不需要管了，毕竟执行新的程序了，这些就没影响了。</p>
+<p>否则需要处理这些锁，不然子进程的执行会出问题。</p>
+<p>#Iinclude&lt;pthread.h&gt;</p>
+<p>int pthread_atfork(void (*prepare) (void), void (*parent) (void),void (*child) (void) );</p>
+<p>atfork函数和atexit函数的作用类似，注册在fork时会执行的函数，我们称为fork处理程序。</p>
+<p>prepare对应的函数是在fork之前调用的，获取进程中的所有锁；parent对应的函数是在父进程中，fork返回之前调用的，用于释放获取的锁；child对应的函数是在子进程中fork返回前调用的，用于释放获取的锁。</p>
+<p>因为父子进程有各自的副本，所以都是释放各自的锁。</p>
+<p>可多次调用atfork函数，注册多个fork处理程序，多个atfork函数下三个参数对应的函数的调用顺序为：以调用atfork函数的顺序为准，prepare函数按该顺序执行，而parent和child函数则与该顺序相反执行。</p>
+<figure data-type="image" tabindex="24"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589342006989.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>一个简单的结论就是，调用atfork释放锁的顺序与使用锁的顺序一致即可，因为atfork对其参数的调用顺序刚好能够保证正常释放，不会冲突。</p>
+<figure data-type="image" tabindex="25"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589343113935.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>互斥量不会被互斥量锁住，即两个互斥量同属一个作用域时，两者的上锁不会锁住对方。</p>
+<p>线程和I/O</p>
+<figure data-type="image" tabindex="26"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589343383094.png?lastModify=1625624585" alt="" loading="lazy"></figure>
+<p>对于线程的读写I/O，使用pread和pwrite，两者为原子操作，能够满足真实的读写需求。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-yi-zhang-xian-cheng/">
+                <h3 class="post-title">
+                  APUE笔记-第十一章-线程
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

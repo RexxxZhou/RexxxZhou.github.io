@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第七章-进程环境 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第七章-进程环境</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第七章-进程环境</p>
+<p>main函数</p>
+<p>内核在执行C程序时（使用一个exec函数），在调用main之前先调用一个特殊的启动例程，可执行程序文件将此启动例程指定为程序的起始地址。启动例程从内核取得命令行参数和环境变量值，为调用main函数做好准备。</p>
+<p>进程终止</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/t5JLlU1RXoBCdWQ.png" alt="" loading="lazy"></figure>
+<p>启动例程就是在main函数返回后立刻调用exit，其调用的可能形式为 exit(main(argc,argv));</p>
+<p>退出函数</p>
+<p>#include&lt;stdlib.h&gt;</p>
+<p>void exit(int status);</p>
+<p>void _Exit(int status);</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>void _exit(status);</p>
+<p>_exit和_Exit函数直接进入内核，而exit函数先执行一些处理操作后退出程序。</p>
+<p>exit函数总是执行标准I/O的一个操作，把所有打开的文件都fclose掉，这样会将所有写的数据刷新到文件中。</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/hCxiykNADbLJlK3.png" alt="" loading="lazy"></figure>
+<p>exit(0); 等价于 return 0; 相当于在系统中存了一个相应的终止标志，根据函数的定义指定了一个意义。</p>
+<p>函数atexit</p>
+<p>ISO C规定一个进程最多可以登记32个函数，这些函数由exit函数自动调用，我们将这些登记的函数称为终止处理函数，也即在终止程序时调用的函数。我们登记的函数顺序和我们exit时调用的顺序是相反的，类似栈结构，每个函数可被多次登记，也就会执行多次。</p>
+<p>exit函数在执行完这些终止处理函数后，调用fclose关闭所有标准I/O流。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/eNtdkcaisb7nUCx.png" alt="" loading="lazy"></figure>
+<p>即使我们没有在main函数中使用exit函数，也会自动调用exit函数。可能是因为启动例程使用了exit函数。</p>
+<figure data-type="image" tabindex="4"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/F768D5466CF44476B249FE38ABFA46F8.png" alt="" loading="lazy"></figure>
+<p>命令行参数</p>
+<p>ISO C和POSIX.1 都要求argv[argc]是一个空指针</p>
+<p>环境表</p>
+<p>与命令行参数表argv一样，也有关于环境变量的一张表，其结构与命令行参数表类似，数组中的每个元素都是c字符串，都以空字符结尾。在数组的最后一个元素后是空字节。</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/nf9JWFBuXIRxyoV.png" alt="" loading="lazy"></figure>
+<p>environ是一个环境指针，指向环境表的首地址，其类型为char ** environ。</p>
+<p>环境由 name=value组成，也就我们系统设置里环境变量要给出名字和值对。通常使用getenv和setenv来访问特定的环境变量。</p>
+<p>C程序的存储空间布局</p>
+<p>由下列几部分组成：</p>
+<p>1.正文段。是由CPU执行的机器指令集，通常正文段是可共享的，也即同一个程序的多个进程可以共用同一个正文段。正文段是只读的，避免意外修改。</p>
+<p>2.初始化数据段。常称为数据段，包含了程序中明确的赋予初值的变量，初始化的全局变量和静态变量都存在这。</p>
+<p>3.未初始化数据段，bss段。未初始化的全局变量和局部变量都存在这里。程序在执行前，内核将这些变量数据初始化为0或空指针。</p>
+<p>4.栈。自动变量以及函数调用时所需保存的信息都存在该段中，每次函数调用，都会在栈中记录函数返回地址和调用者的环境信息（例如在调用该函数之前，调用者所有的变量），被调用的函数在栈上分配自动和临时变量。这样就可以进行递归。每次调用时都会有个新的栈帧。用于记录调用函数的返回地址，各个局部变量，调用者的环境信息。 需要由程序员分配释放管理，若程序员不释放，程序结束时可能由OS回收。通常在堆中进行动态存储分配。<br>
+如程序中的malloc, calloc, realloc，new等函数都从这里面分配。堆是从下向上分配的。</p>
+<p>5.堆。通常在堆中进行动态存储分配。堆位于栈和bss段之间。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/OiU9WRaSFkyTCgj.png" alt="" loading="lazy"></figure>
+<p>栈底是高地址，栈从高地址往低地址增长。</p>
+<p>初始化数据段简称数据段，未初始化数据段简称bss段。也有说法把两者统称为数据段，但在本书中将两者分开标识。</p>
+<p>可以用size 程序文件名 来获取程序的正文段，数据段和bss段大小。但未初始化数据并不存放在磁盘程序文件中，因为每次执行前，都由内核全部置为0或空指针；只有正文段和数据段是存在磁盘程序文件中的。</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/GAUfzb9W62RMEyK.png" alt="" loading="lazy"></figure>
+<p>当栈区耗尽后，进程会阻塞，内核会重新分配更大的栈区。</p>
+<p>共享库</p>
+<p>共享库的作用是让可执行文件不再需要包含其要调用的库函数，使得可执行文件的大小减少。在每个进程都能访问的存储区中存放库函数例程的副本，进程第一次调用库函数时，会与这些共享函数进行动态链接，增加了一定的时间开销但减少了可执行文件长度，且该时间开销是第一次调用时才有的。</p>
+<p>共享库的另外一个优点是，新版本的共享库直接替换老版本的后，不需要对程序进行重新连接编辑。</p>
+<p>存储空间分配</p>
+<p>三个函数malloc，calloc，realloc</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/rH61MAXCUaEnxPc.png" alt="" loading="lazy"></figure>
+<p>realloc是将已经分配的区域再重新分配，可以扩大或者缩小该区域，当扩大区域时，若该区域后的空间足够则会直接扩大区域，不需要对原来的数据进行复制，如果不够，会将原来的数据复制的另外一个更大的区域中，来实现扩大区域。</p>
+<p>realloc函数的ptr参数如果为空指针，则其功能与malloc一样。这些函数都是分配存储空间，并返回该空间的地址，但不会进行元素的构造（也即allocate和construct是分开的）。</p>
+<p>这些调整存储空间大小的函数，常用brk系统调用实现，该系统调用会增大或减少进程的堆。虽然sbrk可以扩充或缩小进程的堆，但一般上述函数不会回收这些空间，释放的空间是可以继续分配的，将他们保持再malloc池中，不返回给内核。</p>
+<p>大多数的实现对于分配块空间来说，实际占用的大小会比指定的字节数多，因为存在额外的空间来记录管理信息，例如下一个块的指针，块的长度等，如果对块的写操作不小心写到了别的块上，会出现致命错误，但是该错误又很难被发现。</p>
+<p>用alloc的三个函数分配了块之后，使用完一定要free释放掉，否则会造成内存泄漏，若一直分配不释放，一直会到没有空间分配终止，并且在存储上访问这些块时增加了分页的开销，进程性能下降。</p>
+<p>用free释放一个已经释放的块是致命错误。</p>
+<p>因此，有些系统对这几个函数有附加的检错，在调用连接编辑器时，可以指定这个专用库，在程序中就会使用该库函数。Linux支持通过环境变量的设置增加附加的调试功能。</p>
+<p>环境变量</p>
+<p>#include&lt;stdlib.h&gt;</p>
+<p>char* getenv(char* name);//返回指定环境变量名的环境变量值，若未找到则返回NULL</p>
+<p>修改或增加环境变量，这种修改只能影响当前进程及其子进程，不会影响父进程的环境表。</p>
+<p>#include&lt;stdlib.h&gt;</p>
+<p>int putenv(char* str);//str时name=value的字符串，若已存在该定义则覆盖</p>
+<p>int setenv(char<em>name,char</em>value,int rewrite);//若存在该定义且rewrite非0，则覆盖；为0则不覆盖。</p>
+<p>int unsetenv(char*name);//删除环境变量的定义</p>
+<p>putenv和setenv有区别：putenv不会为环境变量字符串name=value分配空间，会直接将参数对应的空间作为该环境变量的空间，而setenvhui分配空间给该字符串。所以如果putenv使用了栈中的字符串作为参数进行传递，当该栈帧返回时，相应的存储空间会释放，putenv就会发生错误。</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/N8KFmhnjOWoZGep.png" alt="" loading="lazy"></figure>
+<p>一般来说，环境表、环境表的指针envrion和各环境变量字符串（name=value）都存放在进程存储空间的顶部，在栈上方，所以这部分的空间是不能增加的。如果要更改value和增加环境变量，则：</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/pujlNUokXYvi8e5.png" alt="" loading="lazy"></figure>
+<p>如果修改环境变量使得原本的位置无法装下新的环境表，则会将表重新分配到堆中，多出来的环境变量字符串也会放在堆中，都调用了malloc函数进行分配。</p>
+<p>函数setjump和longjmp</p>
+<p>#include&lt;setjmp.h&gt;</p>
+<p>int setjmp(jmp_buf env);</p>
+<p>void longjmp(jmp_buf env,int val);</p>
+<p>这两个函数用于非局部跳转，也即函数间的跳转，其中会涉及到栈帧的变化。</p>
+<p>必须调用了setjmp之后longjmp才知道回跳到哪里，否则是错误的，程序会崩溃。</p>
+<p>setjmp是设置跳转点，在函数中调用setjmp返回的是0，而调用longjmp表明从调用点跳转回跳转点，参数val是告诉setjmp这个时候要返回的值是多少，可以用于区分多个函数的跳转，辨别是哪个函数跳转而来的。</p>
+<p>jmp_buf是一个某种类型的数组，他包含了我们跳转时要恢复的数据信息；因为一般会在多个函数间使用该对象，一般声明为全局变量。</p>
+<p>如果数据是全局、静态和易变（volatile）类型（这些数据都是存在数据段的，不是在栈中的），在跳转时，会保存其在跳转时的值，而其他类型的数据（局部变量）跳转回来时其值时不确定的。</p>
+<p>当然也可以简单认为这些局部变量在跳回来的时候恢复为一开始调用setjmp的jmp_buf中的值。</p>
+<p>函数getrlimit和setrlimit</p>
+<p>每个进程都有一组资源限制，其中一些可以用setrlimit和getrlimit来进行查询或修改</p>
+<p>#include&lt;sys/resource.h&gt;</p>
+<p>int getrlimit(int resource,struct rlimit*rlptr);</p>
+<p>int setrlimit(int resource,const struct rlimit*rlptr)</p>
+<p>resource参数是一系列常量，分别代表可以修改或查询的资源项，rlimit是一个结构，包含了要查询和修改的内容：</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/5Om7HSkVLhsGgfq.png" alt="" loading="lazy"></figure>
+<p>修改资源时，有下列注意事项：</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/VH7FfmtxdqK19hI.png" alt="" loading="lazy"></figure>
+<p>软限制就是进程自己给自己设置的上限，而硬限制是内核分配给进程的资源上限。</p>
+<p>资源限制影响进程自身和其子进程，子进程会继承这些资源限制。所以为了影响一个用户的所有资源限制，应当在shell中进行限制的设置，shell具有内置的ulimit命令来进行设置。</p>
+<p>一些习题的答案</p>
+<ol>
+<li></li>
+</ol>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/bPRxicE35VyWtXQ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/MjSds7atqCP29ko.png" alt="" loading="lazy"></figure>
+<p>终止状态为13的原因是printf函数的返回值为13，成为了main函数的返回值。但不一定就是因为最近的一次函数返回来决定返回的终止状态。</p>
+<p>2.为什么size一个文件的文件总长大于其正文段加数据段加bss段的大小？</p>
+<p>因为除了这些字段外，还有一些其他的组成部分，例如链接库信息、符号表等。</p>
+<p>3.为什么7.7节中对于一个简单的程序，使用共享库以后其可执行文件的大小变化如此巨大？</p>
+<p>使用静态库时，库代码会被整合进二进制代码文件中，使用动态库时只是放入一个符号指示，而不是整合整个库代码。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-liu-zhang-xi-tong-shu-ju-wen-jian-he-xin-xi/">
+                <h3 class="post-title">
+                  APUE笔记-第六章-系统数据文件和信息
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

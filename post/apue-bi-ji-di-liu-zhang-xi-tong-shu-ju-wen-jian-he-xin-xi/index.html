@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第六章-系统数据文件和信息 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第六章-系统数据文件和信息</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第六章-系统数据文件和信息</p>
+<p>口令文件</p>
+<p>口令文件/etc/passwd记录了系统中的所有用户信息，并且将这些字段信息用passwd结构体记录，该结构体定义在&lt;pwd.h&gt;中。每个字段用冒号隔开</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/5iUORjtWxacwgH4.png" alt="" loading="lazy"></figure>
+<p>加密口令也即用户密码在文件中只显示占位符x，真正的密码存于另外一个文件，提高安全性。口令文件中某些字段可能为空。shell字段指定了用户的登录shell，阻止用户登录可以将该字段设为nologin，/bin/false /bin/true</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/UhAgFt1K3se5xcV.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/aTmY2NjrKwuRHSV.png" alt="" loading="lazy"></figure>
+<p>给定uid或者用户名来获得口令文件中的该用户信息，存入passwd结构体中，并且该结构体是一个静态变量，每次调用都会重写该对象内容。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/tiV2bFKZBGs4L56.png" alt="" loading="lazy"></figure>
+<p>这里只是查看口令文件，不需要任何的特权，也不用说你只能查看自己的用户信息。相当于普通的打开文件</p>
+<p>getpwent函数每次调用都会查看下一个用户的所有信息，并将其写入passwd结构体中，返回该结构体的指针；setpwent使文件回到头部，相当于把文件当前位置设成开头；endpwent是关闭口令文件，以上所有函数都是会打开口令文件的，我们在查看完之后一定要用endpwent关闭口令文件。</p>
+<p>阴影口令</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/avh7sx3FueimZd8.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/S1ueH8x9MtGjPFw.png" alt="" loading="lazy"></figure>
+<p>用户登陆名和加密口令是必须的字段，其他是可选的。阴影文件中的加密口令就不是占位符x了，而是明文密码经过算法加密后的字符串结果了。只有root用户才能访问该文件。</p>
+<p>组文件</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/aWAihcBn4FQEvfw.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/1nSDRLJhTv6IlMG.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/e8YuBrxS2Xh51Vd.png" alt="" loading="lazy"></figure>
+<p>与口令文件的操作基本一样。只是用了另外一个类来保存内容。</p>
+<p>附属组ID</p>
+<p>在口令文件中，我们显示了每个用户的组ID，这个组ID是base gid，我们每个用户还可以附属于其他最多16个组，也即附属组。所以我们的进程在进行权限测试的时候，除了测试自己的组ID外，还会测试其所有附属组ID和要访问的文件的组ID进行比较。</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/8GWIK7zphvJrlRT.png" alt="" loading="lazy"></figure>
+<p>其中setgroups和initgroups需要超级用户权限才能调用。</p>
+<p>其他数据文件</p>
+<p>一般情况下，对于每种数据文件，至少提供下列三种函数：</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/MwAtSLlO4RkV8dy.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/ikSTWAfh4NPrYIH.png" alt="" loading="lazy"></figure>
+<p>登录账户记录</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/63kDQNrwtu1cHmF.png" alt="" loading="lazy"></figure>
+<p>utmp记录当前登录的用户，wtmp记录历史登录的用户记录（登录和注销记录）</p>
+<p>系统标识</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/wtF82emVAJK3fOs.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/i5wHoOIsfQKZWrl.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/npXHthEPx27N4k3.png" alt="" loading="lazy"></figure>
+<p>时间和日程例程</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/4X1zwpxTKWtmQ3N.png" alt="" loading="lazy"></figure>
+<p>time_t是从UTC开始计时的秒数，time函数把当前时间返回，若参数不为空指针还会把时间写到指针对应的对象中。</p>
+<p>localtime gmtime可以将time_t的日历时间转换成tm结构</p>
+<p>mktime将tm结构转换成time_t日历时间</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/DZ2void7tBOhjsK.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/Fa29vsAOSfkEQhr.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/24suLSbMDqwAPy6.png" alt="" loading="lazy"></figure>
+<p>struct tm* localtime(timt_t*ptr);</p>
+<p>struct tm* gmtime(timt_t* ptr);</p>
+<p>size_t strftime(char * buf,size_t max_size,char * format, tm* ptr);</p>
+<p>size_t strftime_l(char * buf,size_t max_size,char * format, tm* ptr,local_t locale);</p>
+<p>char* strptime(const char<em>buf,const char</em>format,struct tm*tmptr);</p>
+<p>strftime将tm结构的时间，格式化输出到buf中，format指定了转换说明，strftime_l多了一个locale指定时区，而strftime从环境变量TZ中获得时区。</p>
+<p>如果max_size大于等于输出字符串的大小+一个空字符，则返回存入的字符数，不包括空字符，否则返回0，不存入buf。</p>
+<p>mktime，localtime，strftime都与环境变量TZ有关，若TZ为空，则使用UTC时间。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-wu-zhang-biao-zhun-io-ku/">
+                <h3 class="post-title">
+                  APUE笔记-第五章-标准IO库
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

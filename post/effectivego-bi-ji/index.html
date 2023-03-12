@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>EffectiveGo笔记 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>EffectiveGo笔记</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h3 id="初始化">初始化</h3>
+<h4 id="常量初始化">常量初始化</h4>
+<p>**不管是全局常量还是在函数中声明的常量，常量是在编译器创建的，而且只能是数字类型、字符、字符串或布尔类型。**因为编译时的限制，定义常量的表达式必须是常量表达式，这样编译器在编译时才能计算常量的值，而不能是一些例如函数计算值，因为调用函数是在代码运行阶段才执行的。</p>
+<h4 id="变量初始化">变量初始化</h4>
+<p>变量的初始化可以是一般的表达式，因为这是在运行时才初始化的。</p>
+<p>包的初始化<strong>首先是解决包级变量的依赖顺序，然后按照包级变量声明出现的顺序依次初始化</strong>：</p>
+<pre><code class="language-go">var a = b + c // a 第三个初始化, 为 3
+var b = f()   // b 第二个初始化, 为 2, 通过调用 f (依赖c)
+var c = 1     // c 第一个初始化, 为 1
+
+func f() int { return c + 1 }
+</code></pre>
+<p>所以在Go语言里，函数的声明顺序，变量的声明顺序都是无所谓的，没有强制要求先依赖的变量或者函数需要先进行声明和定义，Go语言在编译时会自动检查依赖关系，在依赖关系的基础上，然后再按照代码的声明顺序进行初始化。</p>
+<h4 id="init函数">init函数</h4>
+<p><strong>init函数的主要作用</strong>：1）初始化不能采用初始化表达式初始化的变量。2）程序运行前的注册。3）实现sync.Once功能。（备注：init函数没有输入参数、返回值。）</p>
+<p>例如，可用于执行前对系统环境状态进行判断，决定是否继续执行程序：</p>
+<pre><code class="language-go">var (
+    home   = os.Getenv(&quot;HOME&quot;)
+    user   = os.Getenv(&quot;USER&quot;)
+    gopath = os.Getenv(&quot;GOPATH&quot;)
+)
+
+func init() {
+    if user == &quot;&quot; {
+        log.Fatal(&quot;$USER not set&quot;)
+    }
+    if home == &quot;&quot; {
+        home = &quot;/home/&quot; + user
+    }
+    if gopath == &quot;&quot; {
+        gopath = home + &quot;/go&quot;
+    }
+    // gopath may be overridden by --gopath flag on command line.
+    flag.StringVar(&amp;gopath, &quot;gopath&quot;, gopath, &quot;override default GOPATH&quot;)
+}
+</code></pre>
+<p>init函数是在main函数执行前先执行的，总体的执行顺序为：</p>
+<p>各变量的声明和初始化--》init函数--》main函数</p>
+<p>一个包里可以有多个init函数，一个文件里也可以同时拥有多个init函数，在同一个文件中的多个init函数按照代码编写的顺序执行；而同一个包里多个文件都有init函数的情况下，则按照文件名字符串的比较后，从小到大执行，例如先执行a.go里的init，再执行b.go里的init函数。</p>
+<p>导入的包会自动执行init函数，执行的顺序和包的依赖关系有关：</p>
+<p>初始化工作是自下而上进行的，main包最后被初始化。以这种方式，可以确保在main函数执行之前，所有依赖的包都已经完成初始化工作了。<br>
+<img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170143478-1.png" alt="image" loading="lazy"></p>
+<h3 id="接口和其他类型">接口和其他类型</h3>
+<p>接口的类型断言如果失败，则返回的变量为该类型的零值：</p>
+<pre><code class="language-go">val,ok:=myinter.(string)// 如果接口现在承载的不是string，则ok为false，val为字符串的空值，为空字符串
+</code></pre>
+<h4 id="定义函数类型别名">定义函数类型别名</h4>
+<pre><code class="language-go">func main(){
+	type HandlerFunc func(int)
+	f := HandlerFunc(my_func)
+	f(5)
+}
+func my_func(int) {
+	fmt.Println(&quot;my_func&quot;)
+}
+//output
+my_func
+</code></pre>
+<h4 id="下划线">下划线</h4>
+<p>下划线的作用是因为Go语言如果变量或者导入的包没有用到，就无法通过编译，或者我们有时候确实不需要某个函数的返回值或某个对象，可以使用下划线_来忽略这个对象或者包，以通过编译。</p>
+<p>因为如果没有用到的包我们又import了，若这种语法合法，那么编译器的工作量会很大，而且会多余的将这些包一起编译；没用到的变量同理，变量需要去计算它的值，但又后续用不到它，就是浪费资源。</p>
+<p>使用下划线_就好比在linux系统下将东西写道/dev/null文件中，都是忽略不要的。</p>
+<p>常见的用法：</p>
+<pre><code class="language-go">_,ret:=my_func()
+//忽略my_func函数的第一个返回值
+</code></pre>
+<p>也可以，但更多的是用上面的方式，下面累赘：</p>
+<pre><code class="language-go">val,ret:=my_func()
+_=val
+</code></pre>
+<p>如果导入某个包，但是又忽略不用，却要用到它的一些init函数，则可以：</p>
+<pre><code class="language-go">import _ fmt 
+//忽略fmt，在代码中无法使用fmt包
+//This form of import makes clear that the package is being imported for its side effects, because there is no other possible use of the package: in this file, it doesn't have a name.
+</code></pre>
+<p>也可通过下面的方式对来消除编译器的报错提醒：</p>
+<pre><code class="language-go">import(
+	&quot;fmt&quot;
+    &quot;time&quot;
+)
+var _ = fmt.Printf  //这里的Printf是个函数，相当于把这个函数的句柄赋给了_
+var _ time.Duration //这里的Duration是个类型，这个语句就是普通的变量声明语句
+//使用这种方法，就可以避免编译器报错，虽然这里用了_，但是Printf、Duration可以在代码中使用
+</code></pre>
+<p>在Go语言中，很多类型实现了接口，就可以通过接口变量来调用这些类型的实现的接口方法，在编译期间，编译器可以检查大多数的类型是否实现了接口，以判断是否通过编译，但也有些必须在运行时才能判断（例如下面的运行时类型判断）：</p>
+<pre><code class="language-go">if _, ok := val.(json.Marshaler); ok {
+    fmt.Printf(&quot;value %v of type %T implements json.Marshaler\n&quot;, val, val)
+}
+
+</code></pre>
+<p>这种情况编译器是无能为力的，如果运行时才发现类型没有实现接口方法，但又调用了接口的方法，则会出错。</p>
+<p>可以通过下划线_来实现一个检测，下面Marshaler是接口，右侧则是一个类型，下面这个语句可以实现在编译阶段判断(*RawMessage)类型有没有实现接口：</p>
+<pre><code class="language-go">var _ json.Marshaler = (*RawMessage)(nil)
+
+</code></pre>
+<p>虽然通过这种方法可以在编译期间判断某个类型是否实现了接口，但没必要对每个类型都这么写，只要在用的地方做好类型断言就好了。</p>
+<h4 id="嵌套">嵌套</h4>
+<p>在Go语言中可以嵌套interface，也可以嵌套struct</p>
+<p>若嵌套的struct A 实现了接口inter，则嵌套后，structB也实现了接口inter。但是如果在调用A实现的接口方法或者A自身的方法时，接收者都是A而不是B：</p>
+<pre><code class="language-go">type A struct{
+}
+type B struct{
+	A
+}
+func(a A) print(){
+	fmt.Println(&quot;A's method&quot;)
+}
+
+</code></pre>
+<p>如果嵌套的时候，还同时指定了这个嵌套类A的名字，此时则把这个看成一个成员：</p>
+<pre><code>type B struct{
+	a A
+}
+
+</code></pre>
+<p>这时候就单纯理解为structB有个类型A的成员就行了，此时如果想要访问A的方法，只能通过普通的成员访问来实现，所以此时就不能说structB也实现了接口inter，<strong>要注意这里的成员和单纯嵌套（必须是匿名成员）的区别</strong>:</p>
+<pre><code class="language-go">b:=B{}
+b.a.AMethod()
+
+</code></pre>
+<p>因此，<strong>使用structA的指针类型嵌套也是可以的</strong>，也相当于实现了接口inter，：</p>
+<pre><code class="language-go">type B struct{
+	*A
+}
+
+</code></pre>
+<p>对于嵌套时，内部类型同名与外层类型种同名的方法或者变量，如果直接访问，则访问的是外层的数据对象：</p>
+<pre><code class="language-go">type A struct{
+	hello string
+}
+type B struct{
+	A
+	hello string
+}
+func main(){
+	b:=B{}
+	fmt.Println(b.hello) //访问的是B中的hello，而不是A中的hello
+}
+
+</code></pre>
+<p>struct中嵌套的类型名和别的类型后者成员不能重名，当然也有例外情况，例外情况现在没搞懂：</p>
+<pre><code class="language-go">type st2 struct{
+	*st1
+	st1 string
+}//这是不允许的，编译过不了
+
+</code></pre>
+<p>Second, if the same name appears at the same nesting level, it is usually an error; it would be erroneous to embed <code>log.Logger</code> if the <code>Job</code> struct contained another field or method called <code>Logger</code>. <strong>However</strong>, if the duplicate name is never mentioned in the program outside the type definition, it is OK. This qualification provides some protection against changes made to types embedded from outside; there is no problem if a field is added that conflicts with another field in another subtype if neither field is ever used.</p>
+<h4 id="作用域">作用域</h4>
+<p><strong>内部作用域可以访问外部作用域中的对象，反之则不行；可以存在同名的对象，只要他们的作用域不同即可。</strong></p>
+<p>一个程序可能包含多个同名的声明，只要它们在不同的词法域就没有关系。例如，你可以声明一个局部变量，和包级的变量同名。或者是像2.3.3节的例子那样，你可以将一个函数参数的名字声明为new，虽然内置的new是全局作用域的。但是物极必反，如果滥用不同词法域可重名的特性的话，可能导致程序很难阅读。</p>
+<p>当编译器遇到一个名字引用时，它会对其定义进行查找，查找过程从最内层的词法域向全局的作用域进行。如果查找失败，则报告“未声明的名字”这样的错误。如果该名字在内部和外部的块分别声明过，则内部块的声明首先被找到。在这种情况下，内部声明屏蔽了外部同名的声明，让外部的声明的名字无法被访问：</p>
+<pre><code class="language-Go">func f() {}
+
+var g = &quot;g&quot;
+
+func main() {
+    f := &quot;f&quot;
+    fmt.Println(f) // &quot;f&quot;; local var f shadows package-level func f
+    fmt.Println(g) // &quot;g&quot;; package-level var
+    fmt.Println(h) // compile error: undefined: h
+}
+
+</code></pre>
+<p>if和switch语句也会在条件部分创建隐式词法域，还有它们对应的执行体词法域。下面的if-else测试链演示了x和y的有效作用域范围：</p>
+<pre><code class="language-Go">if x := f(); x == 0 {
+    fmt.Println(x)
+} else if y := g(x); x == y {
+    fmt.Println(x, y)
+} else {
+    fmt.Println(x, y)
+}
+fmt.Println(x, y) // compile error: x and y are not visible here
+
+</code></pre>
+<p><strong>第二个if语句嵌套在第一个内部</strong>（除了第一个if，其他if分支都是同级的作用域，嵌套在第一个if作用域下），因此第一个if语句条件初始化词法域声明的变量在第二个if中也可以访问。switch语句的每个分支也有类似的词法域规则：条件部分为一个隐式词法域，然后是每个分支的词法域。</p>
+<h4 id="type-类型名-底层数据结构">type 类型名 底层数据结构</h4>
+<p>这个需要注意的是，即使底层数据结构是相同的，不同的类型名，go当成不同的类型，所以即使底层数据结构相同，想在两种类型名之间进行运算，需要进行强制转换。</p>
+<p>通过这种方式生成新的类型名，底层数据结构支持的运算符，新的类型名也是支持的。</p>
+<h4 id="字符串需要注意的点">字符串需要注意的点</h4>
+<p>更详细的教程见http://books.studygolang.com/gopl-zh/ch3/ch3-05.html</p>
+<p>字符串是一个不可变对象，不像C++中的string可以append，go的字符串是不可变的，但是可以通过重新赋值改变对象的值：</p>
+<pre><code class="language-go">s:=&quot;hello world&quot;
+s[1]='L' //error 不可变对象，不可修改
+s=&quot;new hello world&quot;  //correct 可以重新赋值
+
+</code></pre>
+<p>不变性意味着如果两个字符串共享相同的底层数据的话也是安全的，这使得复制任何长度的字符串代价是低廉的。同样，一个字符串s和对应的子字符串切片s[7:]的操作也可以安全地共享相同的内存，因此字符串切片操作代价也是低廉的。<strong>在这两种情况下都没有必要分配新的内存。</strong> 这种情况就和切片相似，两个对象指向的是同一个底层数据，并没有开辟新的内存。</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170202737-1.png" alt="image" loading="lazy"></figure>
+<p>对字符串使用len函数，返回的是底层数据的字节数，而不是字符数（例如一个中文字计算的是3）。</p>
+<p>对一个字符串对象，可以像切片那样，获取部分子串，以形成一个新的字符串（左闭右开）：</p>
+<pre><code class="language-go">s:=&quot;hello,world&quot;
+s1:=s[:5]
+s2:=s[5:]
+s3:=s[0:5]
+
+</code></pre>
+<p>字符串的比较运算是按照逐字节比较的，所以必须是在同一字符集编码下才有意义。</p>
+<p>字符串的转义符：</p>
+<pre><code>\a      响铃
+\b      退格
+\f      换页
+\n      换行
+\r      回车
+\t      制表符
+\v      垂直制表符
+\'      单引号（只用在 '\'' 形式的rune符号面值中）
+\&quot;      双引号（只用在 &quot;...&quot; 形式的字符串面值中）
+\\      反斜杠
+
+</code></pre>
+<p>可以通过十六进制和八进制转移值来指定字符串每个字节的值， 一个十六进制的转义形式是<code>\xhh</code>，其中两个h表示<strong>十六进制数字</strong>（大写或小写都可以）。一个八进制转义形式是<code>\ooo</code>，包含<strong>三个八进制的o数字</strong>（0到7），但是不能超过<code>\377</code>（译注：<strong>对应一个字节的范围，十进制为255</strong>）。 注意在十六进制和八进制转义中，都是数字，例如\x22，\035。</p>
+<p><strong>原生字符串，使用反引号``括起来</strong>，此时，括起来的内容和字面值一样，可以理解成你写了什么，这个字符串就是什么内容，如果需要在原生字符串中出现反引号，可以通过+&quot;`&quot;连接字符串。 <strong>唯一的特殊处理是会删除回车</strong>以保证在所有平台上的值都是一样的，包括那些把回车也放入文本文件的系统 。</p>
+<pre><code class="language-go">s := `
+hello 
+world
+nihao
+\x23
+`
+fmt.Println(s + &quot;`&quot;)
+//output
+
+        hello 
+        world
+        nihao
+        \x23
+        `
+
+</code></pre>
+<p>**原生字符串面值用于编写正则表达式会很方便，因为正则表达式往往会包含很多反斜杠。**原生字符串面值同时被广泛应用于HTML模板、JSON面值、命令行提示信息以及那些需要扩展到多行的场景。</p>
+<h5 id="unicode编码">Unicode编码</h5>
+<p>使用Unicode（ <a href="http://unicode.org/">http://unicode.org</a> ），它收集了这个世界上所有的符号系统，包括重音符号和其它变音符号，制表符和回车符，还有很多神秘的符号，每个符号都分配一个唯一的Unicode码点，<strong>Unicode码点对应Go语言中的rune整数类型（译注：rune是int32等价类型）。</strong></p>
+<p>我们可以将一个符文序列表示为一个int32序列。这种编码方式叫UTF-32或UCS-4，每个Unicode码点都使用同样大小的32bit来表示。这种方式比较简单统一，但是它会浪费很多存储空间，因为大多数计算机可读的文本是ASCII字符，本来每个ASCII字符只需要8bit或1字节就能表示。而且即使是常用的字符也远少于65,536个，也就是说用16bit编码方式就能表达常用字符。但是，还有其它更好的编码方法吗？ ==》<strong>UTF8</strong></p>
+<h5 id="utf8">UTF8</h5>
+<p>UTF8是一个<strong>将Unicode码点编码</strong>为字节序列的变长编码。</p>
+<p><strong>UTF8编码使用1到4个字节来表示每个Unicode码点</strong>，ASCII部分字符只使用1个字节，常用字符部分使用2或3个字节表示。<strong>每个符号编码后第一个字节的高端bit位用于表示编码总共有多少个字节</strong>。如果第一个字节的高端bit为0，则表示对应7bit的ASCII字符，ASCII字符每个字符依然是一个字节，和传统的ASCII编码兼容。如果第一个字节的高端bit是110，则说明需要2个字节；<strong>后续的每个高端bit都以10开头</strong>。更大的Unicode码点也是采用类似的策略处理。 <strong>前四位高端位的1的个数代表某个字符编码的字节总数。</strong></p>
+<pre><code>0xxxxxxx                             runes 0-127    (ASCII)
+110xxxxx 10xxxxxx                    128-2047       (values &lt;128 unused)
+1110xxxx 10xxxxxx 10xxxxxx           2048-65535     (values &lt;2048 unused)
+11110xxx 10xxxxxx 10xxxxxx 10xxxxxx  65536-0x10ffff (other values unused)
+
+</code></pre>
+<pre><code>&quot;世界&quot;
+&quot;\xe4\xb8\x96\xe7\x95\x8c&quot;
+&quot;\u4e16\u754c&quot;
+&quot;\U00004e16\U0000754c&quot;
+
+</code></pre>
+<p>上述的三种写法得到的结果都是“世界”，首先第一行其实就是utf8编码值对应的十六进制值，这个很好理解。</p>
+<p>第二行则是utf8的转义值，这里详细解释下，以“世”为例，其对应的二进制值为：</p>
+<p>11100100 10111000 10010110，根据编码方式（如上所示），去掉第一个字节的前四位，第二和第三字节的前两位，然后再拼到一起，得到：0100 1110 0001 0110 对应的就是\u4e16</p>
+<p>再举一个unicode码点为4个字节的例子，码点值为65536时，对应有四个字节：</p>
+<pre><code class="language-go">s := string(65536)
+fmt.Printf(&quot;%x\n&quot;, s)
+fmt.Println(len(s))
+fmt.Println(&quot;\U00010000&quot; == s)
+//output
+f0908080
+4
+true
+
+</code></pre>
+<p>s对应的十六进制为f0908080，则相应的二进制为：</p>
+<p>11110000 10010000 10000000 10000000</p>
+<p>一样，去掉高位11110和后面字节的10后：</p>
+<p>000 010000 000000 000000  因为位数不足8的整数倍（也即不是字节的倍数），所以前面在最前面补0：<br>
+0000 0001 0000 0000 0000 0000  因此对应的utf的转义值就是\U00010000，所以上述代码中的相等比较是true</p>
+<p>因为不同字符对应的编码字节数不一定相等，所以变长的编码无法直接通过索引来访问第n个字符。</p>
+<p>没有任何字符的编码是其它字符编码的子串，或是其它编码序列的字串，因此搜索一个字符时只要搜索它的字节编码序列即可，不用担心前后的上下文会对搜索结果产生干扰。 <strong>（每个字符的编码都不相同，都不是各自的子串，匹配搜索的相率更高，无干扰。）</strong></p>
+<p><strong>Go语言的源文件采用UTF8编码</strong>，并且Go语言处理UTF8编码的文本也很出色。</p>
+<p>有很多Unicode字符很难直接从键盘输入，并且还有很多字符有着相似的结构；有一些甚至是不可见的字符（译注：中文和日文就有很多相似但不同的字）。<strong>Go语言字符串面值中的Unicode转义字符让我们可以通过Unicode码点输入特殊的字符。</strong>  <strong>有两种形式：</strong><code>\uhhhh</code>对应<strong>16bit</strong>的码点值，<code>\Uhhhhhhhh</code>对应<strong>32bit</strong>的码点值，其中h是一个十六进制数字；一般很少需要使用32bit的形式。每一个对应码点的UTF8编码。</p>
+<p>得益于UTF8编码优良的设计，诸多字符串操作都不需要解码操作。 例如查找前缀，由于均由utf8编码，不用担心匹配的子串和原字符串存在编码上的区别，可以直接进行比对：</p>
+<pre><code class="language-Go">func HasPrefix(s, prefix string) bool {
+    return len(s) &gt;= len(prefix) &amp;&amp; s[:len(prefix)] == prefix
+}
+
+</code></pre>
+<p>Go语言的range循环，在遍历一个utf8字符串时，会进行隐式的解码，遍历的是每个unicode字符，并不是遍历每个字节，得到的是字符的Unicode码点值：</p>
+<pre><code class="language-go">us := &quot;hello, 中国&quot;
+for _, val := range us {
+	fmt.Printf(&quot;%q\t%d\n&quot;, val, val)
+}
+//output
+'h'     104
+'e'     101
+'l'     108
+'l'     108
+'o'     111
+','     44
+' '     32
+'中'    20013
+'国'    22269
+
+</code></pre>
+<p>**文本字符串采用UTF8编码只是一种惯例，**但是对于循环的真正字符串并不是一个惯例，这是正确的。如果用于循环的字符串只是一个普通的二进制数据，或者是含有错误编码的UTF8数据，将会发生什么呢？</p>
+<p>每一个UTF8字符解码，不管是显式地调用utf8.DecodeRuneInString解码或是在range循环中隐式地解码，<strong>如果遇到一个错误的UTF8编码输入，将生成一个特别的Unicode字符<code>\uFFFD</code></strong>，在印刷中这个符号通常是一个黑色六角或钻石形状，里面包含一个白色的问号&quot;?&quot;。当程序遇到这样的一个字符，通常是一个危险信号，说明输入并不是一个完美没有错误的UTF8字符串。</p>
+<p>utf8编码的字符串是可以和rune数据或切片进行互相转换的：</p>
+<p>一个[]byte(s)转换是<strong>分配了一个新的字节数组用于保存字符串数据的拷贝，然后引用这个底层的字节数组。</strong></p>
+<pre><code class="language-go">us := &quot;hello, 中国&quot;
+rs := []rune(us)
+nus:=string(rs)
+
+</code></pre>
+<p><strong>将一个整数转型为字符串意思是生成以只包含对应Unicode码点字符的UTF8字符串</strong>，由于utf8兼容ascii，所以使用ascii码对应的值来转换生成字符串是对的：</p>
+<pre><code class="language-Go">fmt.Println(string(65))     // &quot;A&quot;, not &quot;65&quot;
+fmt.Println(string(0x4eac)) // &quot;京&quot;
+
+</code></pre>
+<p>如果对应码点的字符是无效的，则用<code>\uFFFD</code>无效字符作为替换：</p>
+<pre><code class="language-Go">fmt.Println(string(1234567)) // &quot;?&quot;
+
+</code></pre>
+<h5 id="字符串和数字的转换">字符串和数字的转换</h5>
+<p>1.使用fmt.Sprintf</p>
+<pre><code class="language-go">x:=123
+y:=fmt.Sprintf(&quot;%d&quot;,x)
+
+</code></pre>
+<p>2.使用strconv包的Itoa函数</p>
+<pre><code class="language-go">x:=123
+y:=strconv.Itoa(x)
+
+</code></pre>
+<p>3.将数字格式化为指定进制的字符串值</p>
+<pre><code class="language-go">x:=123
+y:=strconv.FormatInt(int64(x),2) //二进制 &quot;1111011&quot;
+
+</code></pre>
+<p>4.将字符串转为数字， 以使用strconv包的Atoi或ParseInt函数，还有用于解析无符号整数的ParseUint函数 :</p>
+<pre><code class="language-Go">x, err := strconv.Atoi(&quot;123&quot;)             // x is an int
+y, err := strconv.ParseInt(&quot;123&quot;, 10, 64) // base 10, up to 64 bits
+
+</code></pre>
+<p>ParseInt函数的第三个参数是用于指定整型数的大小；例如16表示int16，0则表示int。在任何情况下，返回的结果y总是int64类型，你可以通过强制类型转换将它转为更小的整数类型。</p>
+<p><strong>标准库中有四个包对字符串处理尤为重要</strong>：bytes、strings、strconv和unicode包。strings包提供了许多如字符串的查询、替换、比较、截断、拆分和合并等功能。</p>
+<p>bytes包也提供了很多类似功能的函数，但是针对和字符串有着相同结构的[]byte类型。因为字符串是只读的，因此逐步构建字符串会导致很多分配和复制。在这种情况下，使用bytes.Buffer类型将会更有效，稍后我们将展示。</p>
+<p>strconv包提供了布尔型、整型数、浮点数和对应字符串的相互转换，还提供了双引号转义相关的转换。</p>
+<p>unicode包提供了IsDigit、IsLetter、IsUpper和IsLower等类似功能，它们用于给字符分类。每个函数有一个单一的rune类型的参数，然后返回一个布尔值。而像ToUpper和ToLower之类的转换函数将用于rune字符的大小写转换。所有的这些函数都是遵循Unicode标准定义的字母、数字等分类规范。strings包也有类似的函数，它们是ToUpper和ToLower，将原始字符串的每个字符都做相应的转换，然后返回新的字符串。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">
+                <h3 class="post-title">
+                  Go语言网络开发
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>MySQL创建用户与授权 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>MySQL创建用户与授权</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+                  MySQL
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="一-创建用户">一. 创建用户</h2>
+<h3 id="命令">命令:</h3>
+<pre><code class="language-javascript">CREATE USER 'username'@'host' IDENTIFIED BY 'password';
+</code></pre>
+<h3 id="说明">说明：</h3>
+<ul>
+<li>
+<p>username：你将创建的用户名</p>
+</li>
+<li>
+<p>host：指定该用户在哪个主机上可以登陆，如果是本地用户可用localhost，如果想让该用户可以</p>
+</li>
+<li>
+<p>从任意远程主机登陆</p>
+</li>
+<li>
+<p>，可以使用通配符</p>
+</li>
+<li>
+<p>%</p>
+</li>
+<li></li>
+</ul>
+<ul>
+<li>password：该用户的登陆密码，密码可以为空，如果为空则该用户可以不需要密码登陆服务器</li>
+</ul>
+<h3 id="例子">例子：</h3>
+<pre><code class="language-javascript">CREATE USER 'dog'@'localhost' IDENTIFIED BY '123456';
+CREATE USER 'pig'@'192.168.1.101_' IDENDIFIED BY '123456';
+CREATE USER 'pig'@'%' IDENTIFIED BY '123456';
+CREATE USER 'pig'@'%' IDENTIFIED BY '';
+CREATE USER 'pig'@'%';
+
+</code></pre>
+<h2 id="二-授权">二. 授权:</h2>
+<p>授权之后，新建的用户才有权限创建新表；首先root用户创建库，然后将库分配授权给新用户，这样新用户才可以操作这个库和其中的表</p>
+<h3 id="命令-2">命令:</h3>
+<pre><code class="language-javascript">GRANT privileges ON databasename.tablename TO 'username'@'host'
+//example
+grant all on test.* to 'new_user'@'%'; 
+//所有的主机访问，只要知道new_user的密码都可以操作test库及其表
+</code></pre>
+<h3 id="说明-2">说明:</h3>
+<ul>
+<li>
+<p>privileges：用户的操作权限，如</p>
+</li>
+<li>
+<p>SELECT</p>
+</li>
+<li>
+<p>，</p>
+</li>
+<li>
+<p>INSERT</p>
+</li>
+<li>
+<p>，</p>
+</li>
+<li>
+<p>UPDATE</p>
+</li>
+<li>
+<p>等，如果要授予所的权限则使用</p>
+</li>
+<li>
+<p>ALL</p>
+</li>
+<li></li>
+</ul>
+<ul>
+<li>
+<p>databasename：数据库名</p>
+</li>
+<li>
+<p>tablename：表名，如果要授予该用户对所有数据库和表的相应操作权限则可用</p>
+</li>
+<li>
+<ul>
+<li></li>
+</ul>
+</li>
+<li>
+<p>表示，如</p>
+</li>
+<li>
+<p><em>.</em></p>
+</li>
+<li></li>
+</ul>
+<h3 id="例子-2">例子:</h3>
+<pre><code class="language-javascript">GRANT SELECT, INSERT ON test.user TO 'pig'@'%';
+GRANT ALL ON *.* TO 'pig'@'%' identified by 'password';
+GRANT ALL ON testdb.* TO 'pig'@'%'; //testdb中所有表都有权限
+GRANT ALL ON testdb.specificTable TO 'pig'@'%';//只有testdb中的specificTable表有权限
+</code></pre>
+<h3 id="注意">注意:</h3>
+<p>用以上命令授权的用户不能给其它用户授权，如果想让该用户可以授权，用以下命令:</p>
+<pre><code class="language-javascript">GRANT privileges ON databasename.tablename TO 'username'@'host' WITH GRANT OPTION;
+</code></pre>
+<p>查看用户的权限：</p>
+<p>show grants for 'event_svr'@'%';</p>
+<h2 id="三设置与更改用户密码">三.设置与更改用户密码</h2>
+<h3 id="命令-3">命令:</h3>
+<pre><code class="language-javascript">SET PASSWORD FOR 'username'@'host' = PASSWORD('newpassword');
+
+</code></pre>
+<p>如果是当前登陆用户用:</p>
+<pre><code class="language-javascript">SET PASSWORD = PASSWORD(&quot;newpassword&quot;);
+
+</code></pre>
+<h3 id="例子-3">例子:</h3>
+<pre><code class="language-javascript">SET PASSWORD FOR 'pig'@'%' = PASSWORD(&quot;123456&quot;);
+
+</code></pre>
+<h2 id="四-撤销用户权限">四. 撤销用户权限</h2>
+<h3 id="命令-4">命令:</h3>
+<pre><code class="language-javascript">REVOKE privilege ON databasename.tablename FROM 'username'@'host';
+
+</code></pre>
+<h2 id="说明-3">说明:</h2>
+<p>privilege, databasename, tablename：同授权部分</p>
+<h3 id="例子-4">例子:</h3>
+<pre><code class="language-javascript">REVOKE SELECT ON *.* FROM 'pig'@'%';
+
+</code></pre>
+<h3 id="注意-2">注意:</h3>
+<p>假如你在给用户'pig'@'%'授权的时候是这样的（或类似的）：GRANT SELECT ON test.user TO 'pig'@'%'，则在使用REVOKE SELECT ON <em>.</em> FROM 'pig'@'%';命令并不能撤销该用户对test数据库中user表的SELECT 操作。相反，如果授权使用的是GRANT SELECT ON <em>.</em> TO 'pig'@'%';则REVOKE SELECT ON test.user FROM 'pig'@'%';命令也不能撤销该用户对test数据库中user表的Select权限。</p>
+<p>具体信息可以用命令SHOW GRANTS FOR 'pig'@'%'; 查看。</p>
+<h2 id="五删除用户">五.删除用户</h2>
+<h3 id="命令-5">命令:</h3>
+<pre><code class="language-javascript">DROP USER 'username'@'host';
+</code></pre>
+<h2 id="查询用户">查询用户</h2>
+<pre><code class="language-javascript">select * from mysql.user
+</code></pre>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/mysql-dao-chu-ku-biao-jie-guo-he-shu-ju/">
+                <h3 class="post-title">
+                  MySQL导出库表结果和数据
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

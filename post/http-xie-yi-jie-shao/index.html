@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>HTTP协议介绍 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>HTTP协议介绍</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+                  HTTP
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>https://www.huaweicloud.com/articles/736eef13dc3e4d73b10d155557bb93c5.html（这个文章写的特别详细，如果本笔记没有的内容可以考虑上这里搜索）</p>
+<p>http 是超文本传输协议，它允许将超文本标记语言（html）文档从服务器传输到客户端。除了传html还可以传其他的类型数据，例如json，二进制数据等。（如果被获取的url是一个文件，就直接会触发浏览器的下载；也可以是html，就会有网页页面）</p>
+<p>http协议是无状态的，短连接的，每一次的客户端请求都是一个新的连接，完成响应后便会关闭连接，同时http是无状态的，上一次请求和这一次的请求无关，相同的用户和请求都被当成新的请求来处理，这会导致响应速度变慢，而cookies就是解决这种问题的方法。</p>
+<p>在浏览器中，打开网页是去获取html页面，而这个html页面中有很多元素，例如各种图片、css、js文件等等，此时浏览器会再去request这些数据，最终展示成一个完整的有内容的页面给用户。</p>
+<h2 id="url">url</h2>
+<p>url的参数通过?后的key-value形式给出</p>
+<p>/mypath/helloworld.html?name=rex&amp;age=25&amp;sex=man</p>
+<h2 id="http-request">http request</h2>
+<p>http请求包的结构如下：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/DbOCRyeS7mVzv54.png" alt="" loading="lazy"></figure>
+<p>第一行有请求方法，例如GET、POST、PUT、DELETE等，然后有这次要访问的url以及使用的http协议版本，例如HTTP/1.1.</p>
+<p>紧接着的几行就是header，头部信息，这些头部信息可以是http协议约定好的一些字段，也可以是用户自己设置的一些字段，如果是前者则会影响http通信的行为。</p>
+<p>header完空一行后的下一行开始，就是请求体，如果是post请求，请求体就有post请求的数据内容，例如可以是json数据。</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/hB2qLlyfSRXirKH.png" alt="" loading="lazy"></figure>
+<p>一些常用的请求头字段：</p>
+<p>1、Accept</p>
+<p>表示浏览器（客户端）可以接受的媒体类型</p>
+<p>Accept: text/html  代表浏览器可以接受服务器回发的类型为 text/html  也就是我们常说的html文档,</p>
+<p>如果服务器无法返回text/html类型的数据,服务器应该返回一个406错误(non acceptable)</p>
+<p>Accept: <em>/</em>  代表浏览器可以处理所有类型,(一般浏览器发给服务器都是发这个)</p>
+<p>2、User-Agent</p>
+<p>告诉服务器，客户端使用的浏览器和操作系统信息</p>
+<p>User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; CIBA; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET4.0C; InfoPath.2; .NET4.0E)</p>
+<p>3、Accept-Charset</p>
+<p>客户端声明自己接受的字符集编码</p>
+<p>4、Accept-Encoding</p>
+<p>客户端声明自己使用的数据编码格式，通常指定为压缩的格式，例如gzip、defalte，表示支持压缩算法，不是字符集的编码</p>
+<h2 id="http-response">http response</h2>
+<p>http的回包结构如下：</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/bkctVBoShwiWeyN.png" alt="" loading="lazy"></figure>
+<p>第一行是状态行，有协议版本，http的状态码以及状态信息（例如HTTP/1.1 200 OK）</p>
+<p>第二行开始也是header，这些header有和真实数据相关的字段，也有和request header中相对应的字段，这需要详细看。</p>
+<p>空一行后，就是响应体，真实的数据都在这，可以是html文档的内容，也可以是json，甚至可以是文件二进制数据等。</p>
+<p>状态码：</p>
+<p>HTTP/1.1中定义了5类状态码， 状态码由三位数字组成，第一个数字定义了响应的类别</p>
+<p>1XX  提示信息 - 表示请求已被成功接收，继续处理</p>
+<p>2XX  成功 - 表示请求已被成功接收，理解，接受</p>
+<p>3XX  重定向 - 要完成请求必须进行更进一步的处理</p>
+<p>4XX  客户端错误 -  请求有语法错误或请求无法实现</p>
+<p>5XX  服务器端错误 -   服务器未能实现合法的请求</p>
+<p>其中302 Found表示重定向，服务器会回一个新的url给浏览器，浏览器会自动访问这个URL</p>
+<p>304 Not modified 表示上次的文档已经被缓存，可以继续使用（客户端用这种制度来确定是否要更新本地的缓存，如果不用，用户响应速度会提高）</p>
+<p>400 Bad request 客户端请求与语法错误，不能被服务端理解</p>
+<p>403 Forbidden 客户端没有权限访问某个uri，或者这个uri在服务端没有开放</p>
+<p>404 Not found 表示服务端没有这个uri资源，一般是客户端url拼错了</p>
+<p>500 Internal Server Error 服务器内部错误</p>
+<p>503 Server Unavailable 服务器暂时不可用，无法处理用户请求，一段时间后可恢复</p>
+<p>总的来说，request和response的包体结构相似，header有相互对应的，也有独立的。</p>
+<h2 id="accept和content-type两个头部字段的区别">Accept和Content-Type两个头部字段的区别</h2>
+<p>1.Accept属于请求头， Content-Type属于实体头。</p>
+<p>Http报头分为通用报头，请求报头，响应报头和实体报头。</p>
+<p>请求方的http报头结构：通用报头|请求报头|实体报头</p>
+<p>响应方的http报头结构：通用报头|响应报头|实体报头</p>
+<p>2.Accept代表发送端（客户端）希望接受的数据类型。</p>
+<p>比如：Accept：text/xml;</p>
+<p>代表客户端希望接受的数据类型是xml类型</p>
+<p>Content-Type代表发送端（客户端|服务器）发送的实体数据的数据类型。</p>
+<p>比如：Content-Type：text/html;</p>
+<p>代表发送端发送的数据格式是html。</p>
+<p>二者合起来，</p>
+<p>Accept:text/xml；</p>
+<p>Content-Type:text/html</p>
+<p>即代表希望接受的数据类型是xml格式，本次请求发送的数据的数据格式是html。</p>
+<p>Accept是告诉服务端，我（客户端）想要接受的是什么格式的数据，而Content-Type则是告诉接收方，传给你的数据是什么格式，是两个方向的事。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/3q6mHDhoEtBA5MC.png" alt="" loading="lazy"></figure>
+<p>除了上面http协议自身定义好的头部字段以外，还可以用户自定义头部字段，例如可以将一些参数用key-value的形式写到header中，接收方去查header一样可以得到参数值：</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/AvDX1RNlWMLC4KY.png" alt="" loading="lazy"></figure>
+<h2 id="body和form的关系">body和form的关系</h2>
+<p>body是http的实体，可以是请求包的请求体，也可以是响应包的响应体，是包结构中的最后一块内容，body不指代具体类型的数据，只是对这块数据的统称。</p>
+<p>form是body的一种数据类型，类似json数据也可以是body一样（像框架直接去get body反序列化写到json对象中，相应的content-type就是application/json），这个具体解析方法，要根据content-type来决定，以及使用相应的api来解析数据。</p>
+<p>想要在body中发送不同类型的数据，就要确定好Content-Type</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/8hb7wJpNou6v3yX.png" alt="" loading="lazy"></figure>
+<h2 id="get和post的区别">get和post的区别</h2>
+<p>1、get是不安全的，是明文的，所有的参数信息会带在url中，如果关键信息在url中，别人一眼可以看出，存在风险</p>
+<p>2、虽然http没有对get限制参数的长度大小，但是一般浏览器有url长度限制，一般为2k，加上请求数据也会被放到url中，所以get操作一般不用于传输大量数据，只是简单的获取资源，要传大量数据请使用post</p>
+<p>3、get请求要从参数中获取数据，而post请求则是在body中获取</p>
+<h2 id="代理和反向代理">代理和反向代理</h2>
+<p>代理是代理客户端，反向代理是代理服务端；</p>
+<p>（客户端的流量必须经过的服务就叫代理，而服务器的流量必须经过的服务就叫反向代理）</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/U9OCBsjYNX2azM1.png" alt="" loading="lazy"></figure>
+<p>例如我们访问外网的vpn就是代理，而API网关就是反向代理，因为前者代理我们客户端的请求到服务器，而后者是代理服务端，客户端不知道确切的服务器是谁；</p>
+<p>代理使客户端对服务器透明，服务器不知道客户端是谁；</p>
+<p>反向代理使服务端对客户端透明，客户端不知道服务器是谁（确切访问的是哪个主机）；</p>
+<h2 id="跨域请求">跨域请求</h2>
+<p>https://juejin.cn/post/6844903954455724045</p>
+<p>https://developer.mozilla.org/zh-CN/docs/Web/HTTP/CORS</p>
+<p>跨域请求的场景是指：</p>
+<p>用户在站点A的页面，发起请求时，请求了站点B的资源，这时候就会触发跨域；</p>
+<p>而浏览器一般在跨域请求之前，会先请求站点B（预检请求）来确认是否可以进行跨域访问站点。</p>
+<p>这类预检请求，method为option，通过一些http规范规定的头部来和服务端进行通信，确认服务端B是否支持跨域请求，以及响应的跨域策略。</p>
+<p>预检请求的时序图：</p>
+<figure data-type="image" tabindex="8"><img src="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/preflight_correct.png" alt="" loading="lazy"></figure>
+<p>这类请求头都是以Access-Control开头的，分为请求和响应头两类</p>
+<p>https://developer.mozilla.org/zh-CN/docs/Web/HTTP/CORS#http_%E8%AF%B7%E6%B1%82%E9%A6%96%E9%83%A8%E5%AD%97%E6%AE%B5</p>
+<p>请求头：</p>
+<p>Access-Control-Request-Method</p>
+<p>用于检查服务端是否支持跨域的某种method请求</p>
+<p>Access-Control-Request-Headers</p>
+<p>用于确认服务端支持的标准外的头部字段</p>
+<p>Origin</p>
+<p>表示跨域的来源请求方，在上面的例子中，跨域时，origin为站点A的host</p>
+<p>响应头：</p>
+<p>Access-Control-Allow-Origin</p>
+<p>服务端返回的放通的、允许的跨域请求源，也即非这些origin的跨域请求，均当作非法</p>
+<p>Access-Control-Expose-Headers</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/PnHGjuX9MNSeaxs.png" alt="" loading="lazy"></figure>
+<p>Access-Control-Max-Age</p>
+<p>表示预检请求的结果能够被客户端缓存多久，这个时间内的预检请求结果有效</p>
+<p>Access-Control-Allow-Credentials</p>
+<p>指定了当浏览器的 credentials 设置为 true 时是否允许浏览器读取 response 的内容。当用在对 preflight 预检测请求的响应中时，它指定了实际的请求是否可以使用 credentials。</p>
+<p>简单来说，就是是否允许将站点A的cookie等信息透传给站点B</p>
+<p>Access-Control-Allow-Methods</p>
+<p>服务端支持的跨域请求method</p>
+<p>Access-Control-Allow-Headers</p>
+<p>服务端允许的跨域请求带过来的自定义的（非http规范的）头部，首部字段用于预检请求的响应。其指明了实际请求中允许携带的首部字段。</p>
+<p>跨域请求的核心标志其实是需要有Origin或者Referer的字段，这样的请求，在服务端接受后，会被判为跨域的请求，如果请求头中没有这两个字段，即使有相关的Access-Control的头部，也不会被当作跨域请求，就是一个普通请求，这时候不会触发服务端的跨域问题。</p>
+<p>如果服务在跨域上限制比较多，可以考虑让请求方去掉origin和referer头部。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/mysql-ri-chang-kai-fa-chang-yong-ming-ling/">
+                <h3 class="post-title">
+                  MySQL日常开发常用命令
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

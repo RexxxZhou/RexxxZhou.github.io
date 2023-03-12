@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>日常开发运维知识记录-2 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>日常开发运维知识记录-2</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="hook钩子程序">Hook钩子程序</h2>
+<p>钩子(Hook)，是Windows消息处理机制的一个平台，应用程序可以在上面设置子程序以监视指定窗口的某种消息，而且所监视的窗口可以是其他进程所创建的。当消息到达后，在目标窗口处理函数（原本真正的处理函数）之前处理它。钩子机制允许应用程序截获处理Windows消息或特定事件。</p>
+<p>类似于埋点，一旦触发了就会先执行钩子函数。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/8MbtnfRZrOpz7HN.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/q68K5TlWr9mEd4H.png" alt="" loading="lazy"></figure>
+<p>可以理解成在原本的函数执行流中，插入了别的函数地址，先执行了钩子函数，而钩子函数又可以去篡改数据，停止执行流等操作。</p>
+<h2 id="日志打印等级区分">日志打印等级区分</h2>
+<p>假设日志等级从低到高分别为TRACE，INFO，WARN，ERROR</p>
+<p>在代码中分别使用TRACE_LOG,INFO_LOG,WARN_LOG,ERR_LOG时，真正会打印到文件的日志是根据当前设置的日志等级来的。</p>
+<p>假设现在设置日志登记为INFO，那么只有INFO_LOG,WARN_LOG,ERR_LOG的日志才会打出，这是因为，真正输出的日志，其等级要大于等于当前设置的等级。</p>
+<p>日志等级越低，打印的日志就越多。</p>
+<h2 id="apache启动方法">apache启动方法</h2>
+<p>cd /usr/local/apache2/bin</p>
+<p>./apachectl start/stop/restart/reload/status</p>
+<p>reload优雅的重启，加载新的配置</p>
+<h2 id="查询目录下的所有符号链接文件和指向的文件">查询目录下的所有符号链接文件和指向的文件</h2>
+<p>find -type l -exec ls -l {} ;</p>
+<h2 id="clambda-捕获列表">c++lambda 捕获列表</h2>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/DauPSTF5w21xKAR.png" alt="" loading="lazy"></figure>
+<p>1、值捕获，不论是显示捕获[local_var]还是隐式捕获[=]，对于被捕获的变量，都是这些变量的副本，不会因为这些变量的销毁而出现内存错误，但是值捕获是常量，在lambda函数中不能修改这些副本的值</p>
+<p>想要强行改值捕获的变量也可以，通过mutable关键字：</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/BIgDa7SFtuqoz2p.png" alt="" loading="lazy"></figure>
+<p>2、引用捕获，通过[&amp;local_var]或[&amp;]实现的捕获，可以在lambda函数中修改被捕获变量的值，但要十分小心，如果这些变量被销毁了，那么就会发生内存错误，容易core。</p>
+<p>对于隐式捕获[=][&amp;]，存在很多陷阱，有时候不能直接按照上面的来理解，尤其是一些引用了类成员变量的情况，这个链接有一定的介绍：https://www.cnblogs.com/5iedu/p/11390495.html</p>
+<p>https://docs.microsoft.com/zh-cn/cpp/cpp/lambda-expressions-in-cpp?view=msvc-160</p>
+<h2 id="stringrfind">string.rfind</h2>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/DWgbOS8qJ1yfhxn.png" alt="" loading="lazy"></figure>
+<p>指定开始搜索的下标位置，从这个位置往左（头部）开始搜索，来匹配字符或者字符串</p>
+<p>https://tinacristal.github.io/2018/12/09/string%E7%B1%BB%E5%9E%8B%E7%9A%84rfind-find/</p>
+<h2 id="c中string的默认中文编码">c++中string的默认中文编码</h2>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/tL7PZfBcYrzA2iy.png" alt="" loading="lazy"></figure>
+<p>c++11中，std::string默认是utf8编码的，如果写文件的话要特别注意。</p>
+<p>http://c.biancheng.net/view/4296.html</p>
+<h2 id="libxls遇到的问题">libxls遇到的问题</h2>
+<p>库的基本使用方法，这里很粗糙，没有去判断没有单元格是什么类型，直接用string类型来获取每个单元格的字符串值。</p>
+<pre><code class="language-javascript">struct st_row::st_row_data* row;
+xls_error_t error = LIBXLS_OK;
+xlsWorkBook*  work_book;
+xlsWorkSheet* work_sheet;
+work_book = xls_open((char*)(file_name.c_str()), (char*)&quot;UTF-8&quot;);
+if (work_book != NULL) {
+    work_sheet = xls_getWorkSheet(work_book, 0);
+    error = xls_parseWorkSheet(work_sheet);
+    if (error != LIBXLS_OK){
+        ERR_LOG(&quot;excel文件解析失败&quot;);
+        return;
+    }
+    for (uint32_t i = 0; i &lt;= work_sheet-&gt;rows.lastrow; i++) {
+        row = (st_row::st_row_data*)&amp;work_sheet-&gt;rows.row[ i ];
+        if (row-&gt;cells.cell[ 0 ].str) {
+            std::string each_line((char*)row-&gt;cells.cell[ 0 ].str);
+            // 处理每一行的数据
+    }
+    xls_close_WS(work_sheet);
+    xls_close_WB(work_book);
+} else {
+    ERR_LOG(&quot;excel文件打开失败&quot;);
+    return;
+}
+</code></pre>
+<p>遇到的问题是，如果xls文件中是数字，会出现其他的字符，例如空字符：</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/vtNAMQiGaV2uOg3.png" alt="" loading="lazy"></figure>
+<p>发现最后出现了空字符，可能导致一些解析出问题。</p>
+<h2 id="c-xlsx文件处理">c++ xlsx文件处理</h2>
+<p>https://github.com/troldal/OpenXLSX</p>
+<p>OpenXLSX库可以处理xlsx文件，但不知道是否可以处理xls，后续有时间可以尝试一下</p>
+<h2 id="vim全选复制">vim全选复制</h2>
+<p>ggVG稍微解释一下上面的命令gg 让光标移到首行，在vim才有效，vi中无效</p>
+<ul>
+<li>
+<p>V 是进入Visual(可视）模式</p>
+</li>
+<li>
+<p>G 光标移到最后一行</p>
+</li>
+</ul>
+<p>选中内容以后就可以其他的操作了，比如：</p>
+<ul>
+<li>
+<p>d 删除选中内容</p>
+</li>
+<li>
+<p>y 复制选中内容到0号寄存器</p>
+</li>
+<li>
+<p>&quot;+y 复制选中内容到＋寄存器，也就是系统的剪贴板，供其他程序用</p>
+</li>
+</ul>
+<h2 id="proto变量名相关">proto变量名相关</h2>
+<p>1、proto文件中定义的变量名不能带下划线</p>
+<p>例如：</p>
+<p>不能 optional int32 number_ =1;</p>
+<p>2、如果字段名和protobuf的内置名字冲突了，编译后会自动在该字段加个下划线</p>
+<p>例如：</p>
+<p>Pb的message的字段名为opeartor的时候，会冲突，编译出来的字段实际是operator_，这应该是pb防止冲突的方法。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/NgMwWlza8rTE5Gy.png" alt="" loading="lazy"></figure>
+<p>建议按照上面的规则来写proto，这样编译出来的rpc函数和消息字段名才符合正常的使用习惯，不然protobuf可能会对名字处理，导致使用的时候名字引用不对。</p>
+<h2 id="time_t是一个长整型">time_t是一个长整型</h2>
+<p>是utc时间戳，秒级</p>
+<h2 id="慢查询">慢查询</h2>
+<p>超过指定时间的 SQL 语句查询称为“慢查询”，对应语句称为“慢查询语句”。</p>
+<h2 id="mysql执行sql语句的几种方法">mysql执行sql语句的几种方法</h2>
+<p>https://blog.csdn.net/lwei_998/article/details/11806223</p>
+<p>可以直接在shell命令行执行sql：</p>
+<p>mysql -h -u -p -e &quot;select count(*) from my_db;&quot;</p>
+<h2 id="shell命令行最大长度限制">shell命令行最大长度限制</h2>
+<p>通过命令xargs --show-limits可以得到机器允许的最大命令行长度：</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/xYmCMWeLv9Nhni4.png" alt="" loading="lazy"></figure>
+<p>命令getconf ARG_MAX可以获取命令行长度上限，ARG_MAX包含环境变量和用户的参数，所以上图中2597+2089910=2092507=ARG_MAX，单位是字节</p>
+<p>相关文章：https://www.cnblogs.com/MYSQLZOUQI/p/5552238.html</p>
+<h2 id="iptables">iptables</h2>
+<p>https://www.huaweicloud.com/articles/3abf0cf9743f2f582f45e320452596f6.html</p>
+<p>iptables是用于linux自带的防火墙管理软件，通过命令行可以对不同的协议，入包/出包/转发等等网络包的逻辑进行处理，例如可以阻止包的转发，丢弃包等等。</p>
+<p>上面这个网页中有很多例子，可以帮助理解。</p>
+<p>https://www.huaweicloud.com/articles/98b6509a9fd7248e94364ff21ea434ac.html</p>
+<p>https://www.cnblogs.com/zclzhao/p/5081590.html</p>
+<p>这也有些说明，总的来说配置还是比较简单的。</p>
+<p>主要要把握住，iptables其实管理的就是四张表，五个链，每个数据包根据起场景，是转发、入包还是出包会走不同的链，每个链都配了一系列规则，只要其中一个规则符合了就会停止往下找下一个规则。</p>
+<figure data-type="image" tabindex="10"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE6d5750999c223f994d59e2d6e5366a82.png" alt="" loading="lazy"></figure>
+<h2 id="linux和windows的换行符处理方法">linux和windows的换行符处理方法</h2>
+<p>https://www.itbiancheng.com/linux/4930.html</p>
+<p>在windows下，换行符是\r\n，而在linux下换行符是\n</p>
+<p>所以windows的文件如果在linux下getline，最后结尾的是一个\r字符</p>
+<p>\r字符在xls文件中又会换行，给代码处理带来麻烦，处理windows的文件一定要记得出来最后的\r字符</p>
+<p>在vim下可以查看是否存在这样的字符，vim以二进制打开文件：</p>
+<p>vim -b filename</p>
+<p>如果看到^M就表示这是一个windows文件，而且也可以在vim下输入:set invlist可以显示特殊字符。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/nmdC8VOgshiIWYu.png" alt="" loading="lazy"></figure>
+<p>$在linux下就是换行符\n，<sup>M等同于\r\n，</sup>I是制表符</p>
+<p>上面的文件之所以会这样，是因为这是一个windows文件，然后我又在mac下在每行的最后买了个空格，然后就多了一个linux的换行符，所以这意味着两个系统一起操作同一个文件，会留下两个系统的痕迹。</p>
+<p>不过索性一般文件只会在一个系统里操作，或者说是一个系统里生成，就还好，不会同时出现两种换行符，导致getline获取两行的情况。</p>
+<h2 id="goframe的orm">goframe的orm</h2>
+<p>goframe是go语言下的一个组件，他支持orm，可用这个来操作数据库的一些操作。</p>
+<p>https://goframe.org/pages/viewpage.action?pageId=1114286</p>
+<h2 id="redis的容灾恢复">redis的容灾恢复</h2>
+<p>https://blog.csdn.net/nlcexiyue/article/details/108266127</p>
+<p>redis提供两种方式的持久化，一个是AOF，一个是RDB，前者是每次写操作都会append到aof文件，每一秒fsync到磁盘，而后者则是周期性的将内存快照落盘到硬盘上，rdb适合冷备。</p>
+<h2 id="strtol函数">strtol函数</h2>
+<p>#include &lt;stdlib.h&gt;</p>
+<p>unsigned long strtoul (const char* str, char** endptr, int base);</p>
+<p>str 为要转换的字符串，endstr 为第一个不能转换的字符的指针（函数执行时会自动设置，指针指向str的第一个非数字的字符），base 为字符串 str 所采用的进制（2-32，10代表十进制）。</p>
+<h2 id="ssh的一些问题">ssh的一些问题</h2>
+<p>ssh的配置项在/etc/ssh/sshd_config下，修改这个文件后，执行service sshd restart来生效配置</p>
+<p>每一项参数代表的意思：</p>
+<p>https://blog.csdn.net/whatday/article/details/112389511</p>
+<p>三个和最大连接数有关的参数：</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/Cxk62MBj9Idybaf.png" alt="" loading="lazy"></figure>
+<p>MaxStartups的几个值都调大，例如300:30:1000， 或者干脆直接只写1000好了</p>
+<p>ssh如果去连接一个挂掉的机器会一直阻塞重试；如果是目前连接到达上限，这时候去连，ssh直接返回：</p>
+<p>ssh_exchange_identification: Connection closed by remote host</p>
+<p>不会阻塞。</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/Ic84SuyFZQ2vOaM.png" alt="" loading="lazy"></figure>
+<p>MaxSessions，一个tcp连接允许的会话个数上限，简单的理解成一个连接可以打开多少个shell，如果超过这个数量，那么就需要再创建一个新的tcp连接。</p>
+<h3 id="ssh多路复用multiplexing配置">ssh多路复用multiplexing配置</h3>
+<p>https://www.cnblogs.com/birdstudio/p/6801052.html</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/hM1kKxIAvOPZScQ.png" alt="" loading="lazy"></figure>
+<p>假设机器A通过ssh连接机器B，在机器A上设置上述的配置之后，只要不超过MaxSessions参数，在A上连接B，会复用一个tcp连接，有一个master进程，复用同一个tcp连接的ssh进程通过unix套接字进行通信，进而实现复用。</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/ai56cSqblwRG1hF.png" alt="" loading="lazy"></figure>
+<h2 id="restful">RESTful</h2>
+<p>其实简单的理解就是uri是个名词，通过网络被获取的一个资源，而这个资源有不同的表现形式，例如文本可以是txt、xml、json等，而你想要获取这个资源则是通过在http头部中指定method：get post put delete等，动名词分开。</p>
+<p>平时开发的就是restful的接口，详细的可以看：</p>
+<p>https://www.ruanyifeng.com/blog/2011/09/restful.html</p>
+<p>https://www.ruanyifeng.com/blog/2014/05/restful_api.html</p>
+<h2 id="python-退出程序">python 退出程序</h2>
+<p>exit</p>
+<p>抛出异常，如果没有获取异常则程序推出</p>
+<p>sys.exit</p>
+<p>抛出异常，如果没有获取异常则程序推出</p>
+<p>os._exit</p>
+<p>直接退出</p>
+<h2 id="gethostbyname_r-gethostbyname">gethostbyname_r gethostbyname</h2>
+<p>这两个函数的功能相似，只是_r是线程安全的，可重入的。</p>
+<p>对一个主机名做dns解析，来获取ip地址</p>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/JeNsOhtDXz4jKp7.png" alt="" loading="lazy"></figure>
+<p>这个有几个版本，不同的内核有不同的版本，总的来说就是要给一个struct hostent对象，传这个对象的指针给这个函数，函数会把结果写到这个对象中，要么可以通过hostent指针的指针是否为null来判断是否调用成功，也有的函数重载是通过retcode来判断的。</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/ZTePYOuatcx6wmg.png" alt="" loading="lazy"></figure>
+<p>hostent的介绍：</p>
+<p>https://docs.microsoft.com/en-us/windows/win32/api/winsock/ns-winsock-hostent</p>
+<h2 id="url参数有中文的问题">url参数有中文的问题</h2>
+<p>url是ascii编码的，如果client和server两端对中文参数没有做好参数的编解码，就会导致处理的那一方参数乱码导致异常。</p>
+<p>例如可以对参数进行utf8编码，server那边进行utf8解码，那就能够正常得到中文参数进而进行处理。</p>
+<h2 id="top命令下各指标的含义">top命令下各指标的含义</h2>
+<p>https://blog.csdn.net/zhaifengmin/article/details/64123072</p>
+<p>https://www.cnblogs.com/jiahm/p/11867375.html</p>
+<p>其中常驻内存的指标RES的计算方式：</p>
+<p>https://blog.csdn.net/whbing1471/article/details/108427689</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/AQUuvZnJjlzC6SY.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/IwKjbAlTEHpdgoD.png" alt="" loading="lazy"></figure>
+<p>所以res是包含mmap申请的内存的。</p>
+<p>进程的目录下也有相应的内存占用信息，例如/proc/25816/maps</p>
+<p>https://www.cnblogs.com/jiayy/p/3458076.html</p>
+<p>http://linuxperf.com/?p=143</p>
+<p>通过mmap的内存，在进程使用这部分内存后，才会被统计入RSS大小。</p>
+<h2 id="top命令">top命令</h2>
+<p>执行top后，再按e能够显示内存的单位，每按一次都会切换一次单位：</p>
+<p>切换的单位也是 k,m,g,t,p：</p>
+<h2 id="string-erase-clear函数">string erase clear函数</h2>
+<p>clear函数只是将size变为0，将首字符变成空字符，没有去释放空间</p>
+<p>erase函数则是将数据进行移动，也没有去释放被删掉字符的空间。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/ri-chang-kai-fa-yun-wei-zhi-shi-ji-lu-1/">
+                <h3 class="post-title">
+                  日常开发运维知识记录-1
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge warning">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

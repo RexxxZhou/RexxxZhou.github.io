@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>日常开发运维知识记录-1 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>日常开发运维知识记录-1</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h1 id="stringc_str-stringdata">string::c_str() string::data()</h1>
+<p>两者返回的都是字符串对象底层字符数组的指针，但是c_str()返回的是以空字符结尾的数组指针，而data()返回的是不以空字符结尾的数组指针。</p>
+<h1 id="cicdco的含义">CI/CD/CO的含义</h1>
+<h2 id="ci-continuous-integration-持续集成">CI continuous integration 持续集成</h2>
+<p>代码打包，更新代码版本，构建成可用于下发的包，例如民汉写的代码经过code cc，环境打包形成一个版本，可用于后续发布。</p>
+<p>关注的是开发人员将代码变成制品（tgz包）的过程，涉及到repalce代码的管理、开发环境及工具、代码编译、代码扫描，单元测试等环节。主要目的就是加快构建频率，尽早的发现问题，并且及早修复。</p>
+<p>从研发团队提交代码作为起点，经过构建扫描测试等环节，以版本仓库为终点</p>
+<p>这中间，需要对每个新功能或者问题修复创建自动化测试用例。对新提交的代码执行自动化测试。</p>
+<p>通过自动化测试可以提早拿到测试结果，测试成本也大幅降低，CI服务器可以在几秒钟运行上百条测试。</p>
+<h2 id="cd-continuous-deployment-持续部署发布">CD continuous deployment 持续部署/发布</h2>
+<p>用CI生成的包，进行服务的部署，例如民汉当时的版本下发到具体机器</p>
+<p>通过了接口测试及功能测试后，将制品和运行环境依赖的组件，通过dockerfile或其他方式生成镜像，提交仓库，等待发布到预发布、灰度、线上环境。</p>
+<p>以版本仓库为起点，经过各模块自动化部署，到业务上线提供服务为终点，可以一键部署，自动触发发布流程</p>
+<h2 id="co-cotinuous-operation-持续运营">CO cotinuous operation 持续运营</h2>
+<p>对线上服务做配额、参数的动态配置及运营策略调整而出发的操作，比如扩缩容、配置文件修改、服务启停等等。所有和线上服务相关的运营操作</p>
+<p>从业务上线服务为起点，到业务下线终止服务，期间包含各种运营事件。</p>
+<h1 id="stub的含义">stub的含义</h1>
+<p>很多地方都可能出现stub这个词</p>
+<ul>
+<li>
+<p>在测试中，可以理解成打桩服务，由于服务是需要成本的，如果写的程序需要调用服务A，而A的代价较高，我们又只想测试程序有无bug，则可以对服务打桩，程序调用的接口api不变，但是该api不访问真实的服务A，减少开销，聚焦于测试程序的可行性。</p>
+</li>
+<li>
+<p>在代码编写中，其实可以简单的理解成一个流程中需要调用某个api，但是这个api还没有开发好，或者说目前关注的是流程的跑通，而不是业务是否正确，可以对这种api写一个空方法（最简单的直接返回正确的结果），日后可以补充实现这个api。</p>
+</li>
+<li>
+<p>在rpc中，stub是客户端代码访问rpc服务的桥梁，通过stub类的对象来访问服务的访问。</p>
+</li>
+</ul>
+<h2 id="0000和127001的区别">0.0.0.0和127.0.0.1的区别</h2>
+<p>因为服务器可能有多个ip地址，外网地址、内网地址或者虚拟ip节点，0.0.0.0表示本机上的所有ip地址</p>
+<p>如果一个服务在0.0.0.0上启动，那么客户端访问该服务器的外网、内网、虚拟ip地址均可以得到服务响应</p>
+<p>而127.0.0.1是一个环回地址，所有发向这个地址的数据都会loopback，一般用在服务器调试的时候。多数情况下localhost是绑定在127.0.0.1上的，所以很多时候我们使用localhost就是环回地址，当然我们也可以更改localhost绑定的ip地址，这个可以通过查看/etc/hosts文件当前localhost代表哪个地址：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/rNAcKJvYTFqbtw9.png" alt="" loading="lazy"></figure>
+<h2 id="magic-number-魔法数字">magic number 魔法数字</h2>
+<p>魔法数字一般指代码中莫名其妙出现的数字，必须通过阅读代码才能知道数字的含义，这类就叫魔法数字</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/tZ6wyl5pmxM74Va.png" alt="" loading="lazy"></figure>
+<h2 id="名字服务">名字服务</h2>
+<p>所谓名字服务就是将服务名与ip端口映射的服务，因为后台服务可能会更换机器，那么如果上游服务根据ip端口来访问的话就写死了，如果不修改上游服务代码，则后台服务所有的变更都只能在那台机器上。</p>
+<p>名字服务就相当于是加了一层过渡，通过查服务的字符串名，得到当前该服务所处的ip端口，进行正常访问，无需修改上游服务。</p>
+<h2 id="vscode代码能够跳转能找到引用但是代码显示未定义-无法找到某个定义">vscode代码能够跳转（能找到引用）但是代码显示未定义、无法找到某个定义</h2>
+<p>问题描述：VS Code中出现“未定义标识符”，可以右键“转到声明”，但会一直出现红色提醒。</p>
+<p>问题原因：VS Code intellisense不能自动找到需要的头文件路径，需要在用户设置中强制intellisense使用Tag Parser,递归方式检索头文件。</p>
+<p>解决方式：找到工程对应的settings.json，并复制以下两个语句，在其中配置使用Tag Parser方式。</p>
+<p>打开vscode的command palette，搜索settings.json:</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/EL79sCheNOZDIGt.png" alt="" loading="lazy"></figure>
+<p>并在其中加入：</p>
+<pre><code class="language-javascript">&quot;C_Cpp.intelliSenseEngineFallback&quot;: &quot;Disabled&quot;, //需要添加的
+&quot;C_Cpp.intelliSenseEngine&quot;: &quot;Tag Parser&quot;,  //  需要添加的
+</code></pre>
+<p>便能解决问题</p>
+<h2 id="tar命令">tar命令</h2>
+<p>参数：</p>
+<p>-c  ：建立一个压缩档案的参数指令(create 的意思)；</p>
+<p>-x  ：解开一个压缩档案的参数指令！</p>
+<p>-t  ：查看 tarfile 里面的档案！</p>
+<p>特别注意，在参数的下达中， c/x/t 仅能存在一个！不可同时存在！</p>
+<p>因为不可能同时压缩与解压缩。</p>
+<p>-z  ：是否同时具有 gzip 的属性？亦即是否需要用 gzip 压缩？</p>
+<p>-j  ：是否同时具有 bzip2 的属性？亦即是否需要用 bzip2 压缩？</p>
+<p>-v  ：压缩的过程中显示档案！这个常用，但不建议用在背景执行过程！</p>
+<p>-f  ：使用档名，请留意，在 f 之后要立即接档名喔！不要再加参数！</p>
+<p>例如使用『 tar -zcvfP tfile sfile 』就是错误的写法，要写成</p>
+<p>『 tar -zcvPf tfile sfile 』才对喔！</p>
+<p>-p  ：使用原档案的原来属性（属性不会依据使用者而变）</p>
+<p>-P  ：可以使用绝对路径来压缩！</p>
+<p>-N  ：比后面接的日期(yyyy/mm/dd)还要新的才会被打包进新建的档案中！</p>
+<p>--exclude=FILE：在压缩的过程中，不要将 FILE 打包！</p>
+<p>https://www.cnblogs.com/52linux/archive/2012/03/04/2379738.html</p>
+<p>tar czvf my_pack.tgz mydir --exclude=file1 --exclude=dir1</p>
+<p>注意dir1不要加后缀/，否则没有排除这个目录</p>
+<h2 id="crontab">crontab</h2>
+<p>查看crontab的执行日志： /var/log/cron 不能使用cat命令查看</p>
+<p>1、crontab执行定时任务时，所在的路径是根路径/root，所以如果脚本中使用了相对路径，就会执行失败，甚至出错。</p>
+<p>2、crontab -e，或者直接编辑crontab的文件时，使用%必须进行转义，因为crontab遇到%就会认为是标准输入的开始。：</p>
+<p>0 3 * * * mysqldump -u user -pxxxx database &gt; &quot;/alidata/backup/imyzf.com/$(date +%F\ %T).sql&quot;</p>
+<p>3、crontab的环境变量是另外定义的。通过cat /etc/crontab你会发现默认的PATH是/sbin:/bin:/usr/sbin:/usr/bin，如果要使用自己想要的环境变量，应当在脚本中先执行source /etc/profile等指定了环境变量的文件。</p>
+<p>crontab -e 编辑crontab文件，添加或删除要执行的任务；通过这种方式添加的任务会自动根据当前添加任务的用户是谁，来确定到时候执行的用户是谁，例如root添加的，那么执行的时候就是root身份。</p>
+<p>man 5 crontab 可以查看crontab的使用方法</p>
+<p>crontab -l 列出现在的所有任务</p>
+<h2 id="shell获取系统时间并格式化">shell获取系统时间并格式化</h2>
+<p>time=$(date &quot;+%Y-%m-%d %H:%M:%S&quot;)</p>
+<h2 id="mysql的replace-into和insert-into的区别">mysql的replace into和insert into的区别</h2>
+<p>两者都可以实现插入新数据的功能</p>
+<p>replace into 首先会根据主键/唯一字段来查找本次插入的数据是否已经存在：</p>
+<p>是的话则先删除已有的数据行，然后再插入</p>
+<p>如果没有的话，则直接插入。</p>
+<p>使用replace into不会出现插入失败。</p>
+<p>如果表中没有主键/唯一字段，则不会判断上述逻辑，直接插入。</p>
+<p>而insert into如果发现已经有了某行数据（如果表中没有主键/唯一字段）的话，则会直接报重复记录，插入失败的错误。</p>
+<h2 id="mysql已有数据的表增加自增列">mysql已有数据的表增加自增列</h2>
+<p>一个表中，自增列只有一个。https://cloud.tencent.com/developer/article/1532394</p>
+<p>更改已有列为字增列：</p>
+<p>alter table my_table modify column my_column_name int(11) unsigned auto_increment;</p>
+<p>如果该字段的已有数据，则下一次新增记录时，使用当前该列的最大数值+1.</p>
+<p>例如当初最大为10000，则下次新增该字段为10001</p>
+<p>指定下次新增字段是自增列的值（或者叫设置自增列的起始值）：</p>
+<p>alter table my_table auto_increment=10002;</p>
+<p>则新记录的该自增列将从10002开始。</p>
+<h3 id="mysql的自增列在insert时存在竞争">mysql的自增列在insert时存在竞争</h3>
+<p>早先最常见的就是在一个数据中心采用一个全局的锁，做一自增长的id算法。比如说使用Mysql的自增长ID。但这样做会造成系统的瓶颈，性能和可用性都会受到很大的影响。于是snowflake id的设计是避免了使用全局锁，每台ID生成的服务器都可以独立地生成自己的ID，而且不会产生重复。因为大家可以看到每个id都会带有一定位数的机器ID，这样就可以保证不同机器生成的id不会重复。</p>
+<figure data-type="image" tabindex="4"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE3e9b1db9cc191ef19bc562f4ffa28331.png" alt="" loading="lazy"></figure>
+<p>但是自增列又有好处，可以令数据底层存储更加顺序，减少页分裂，查询效率也高，具体场景需要根据业务情况进行权衡。</p>
+<p>自增列的较为详细的使用教程：</p>
+<p>https://www.cnblogs.com/kerrycode/p/9294767.html</p>
+<h2 id="mysql-4种sql语句来避免重复插入">mysql 4种sql语句来避免重复插入</h2>
+<p>https://cloud.tencent.com/developer/article/1738721</p>
+<h2 id="要维护mysql连接池的原因">要维护mysql连接池的原因</h2>
+<p>官方的说法是：操作(operations)。也就是说把【多次的单一词条插入操作】整合成为【一次的多词条插入操作】这个是提高Insert速度的基础。原因很简单，在数据里做插入操作的时候，整体时间的分配是这样的：</p>
+<ol>
+<li>
+<p>链接耗时 （30%）</p>
+</li>
+<li>
+<p>发送query到服务器 （20%）</p>
+</li>
+<li>
+<p>解析query （20%）</p>
+</li>
+<li>
+<p>插入操作 （10% * 词条数目）</p>
+</li>
+<li>
+<p>插入index （10% * Index的数目）</p>
+</li>
+<li>
+<p>关闭链接 （10%）</p>
+</li>
+</ol>
+<p>上面的百分比是官方给出的近似比例。从这里可以看出来，真正耗时的不是操作，而是链接，解析的过程，这也就是为什么【多次的单一词条插入操作】的耗时要比 【一次的多词条插入操作】高的根本原因</p>
+<p>如果是多线程连接mysql，一种能够有效减少行锁冲突的方式是数据库加一个线程相关的id，这样每个线程都去查询或者修改自己负责的这些行，就可以减少线程之间竞争行锁。</p>
+<p>快照读和当前读，快照读读的是事务开始的那一刻数据库的数据，此时后续的快照读都是基于这个快照进行的，看不到新的修改，而如果是当前读 select * from my_table for update，那么就会读取现在最新的数据库数据，如果读的数据刚好被别的会话得到了锁，那么就会在当前读的时候阻塞，等待锁的释放。（可重复读就是一种快照读）</p>
+<p>在可重复读的隔离级别下，进行了一个小测试：</p>
+<pre><code class="language-javascript">create table tt(id int(11), name varchar(12));
+insert into tt values(1,&quot;rex&quot;),(2,&quot;chloew&quot;);
+</code></pre>
+<p>transaction 1:</p>
+<pre><code class="language-javascript">begin;
+select * from tt;
+update tt set name='newrex' where name='rex';
+</code></pre>
+<p>执行到第三步的结果：</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/2jWB6OPtfYxTSEH.png" alt="" loading="lazy"></figure>
+<p>可见对数据进行了修改，影响的行数为1</p>
+<p>先不commit事务1，此时执行事务2</p>
+<p>transaction 2:</p>
+<pre><code class="language-javascript">begin;
+select * from tt;
+update tt set name='newnewrex' where name='rex';
+</code></pre>
+<p>此时，事务2会被阻塞挂起，因为事务1已经获得了这行的行锁</p>
+<p>然后对事务1 commit，随后锁释放，事务2得以执行，其第三步执行结果为：</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/muU5digPMX14Gsz.png" alt="" loading="lazy"></figure>
+<p>可以看到，事务2的update操作并没有修改记录，影响行数为0.</p>
+<p>这是因为，在事务1commit之后，该行记录的name字段已经变成newrex，而不是rex，所以事务2获得锁执行update时的筛选条件并没有命中某一行，所以修改了0行。如果事物2的第三步语句为：</p>
+<pre><code class="language-javascript">update tt set name='newnewrex' where name='newrex';
+</code></pre>
+<p>才会产生修改。</p>
+<p>mysql支持四种级别的隔离，但如果对于同时写入同一条数据而言，实际上还是锁的竞争，mysql的锁有表锁、行锁、意向锁、间隙锁，不同的锁的访问限制不一样，但多个事务或者说多个客户端对同一个数据的并发修改，都是要竞争锁的，然后根据得到锁的顺序进行数据的修改。</p>
+<p>说白了，就是要根据业务场景和并发量，选择合适的锁和事物隔离级别，已得到最好的qps。</p>
+<h2 id="c11支持类似go一样的结构体列表初始化格式">C++11支持类似go一样的结构体列表初始化格式</h2>
+<pre><code class="language-javascript">struct my_struct{
+    int a,b,c;
+    string str;
+}
+int main(){
+    my_struct test{a:1,b:2,c:3,};
+    return 0;
+}
+</code></pre>
+<p>上面可以看到，使用了类似字典kv一样的初始化方式，同时未指定初始值的变量将采用默认值（经测试为零值）。</p>
+<h2 id="mysql异常">mysql异常</h2>
+<p>Incorrect string value: '\xE6\xB5\x8B\xE8\xAF\x95' for column 'region_name'</p>
+<p>这是因为字符集不对造成的，例如可能你的数据表是latin1，而你当前客户端会话设置的字符集是utf8，那么有可能utf8编码的格式latin1不识别，就会导致插入失败。</p>
+<p>所以只需要根据数据表的字符集，在插入前set names就行。</p>
+<h2 id="开发时查询的一些脚本写法">开发时查询的一些脚本写法</h2>
+<p>shell教程：https://www.runoob.com/linux/linux-shell-basic-operators.html</p>
+<h3 id="使用变量名就可以引用变量">使用$变量名就可以引用变量：</h3>
+<pre><code class="language-javascript">$var1
+${var1}//两种方式都可以
+
+可通过在变量面前加$来获取变量的值。
+
+为了能使shell正确的界定变量名，可以在引用变量时使用大括号将变量括起来
+
+如：
+
+v4=123
+
+echo “${v4}abc”
+
+结果：123abc
+
+(若直接echo “$v4abc”，会变成空字符串，因为v4abc没有被定义)
+</code></pre>
+<h3 id="httpsliampage20161108shell-variable-reference-and-string-cut-off">https://liam.page/2016/11/08/Shell-variable-reference-and-string-cut-off/</h3>
+<h3 id="统计文件中某个词的词频">统计文件中某个词的词频</h3>
+<pre><code class="language-javascript">more filename  | grep -o &quot;pattern&quot; | wc -l
+</code></pre>
+<p>grep -o 只现实匹配的pattern部分，o（only matching）</p>
+<h3 id="遍历目录下的每个文件">遍历目录下的每个文件</h3>
+<pre><code class="language-javascript">for file in./*
+do
+    echo ${file}
+done
+</code></pre>
+<h3 id="if语句">if语句</h3>
+<p>https://blog.csdn.net/doiido/article/details/43966819</p>
+<p>https://blog.csdn.net/m0_37138008/article/details/72814543</p>
+<p>语法：</p>
+<pre><code class="language-javascript">if
+then
+ 
+else
+fi
+</code></pre>
+<h3 id="条件判断中的单双括号的区别">条件判断中的单双括号的区别：</h3>
+<p>https://www.cnblogs.com/zeweiwu/p/5485711.html</p>
+<p>使用双括号能够有效避免语法错误，有种单括号是双括号的子集的感觉。</p>
+<h3 id="if的判断条件">if的判断条件：</h3>
+<p>基本上和其他脚本语言一样。没有太大区别。不过值得注意的是。[]里面的条件判断。</p>
+<p>1 字符串判断</p>
+<p>str1 = str2　　　　　　当两个串有相同内容、长度时为真</p>
+<p>str1 != str2　　　　　 当串str1和str2不等时为真</p>
+<p>-n str1　　　　　　　 当串的长度大于0时为真(串非空)</p>
+<p>-z str1　　　　　　　 当串的长度为0时为真(空串)</p>
+<p>str1　　　　　　　　   当串str1为非空时为真</p>
+<p>2 数字的判断</p>
+<p>int1 -eq int2　　　　两数相等为真</p>
+<p>int1 -ne int2　　　　两数不等为真</p>
+<p>int1 -gt int2　　　　int1大于int2为真</p>
+<p>int1 -ge int2　　　　int1大于等于int2为真</p>
+<p>int1 -lt int2　　　　int1小于int2为真</p>
+<p>int1 -le int2　　　　int1小于等于int2为真</p>
+<p>3 文件的判断</p>
+<p>-r file　　　　　用户可读为真</p>
+<p>-w file　　　　　用户可写为真</p>
+<p>-x file　　　　　用户可执行为真</p>
+<p>-f file　　　　　文件为正规文件为真</p>
+<p>-d file　　　　　文件为目录为真</p>
+<p>-c file　　　　　文件为字符特殊文件为真</p>
+<p>-b file　　　　　文件为块特殊文件为真</p>
+<p>-s file　　　　　文件大小非0时为真</p>
+<p>-t file　　　　　当文件描述符(默认为1)指定的设备为终端时为真</p>
+<p>3 复杂逻辑判断</p>
+<p>-a 　 　　　　　 与</p>
+<p>-o　　　　　　　 或</p>
+<p>!　　　　　　　　非</p>
+<p>结尾</p>
+<pre><code>语法虽然简单，但是在SHELL里使用的时候，他的功能变得强大了。
+</code></pre>
+<p>附 表：</p>
+<p>[ -a FILE ]  如果 FILE 存在则为真。</p>
+<p>[ -b FILE ]  如果 FILE 存在且是一个块特殊文件则为真。</p>
+<p>[ -c FILE ]  如果 FILE 存在且是一个字特殊文件则为真。</p>
+<p>[ -d FILE ]  如果 FILE 存在且是一个目录则为真。</p>
+<p>[ -e FILE ]  如果 FILE 存在则为真。</p>
+<p>[ -f FILE ]  如果 FILE 存在且是一个普通文件则为真。</p>
+<p>[ -g FILE ] 如果 FILE 存在且已经设置了SGID则为真。 [ -h FILE ]  如果 FILE 存在且是一个符号连接则为真。</p>
+<p>[ -k FILE ]  如果 FILE 存在且已经设置了粘制位则为真。</p>
+<p>[ -p FILE ]  如果 FILE 存在且是一个名字管道(F如果O)则为真。</p>
+<p>[ -r FILE ]  如果 FILE 存在且是可读的则为真。</p>
+<p>[ -s FILE ]  如果 FILE 存在且大小不为0则为真。</p>
+<p>[ -t FD ]  如果文件描述符 FD 打开且指向一个终端则为真。</p>
+<p>[ -u FILE ]  如果 FILE 存在且设置了SUID (set user ID)则为真。</p>
+<p>[ -w FILE ]  如果 FILE 如果 FILE 存在且是可写的则为真。</p>
+<p>[ -x FILE ]  如果 FILE 存在且是可执行的则为真。</p>
+<p>[ -O FILE ]  如果 FILE 存在且属有效用户ID则为真。</p>
+<p>[ -G FILE ]  如果 FILE 存在且属有效用户组则为真。</p>
+<p>[ -L FILE ]  如果 FILE 存在且是一个符号连接则为真。</p>
+<p>[ -N FILE ]  如果 FILE 存在 and has been mod如果ied since it was last read则为真。</p>
+<p>[ -S FILE ]  如果 FILE 存在且是一个套接字则为真。</p>
+<p>[ FILE1 -nt FILE2 ]  如果 FILE1 has been changed more recently than FILE2, or 如果 FILE1 exists and FILE2 does not则为真。</p>
+<p>[ FILE1 -ot FILE2 ]  如果 FILE1 比 FILE2 要老, 或者 FILE2 存在且 FILE1 不存在则为真。</p>
+<p>[ FILE1 -ef FILE2 ]  如果 FILE1 和 FILE2 指向相同的设备和节点号则为真。</p>
+<p>[ -o OPTIONNAME ]  如果 shell选项 “OPTIONNAME” 开启则为真。</p>
+<p>[ -z STRING ]  “STRING” 的长度为零则为真。</p>
+<p>[ -n STRING ] or [ STRING ]  “STRING” 的长度为非零 non-zero则为真。</p>
+<p>[ STRING1 == STRING2 ]  如果2个字符串相同。 “=” may be used instead of “==” for strict POSIX compliance则为真。</p>
+<p>[ STRING1 != STRING2 ]  如果字符串不相等则为真。</p>
+<p>[ STRING1 &lt; STRING2 ]  如果 “STRING1” sorts before “STRING2” lexicographically in the current locale则为真。</p>
+<p>[ STRING1 &gt; STRING2 ]  如果 “STRING1” sorts after “STRING2” lexicographically in the current locale则为真。</p>
+<p>[ ARG1 OP ARG2 ] “OP” is one of -eq, -ne, -lt, -le, -gt or -ge. These arithmetic binary operators return true if “ARG1” is equal to, not equal to, less than, less than or equal to, greater than, or greater than or equal to “ARG2”, respectively. “ARG1” and “ARG2” are integers.</p>
+<h3 id="while语句">while语句</h3>
+<pre><code class="language-javascript">while
+do
+ 
+done
+</code></pre>
+<h3 id="脚本程序挂起">脚本程序挂起</h3>
+<pre><code class="language-javascript">sleep 1//睡眠1s，可以给浮点数
+usleep 1//睡眠1微秒
+</code></pre>
+<h3 id="curl获取返回码">curl获取返回码</h3>
+<p>curl -I -m 10 -o /dev/null -s -w %{http_code} www.baidu.com</p>
+<p>-I 仅测试HTTP头</p>
+<p>-m 10 最多查询10s</p>
+<p>-o /dev/null 屏蔽原有输出信息</p>
+<p>-s silent 模式，不输出任何东西</p>
+<p>-w %{http_code} 控制额外输出</p>
+<p>即返回码会写到变量http_code中，通过${http_code}获取结果</p>
+<h2 id="冒烟测试">冒烟测试</h2>
+<p>冒烟测试是测试用例的子集，测试主要为了覆盖了组件或系统的最重要功能，并用于辅助评价一个软件的主要功能是否正常运行。</p>
+<p>所谓冒烟测试其实就是在转测之前，开发同学对代码的所有功能点进行一次测试，相当于跑通每个功能，不是深入的测试，深入的测试需要转给测试同学。</p>
+<p>冒烟测试是为了避免程序设计存在明显缺陷，还没跑通就送给测试同学，浪费人力和时间。</p>
+<p>冒烟测试的叫法来源，最初是指电路板更改之后，看通电是否冒烟，如果电路板有缺陷，就会短路冒烟，所以才有这个说法。</p>
+<h2 id="abtest-灰度发布的区别">ABtest、灰度发布的区别</h2>
+<p>灰度发布很好理解，就是版本经过测试后，发布更新给用户的过程，是一个逐渐递增的发布，在过程中去检测是否有线上问题，若有可以回滚，若无则可以全量灰度。</p>
+<p>灰度发布则是指在新的功能上线以及没有上线之间能够保证新的版本可以稳定过渡的一种发布方法，可以在灰度发布的过程当中解决一些问题或者对新版本做出一些可以提高用户体验的调整，这是保证网站可以平稳更新到新版本的有效过程。</p>
+<p>而ABtest其实就是做实验一样，有个对照组和实验组，将两个版本的程序分别给随机的给不同的用户使用，在这个过程中采集两个版本的反馈，来选择版本和判断版本的更新是否合理，可用来收集用户的反馈，确定产品迭代的功能。和灰度发布很像，这是因为ABtest是灰度发布的一种方式。</p>
+<p>灰度测试和灰度发布概念很像，可以这么理解，灰度测试是已经确认了发布版本，只是一个逐渐放量的过程，出现问题只是回滚取消发布，不会涉及功能的变更。</p>
+<p>而ABtest则是偏向于得到用户的结果，在多个版本中选择更好的，看哪种功能的版本更符合用户需求，是通过结果来决策，而灰度测试只是一个过程，版本功能是不会变的。</p>
+<h2 id="cookies">Cookies</h2>
+<p>cookies是访问网站时，网站服务器传回来的一些信息，是存在请求者本地上的，在有这个网站的cookies之后，访问该网站的服务，如果需要cookies中的某些信息，例如token，就会直接在请求头中一并带走，可以使得网站服务器知道用户的前置信息，来实现响应，例如避免每次用户访问页面都要重新登录。</p>
+<p>HTTP cookies (also called web cookies, Internet cookies, browser cookies, or simply cookies) are small blocks of data created by a web server while a user is browsing a website and placed on the user's computer or other device by the user’s web browser. Cookies are placed on the device used to access a website, and more than one cookie may be placed on a user’s device during a session.</p>
+<p>Cookies serve useful and sometimes essential functions on the web. They enable web servers to store stateful information (such as items added in the shopping cart in an online store) on the user’s device or to track the user's browsing activity (including clicking particular buttons, logging in, or recording which pages were visited in the past). They can also be used to save for subsequent use information that the user previously entered into form fields, such as names, addresses, passwords, and payment card numbers.</p>
+<p>wiki：https://en.wikipedia.org/wiki/HTTP_cookie#Origin_of_the_name</p>
+<h2 id="ping通-telnet不通的原因">ping通 telnet不通的原因</h2>
+<p>两者是不同的层级协议，ping是ip层的icmp协议，走网络层，所以即使两台机器之间存在防火墙或者网络隔离，都是可以ping通的，因为不需要再往上走更高层的协议。</p>
+<p>有些防火墙和网络隔离会隔离不同层级的协议，所以传输层协议的数据包也有可能不通。</p>
+<p>而telnet是应用层协议，防火墙/网络隔离肯定会屏蔽这类协议，所以自然而然就telnet不通了。</p>
+<p>telnet ip port</p>
+<h2 id="组包直接ip-port发包访问rpc">组包直接ip port发包访问rpc</h2>
+<p>肯定是可以的，因为rpc是应用程序，网络请求包来了，程序会自动处理该请求包，然后通过读请求包的信息，来执行特定的方法。</p>
+<p>如果自己写的rpc中用的是自定义的协议，若判断调用哪个方法的逻辑是根据请求包中的字段信息来判断，那么只要这个包有这些信息，那么直接ip port访问自然是可以的。</p>
+<h2 id="md5">md5</h2>
+<p>md5是对文件二进制数据进行计算的，按照每512位为一个分组进行计算，所以在计算前会将文件补齐到512的整数倍。计算的结果是一个128位二进制数，如果用十六进制数来表示，那么就有32个十六进制数，这就是为什么计算结果都是32个十六进制数的原因：</p>
+<pre><code class="language-javascript">2704de0c18321705f9d899e2564a8eb5
+</code></pre>
+<p>因此只要文件数据不同，算出来的md5就不同（不考虑碰撞的情况下），所以同一张图片，模糊和清晰的md5就不同，因为像素不一样，文件数据也不一样。想要判断图片是否同源，需要更高级的算法。</p>
+<p>md5经过研究不是安全的hash算法，后续有更安全的hash算法，例如sha1，sha2等。</p>
+<h2 id="修改db权限不影响连接只是增删改查会失败而已">修改db权限不影响连接，只是增删改查会失败而已</h2>
+<h2 id="core文件正确的使用方式">core文件正确的使用方式：</h2>
+<pre><code class="language-javascript">gdb program_bin program_core_file
+</code></pre>
+<p>这样才能正确获取符号信息</p>
+<p>core文件的路径可以通过/proc/sys/kernel/core_pattern查看，是否在core文件名中给出pid信息可以通过/etc/sysctl.conf给出</p>
+<h2 id="获取本机ip的方法">获取本机ip的方法</h2>
+<pre><code class="language-javascript">ifconfig -a|grep inet|grep -v 127.0.0.1|grep -v inet6|awk '{print $2}'|tr -d &quot;addr:&quot;
+</code></pre>
+<p>https://www.cnblogs.com/poloyy/p/12212868.html</p>
+<h2 id="遍历protobuf获取字段类型和值信息">遍历protobuf，获取字段类型和值信息</h2>
+<pre><code class="language-javascript">Message* message = &amp;your_proto;
+const google::protobuf::Descriptor* desc = message-&gt;GetDescriptor();
+const google::protobuf::Reflection* ref = message-&gt;GetReflection();
+for (int i = 0; i &lt; desc-&gt;field_count(); ++i) {
+  const google::protobuf::FieldDescriptor* field_desc = desc-&gt;field(i); 
+  switch (field_desc-&gt;cpp_type()) {
+    case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+      // call get_int32
+      break;
+    case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+      // call get_int64
+      break;
+    ...
+  }
+}
+</code></pre>
+<h2 id="查看某个进程的启动路径">查看某个进程的启动路径</h2>
+<pre><code class="language-javascript">ps -elf | grep your_prog #获取进程id
+</code></pre>
+<p>得到进程id后</p>
+<pre><code class="language-javascript">ll /proc/pid
+</code></pre>
+<figure data-type="image" tabindex="7"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCEd07235a3b23fb787784ef99468d4d980.png" alt="" loading="lazy"></figure>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/cmake-ru-men-jie-shao/">
+                <h3 class="post-title">
+                  Cmake入门介绍
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

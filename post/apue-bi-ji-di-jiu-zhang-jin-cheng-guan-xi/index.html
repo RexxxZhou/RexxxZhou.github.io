@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第九章-进程关系 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第九章-进程关系</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第九章-进程关系</p>
+<p>终端登录</p>
+<p>1.BSD终端登录</p>
+<p>系统管理者创建名为/etc/ttys的文件，每个终端设备各有一行，每一行说明设备名和传给getty程序的参数。</p>
+<p>当系统自举时，init进程使系统进入多用户模式，读取/etc/ttys文件，对每一个允许登录的终端设备调用一次fork，生成的子进程再exec getty程序，init以空环境exec getty程序。</p>
+<p>getty调用open函数打开终端设备，一旦打开后，fd 0、1、2就被设置到该设备中，getty输出login：，等待用户输入用户名，至此，getty的工作边做完了，然后它exec login程序：</p>
+<figure data-type="image" tabindex="1"><img src="https://note.youdao.com/yws/res/11038/74E8D58DEF3D4006AD2EC747F562EEE2" alt="" loading="lazy"></figure>
+<p>在gettytab文件中有相关的环境表数据，getty将TERM=foo和gettytab中的环境表创建一个环境envp传给login函数执行，-p代表login函数要保留环境表，不要替换它。</p>
+<figure data-type="image" tabindex="2"><img src="https://note.youdao.com/yws/res/11024/54CDF660945049C3999CF989F60B468C" alt="" loading="lazy"></figure>
+<p>login获得了用户名之后，调用getpwnam，获取该用户的登录项，调用getpass让用户输入密码，再将该输入调用crypt加密，与阴影文件中的口令进行对比，验证用户信息。父进程（init）了解子进程的终止状态后，将再次调用fork重复上述步骤，对终端进行重复上述过程。</p>
+<p>现在Linux支持多个身份验证过程，支持PAM可插入的身份验证模块，可以使用PAM库来进行身份验证。</p>
+<figure data-type="image" tabindex="3"><img src="https://note.youdao.com/yws/res/11031/4C00995BB4024C2CA526A1616A5B5860" alt="" loading="lazy"></figure>
+<p>当用户登录成功后：</p>
+<figure data-type="image" tabindex="4"><img src="https://note.youdao.com/yws/res/11017/3CBBF7B8621F40AD895126DBABE01727" alt="" loading="lazy"></figure>
+<p>login会setuid更改用户ID，执行登录项中的登录shell，这样进程的ID就不再是root了。</p>
+<figure data-type="image" tabindex="5"><img src="https://note.youdao.com/yws/res/11016/91B22F5F1B7E4CAB90BAEB66B3634402" alt="" loading="lazy"></figure>
+<p>MAC OS终端登录</p>
+<p>与BSD的不同的点在于：init的工作是由launchd完成的；一开始提供的就是图形终端。</p>
+<p>Linux终端登录</p>
+<p>与BSD相似，主要区别在于说明终端配置的方式：</p>
+<figure data-type="image" tabindex="6"><img src="https://note.youdao.com/yws/res/11019/33F55F7C9F814943829984B59A0452F4" alt="" loading="lazy"></figure>
+<p>4.Solaris终端登录</p>
+<figure data-type="image" tabindex="7"><img src="https://note.youdao.com/yws/res/11030/8664C7407B3C46958B51F0EFADEB6C2B" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://note.youdao.com/yws/res/11021/938C68646D9A496E9A8BB149F9486483" alt="" loading="lazy"></figure>
+<p>网络登录</p>
+<p>在上述的终端登录中，init进程可以查看相关的文件，知道哪些设备可以进行登录，并为此fork进程来进行登录。</p>
+<p>但对于网络登录，由于不知道有多少这样的登录，而且所有的登录都是通过内核的网络接口驱动程序。因此必须等待一个网络连接的请求到达，而不是用一个个的进程等待每一个可能的登录。</p>
+<p>系统使用了称为伪终端的软件驱动程序，仿真串行终端的运行行为，并将终端的操作映射为网络操作。</p>
+<p>1.BSD网络登录</p>
+<p>在BSD中有一个inetd进程（因特网超级服务器，守护进程，由init进程fork），它等待大多数网络连接。inetd等待TCP/IP请求到达主机，当有请求到达主机后，inet会fork一个子进程，然后该子进程执行相应的程序。</p>
+<p>以telnet为例：telnet hostname</p>
+<p>主机接收到该请求后，inet fork的子进程就会执行telnetd服务进程（也即服务端），然后telnetd进程打开一个伪终端设备，并fork一个子进程，父进程处理通过网络连接的通信，而子进程执行login程序，父子进程通过伪终端相连接，若登录成功后，子进程会exec一个登录shell。</p>
+<p>在子进程调用exec之前，会将fd 0、1、2与伪终端相连。</p>
+<figure data-type="image" tabindex="9"><img src="https://note.youdao.com/yws/res/11015/324BE2B9414B4158820BE4362B23500C" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="10"><img src="https://note.youdao.com/yws/res/11034/24CF0916031A48429DE76E0E84043066" alt="" loading="lazy"></figure>
+<p>不管是终端登录还是伪终端登录，其最终结果都会得到一个登录shell，这个登录shell的标准输入0，标准输出1，标准错误2都会连接到终端上或伪终端上。这个登录shell是POSIX会话的开始，而该终端或伪终端为该会话的控制终端。</p>
+<p>2.MAC OS X网络登录</p>
+<p>与BSD类似，只不过telnetd不是init进程fork的，而是launchd进程fork的。</p>
+<p>3.Linux网络登录</p>
+<p>除了有些发行版使用扩展的xinetd代替inetd外，其他和BSD一样，xinetd的控制更精细。</p>
+<p>4.Solaris网路登录</p>
+<p>与BSD和Linux类似，不展开。</p>
+<p>进程组</p>
+<p>每个进程除了有进程ID外，还属于一个进程组（这里是进程组，而不是用户组，两者不一样）。进程组是一个或多个进程的集合，通常是在同一作业中结合起来的，同一进程组的进程接收来自同一终端的信号。进程组ID是一个正整数，可放在pid_t类型中。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>pid_t getpgrp();//返回进程所属进程组的ID</p>
+<p>或者使用getpgid(0)来获取进程组ID。</p>
+<p>每个进程组都有一个组长进程，组长进程的进程ID就是该组的进程组ID。组长进程可以创建进程组和组中的进程，然后终止。</p>
+<p>只要该组有一个进程还没终止，则该组就存在，存在与否与组长是否终止没有关系。</p>
+<p>从进程组创建开始到最后一个进程终止为止，这个区间叫做进程组的生命期。</p>
+<p>进程组中的最后一个进程可以终止也可以转移到另一个进程组中。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int setpgid(pid_t pid,pid_t pgid);//成功返回0，失败返回-1；</p>
+<p>setpgid将pid进程的进程组设置为pgid对应的进程组。</p>
+<p>进程可以通过setpgid来设置自己和自己的子进程的进程组ID，但只能在子进程调用exec之前设置子进程的进程组ID。</p>
+<p>若pid和pgid参数相同或pgid参数为0，则pid进程为组长进程。若pid为0，则将调用者的进程ID作为pid。</p>
+<p>大多数实现中，会分别在父进程和子进程中都调用setpgid函数来设置进程组ID，因为可能存在父子进程之间的竞争条件，可能子进程的exec先执行了，那么父进程设置子进程的进程组ID就失败了。两次调用保证设置的成功。</p>
+<p>会话</p>
+<p>会话（session）是一个或多个进程组的集合：</p>
+<figure data-type="image" tabindex="11"><img src="https://note.youdao.com/yws/res/11035/12CE342A6A464283B7C27CF15F076412" alt="" loading="lazy"></figure>
+<p>通常是由shell管道将几个进程边城一组的。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>pid_t setsid();</p>
+<p>pid_t getsid(pid_t pid);</p>
+<p>进程调用setsid创建一个会话，且该进程不能是组长进程。调用setsid后，会创建一个会话和一个进程组，该调用进程称为进程组组长和会话首进程，调用该函数后该进程没有控制终端，若本来有连接控制终端，则会切断该连接。</p>
+<p>如果已经是组长进程了，再调用setsid就会出错，一般是fork后父进程终止后，子进程调用setsid，因为子进程的进程组ID是父进程的进程组ID，而其PID又与其不同，也即不是组长。</p>
+<p>所以最终效果是，setsid后创建了新会话、新进程组，且会话ID和进程组ID都是该调用进程的进程ID。</p>
+<p>getsid指定pid获得该pid进程的会话ID，但调用该函数进程必须与pid指定的进程属于同一会话才能调用成功。</p>
+<p>如果pid参数为0，则返回调用进程的所在的会话ID。</p>
+<p>控制终端</p>
+<p>会话首进程在调用setsid后是没有控制终端的，其可以在后面打开一个终端设备。</p>
+<p>建立与控制终端相连接的会话首进程被称为控制进程。</p>
+<p>一个会话中的进程组可以分为一个前台进程组和多个后台进程组。</p>
+<p>如果一个会话有控制终端，则它有一个前台进程组，其他的为后台进程组。</p>
+<p>无论合适键入终端的终止(ctrl+c)和退出键(ctrl+)，其信号都会发给前台进程组的所有进程。</p>
+<p>如果终端接口检测到调制解调器或网络已经断开连接，则将挂断信号发送至控制进程（会话首进程）。</p>
+<figure data-type="image" tabindex="12"><img src="https://note.youdao.com/yws/res/11027/8117B39D69A44DBCADFE3C86205625D2" alt="" loading="lazy"></figure>
+<p>通常我们不需要担心控制终端，登录时会自动建立控制终端。</p>
+<figure data-type="image" tabindex="13"><img src="https://note.youdao.com/yws/res/11039/7E602F26F20049219CC356F687ACF790" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="14"><img src="https://note.youdao.com/yws/res/11018/16E915978E7A456281BCDF51F8DC9463" alt="" loading="lazy"></figure>
+<p>有时不管标准输入或输出是否重定向，程序都需要与控制终端交互，为了保证能够进行交互，方法是open文件/dev/tty，在内核中，该文件就是控制终端的同义词。如果程序没有控制终端，则会打开失败。</p>
+<p>函数tcgetpgrp tcsetpgrp tcgetsid</p>
+<p>需要有函数来告诉内核哪个进程组是前台进程组，这样终端输入和产生的信号就能知道发送到何处。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>pid_t tcgetpgrp(int fd);//成功返回前台进程组ID，出错返回-1</p>
+<p>int tcsetpgrp(int fd,pid_t pgrpid);//成功返回0，失败返回-1</p>
+<p>tcgetpgrp函数用与终端相关的文件描述符来获得终端中的前台进程组ID属性。</p>
+<figure data-type="image" tabindex="15"><img src="https://note.youdao.com/yws/res/11026/D906913EB75843299D165B74D7890DAE" alt="" loading="lazy"></figure>
+<p>大多数程序不调用这两个函数，它们通常由作业控制shell调用</p>
+<p>给出控制终端的fd，通过tcgetsid函数就能得到该会话ID</p>
+<p>#include&lt;termios.h&gt;</p>
+<p>pid_t tcgetsid(int fd);// 成功返回会话ID,失败返回-1</p>
+<figure data-type="image" tabindex="16"><img src="https://note.youdao.com/yws/res/11036/1D1CB4AB178141A0BBE01FFB6205CBFD" alt="" loading="lazy"></figure>
+<p>作业控制</p>
+<p>作业控制允许在一个终端上启动多个作业（进程组），它控制哪些作业可以访问终端以及哪些作业在后台运行。</p>
+<p>作业控制需要以下三个支持：</p>
+<p>1.支持作业控制的shell</p>
+<p>2.内核中的驱动程序必须支持作业控制</p>
+<p>3.内核必须提供对某些作业控制的信号的支持</p>
+<p>bash是支持作业控制的shell。从shell使用作业控制功能的角度看，用户可以在前台和后台启动一个作业，一个作业是几个进程的集合（可能该作业需要多个进程实现，例如fork后再exec），通常是一个进程管道。</p>
+<p>每一个作业都有一个作业ID。</p>
+<p>后台执行：&amp;号表示该程序后台执行 省略则表示前台执行</p>
+<p>cat test.txt &amp;</p>
+<p>当作业完成且在shell中键入回车后，shell通知作业已经完成，键入shell只是为了让shell打印命令提示符。</p>
+<figure data-type="image" tabindex="17"><img src="https://note.youdao.com/yws/res/11032/14F4D7D7A462434AA84A63748B86517E" alt="" loading="lazy"></figure>
+<p>通过键入ctrl+z挂起键、ctrl+c退出键、ctrl+\中断键，终端驱动程序会向前台进程组中的所有进程发送相应的信号：</p>
+<figure data-type="image" tabindex="18"><img src="https://note.youdao.com/yws/res/11037/B41BFA9F05234D78A2D325D1C14B1A92" alt="" loading="lazy"></figure>
+<p>可以将这三个字符更改成用户选择的其他任意字符。</p>
+<p>只有前台进程可以接收控制终端的输入，后台进程则不行，如果后台进程读终端输入，并不是错误，只是终端检测到后这是个后台进程后会发送SIGTTIN信号给该进程，该进程被阻塞，直到在shell中输入 fg %作业ID 才令其转为前台进程继续执行，则可读终端输入。</p>
+<p>前台进程可以输出到终端中，而后台进程的该行为则是一个可允许的选项，可以通过禁用该选项，禁止后台进程向终端输出，通过stty命令来设置：</p>
+<figure data-type="image" tabindex="19"><img src="https://note.youdao.com/yws/res/11028/C37489A8CB8045F1871289A0220CE860" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="20"><img src="https://note.youdao.com/yws/res/11025/F418E46DA6444BBDA0E5953DF197AA91" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="21"><img src="https://note.youdao.com/yws/res/11023/AA4098CDABAB41D0A85BE13A15312CBD" alt="" loading="lazy"></figure>
+<p>与会话和终端登录小节中对应，所谓的登录shell是指用户登录后，为用户执行的shell程序，而不是用来进行登录操作的shell。</p>
+<p>一个终端登录后，最终获得了登录shell，而该登录shell调用setsid函数，使其成为会话首进程，并且打开一个终端设备，成为控制进程，用户在shell上输入的命令，例如执行程序，则由shell进程fork子进程后exec相应的程序，而该程序可以为前台进程也可以为后台进程，这也即作业控制，相应的前台进程的设置就会调用tcsetpgrp等函数，最终效果就得到上面的图。</p>
+<p>终端就是我们的设备，例如键盘、显示器，用户使用终端（例如敲命令）通过shell执行相应的命令。</p>
+<p>shell执行程序</p>
+<p>打印进程的相关ID信息命令：</p>
+<p>ps -o pid,ppid,pgid,sid,tgid,comm</p>
+<p>tgid是指前台进程组ID。进程属于一个进程组，而进程组属于一个会话；会话可以有一个控制终端，如果有，终端设备直到该会话的前台进程组ID，这是通过tcsetpgrp在终端设备驱动程序中设置的。</p>
+<p>前台进程组ID是终端的属性，而不是进程的属性，该值对应于tgid列。</p>
+<p>所以通过查tgid列，而已判断执行某个程序时，若其进程组ID不是tgid的值，则说明其是后台进程组，否则为前台进程组。</p>
+<p>每一行记录的中tgid表示执行该进程时的前台进程组ID。</p>
+<p>不支持作业控制的borune shell：</p>
+<figure data-type="image" tabindex="22"><img src="https://note.youdao.com/yws/res/11020/17346DF1600841B3A1C588E86E592A20" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="23"><img src="https://note.youdao.com/yws/res/11029/241A6E1A7F7B4B1C8A387ADF6005E596" alt="" loading="lazy"></figure>
+<p>ps -o pid,ppid,pgid,sid,tgid,comm | cat1 | cat2</p>
+<p>在该命令行中的最后一个进程是Bourne shell的子进程，而其他的进程是该子进程的子进程，具体的fork和exec过程如上图所示。</p>
+<p>但在支持作业控制的Bourne again shell中，命令行中的所有进程都是shell的子进程：</p>
+<figure data-type="image" tabindex="24"><img src="https://note.youdao.com/yws/res/11033/6F04E6ED669C4FD4868210C5771A40CE" alt="" loading="lazy"></figure>
+<p>不同的shell，其创建各个进程的顺序也可能不同。</p>
+<p>孤儿进程组</p>
+<p>定义：如果该进程组中的每一个成员进程的父进程都不在该会话当中，则该进程组为孤儿进程。</p>
+<figure data-type="image" tabindex="25"><img src="https://note.youdao.com/yws/res/11022/22A7C157CCE6422AA274E77041204855" alt="" loading="lazy"></figure>
+<p>若不是孤儿进程，则其父进程有机会重新启动该停止的孤儿进程。</p>
+<p>根据孤儿进程组的定义，是否说明，一个孤儿进程的产生要么是其父进程终止要么是其父进程与其不属于同一会话当中？？？</p>
+<p>答：孤儿进程和孤儿进程组不是一个概念，孤儿进程就是其父进程终止了就是孤儿进程，而孤儿进程组是满足其定义的一个进程组。</p>
+<p>当父进程终止后，若孤儿进程组中有子进程是挂起（停止状态）的，则POSIX会向这些子进程发送SIGHUP挂断信号，接着又向其发送SIGCONT继续信号。</p>
+<p>SIGHUP信号系统默认终止该进程，所以如果想要用别的方式处理该信号，需要注册回调，执行自己的函数。</p>
+<p>在父进程终止后，子进程成为后台进程。</p>
+<p>FreeBSD实现</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-ba-zhang-jin-cheng-kong-zhi/">
+                <h3 class="post-title">
+                  APUE笔记-第八章-进程控制
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

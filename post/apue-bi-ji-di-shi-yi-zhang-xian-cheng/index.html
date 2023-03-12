@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十一章-线程 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十一章-线程</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十一章-线程</p>
+<p>线程概念</p>
+<p>控制线程也简称线程。</p>
+<p>如果程序是多线程的，那么该进程在同一时间可以执行不同的任务（在多核处理器上），能够有效的提高执行效率。可以为每种事件类型分配单独的线程。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/IFiQty2sqon6uTA.png" alt="" loading="lazy"></figure>
+<p>不管是不是多核处理器，都不影响程序的结构，多线程的程序在单核处理器上也能得到简化和效率的提升，因为如果是单线程的程序，当该线程阻塞后，整个进程都阻塞了，而多线程程序中一个线程阻塞了，若有其他不会阻塞的线程则会执行该线程，而不会像单线程中一旦阻塞就一直到解除阻塞为止，这样能够提高执行效率，也因为这个原因，多线程程序在单核处理器上执行时也要注意同步的问题，否则可能出现改成执行第二个线程时修改了正在阻塞的线程中要用到的数据，就会出问题。</p>
+<p>每个线程都包含有表示执行环境必需的信息，其中包括线程ID，一组寄存器，栈，调度优先级，策略，信号屏蔽字，errno变量以及线程私有数据。</p>
+<p>一个进程中的所有线程都能共享进程中的所有资源，包括可执行程序的代码，程序的全局内存，堆，栈以及文件描述符。</p>
+<p>所有讨论的线程都是POSIX标准规定的，所以叫pthread或POSIX线程。</p>
+<p>pthread库不是Linux默认的库，所以编译时需要添加-lpthread命令。</p>
+<p>线程标识</p>
+<p>一个进程中的每个线程都有一个线程ID，线程ID是在进程的上下文环境中才有意义的，而进程ID是在整个系统的标识。</p>
+<p>线程ID用pthread_t数据类型表示，Linux用无符号长整型来表示pthread_t数据类型。</p>
+<p>可以用pthread_equal函数来判断来个线程ID是否相等。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_equal(pthread_t tid1,pthread_t tid2);//若相等返回非0，否则返回0</p>
+<p>线程可以使用pthread_self来获得自身的线程ID：</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>pthread_t pthread_self();</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/E5QVJWlmkaK4Zzh.png" alt="" loading="lazy"></figure>
+<p>每个工作线程对队头的作业中的tid和自身的tid调用pthread_equal来判断该作业是否该由该线程取走。</p>
+<p>线程创建</p>
+<p>在没有创建线程之前，程序的执行就和单线程程序是一样的，可以通过下列函数进行线程的创建：</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_create(pthread_t*tidp, const pthread_attr_t *attr , void * ( <em>start_rtn)(void</em>) ,void * arg);</p>
+<p>成功返回0，失败则返回错误编号</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/oQVTWvSx7HzDFNb.png" alt="" loading="lazy"></figure>
+<p>创建的新线程会跳到start_rtn参数指定的函数地址上执行，若该函数需要传参，且具有多个参数，则将这些参数放到一个结构体中，将该结构体的地址传给arg参数即可。</p>
+<p>新线程的线程ID会被写到tidp参数中。</p>
+<p>所有的pthread函数的出错返回值都是返回相应的错误码，而不使用errno变量，这样就不需要依赖随着函数状态变化的全局变量，更能说明是哪个函数出错。</p>
+<p>创建的新进程的挂起信号集会被清除，说明新线程不再阻塞挂起信号。</p>
+<p>多个线程之间的执行顺序是不定的，这与CPU的调度有关，也就类似于父进程和子进程谁先执行是不确定的一样。</p>
+<p>第一个线程一般为主线程，主线程创建新的线程后，这些线程再各自按需要创建新线程，这样线程就会得到增加。</p>
+<p>线程终止</p>
+<p>在任意一个线程中，如果调用了exit、_exit,_Exit函数，都是直接终止整个进程而不是线程，或者对于信号的系统默认动作是终止进程的话，也会终止进程。进程的终止还是其原本的终止方法，线程的终止有自己的终止方法。</p>
+<p>有三种方式会终止线程：</p>
+<p>1.线程从启动例程返回，返回值是线程的退出码。启动例程就是创建线程时指定线程的执行函数，也即上面的start_rtn参数。</p>
+<p>2.线程被其他的线程取消。</p>
+<p>3.线程调用pthread_exit。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>void pthread_exit(void*rval_ptr);</p>
+<p>rval_ptr是一个空类型指针，与传给启动例程的单个参数（arg）类似，其他线程可以调用pthread_join函数访问这个指针。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_join(pthread_t tid,void **rval_ptr);//成功返回0，失败返回错误码</p>
+<p>通过pthread_join函数能够自动将指定线程设置为分离状态，这样资源就可以得到恢复。如果线程已经出于分离状态，则函数调用失败，返回EINVAL。</p>
+<p>默认情况下，调用pthread_join会自动将线程分离，线程分离后其底层的存储资源可以在线程终止时立即被收回，这与父进程waitpid后不会产生僵尸进程相似。</p>
+<p>可以使用pthread_detach函数来分离线程，这个时候再用pthread_join该线程就会出错。</p>
+<p>int pthread_detach(pthread_t tid);//成功0，出错返回错误码</p>
+<p>pthread_join的作用有点像waitpid，指定获得指定tid线程的返回值，然后可以恢复线程的资源。只不过对于线程环境中，所有线程都可以调用pthread_join，而不像进程中，只有父进程才能waitpid子进程。</p>
+<p>调用pthread_join的线程会一直被阻塞，直到指定的tid线程终止了。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/bkNqvnBrRiY1Vxp.png" alt="" loading="lazy"></figure>
+<p>pthread_exit中的rval_ptr类似于exit函数中的终止状态值，可以被想要获取该信息的线程给访问，且这是通过pthread_join实现的。</p>
+<p>调用pthread_exit使用rval_ptr参数时，必须保证该参数指向的对象在调用线程终止后还能够被访问，否则pthread_join还访问该数据的结果就是不可预料的，且不同的系统实现对这种访问的结果是不一样的，有的会得到没有意义的值，有的直接程序崩溃，而linux中为前者。</p>
+<p>线程可以使用pthread_cancel函数来请求取消某一线程，这类似于进程环境中的kill函数，向指定进程发送终止信号。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_cancel(pthread_t tid);成功返回0，失败返回错误码</p>
+<p>而相应的线程可以忽略该取消或响应该取消。</p>
+<p>pthread_cancel并不阻塞，只是仅仅提出请求。</p>
+<p>线程的退出又与进程的退出类似，进程中有终止处理程序，而线程中有线程清理程序，两个概念类似，都是在退出之前执行一些操作。这些处理函数都是存放在栈中的，与atexit函数一样，先放进栈的后执行。</p>
+<p>#inlcude&lt;pthread.h&gt;</p>
+<p>void pthread_cleanup_push(void (<em>rtn)(void</em> arg));</p>
+<p>void pthread_cleanup_pop(int execute);</p>
+<p>所有的放进线程清理程序中的函数，会在下面三种情况下执行：</p>
+<p>1.线程调用了pthread_exit;</p>
+<p>2.线程响应取消请求；</p>
+<p>3.以非0的execute参数调用pthread_cleanup_pop函数。</p>
+<p>线程的正常返回（return）也会执行线程清理程序的，这与进程一样。</p>
+<p>pthread_cleanup_pop函数中的execute参数如果为0，则代表把栈顶的清理函数弹出，且不执行。</p>
+<p>如果非0，则弹出并执行。</p>
+<p>进程和线程之间很多函数都是相对应的，具有相似的原语：</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/YvDbjIo9Z4pazHL.png" alt="" loading="lazy"></figure>
+<p>其中pthread_cancel可以用kill(pid,SIGABRT)相对应来更好的理解。</p>
+<p>线程同步</p>
+<p>若多个线程之间需要使用到相同的变量，则有可能出现某个线程对变量的访问得到了意料之外的数据。所以这种情况下需要线程同步，保证每个线程想访问的东西是其逻辑上想要的结果，而不是受别的线程影响后的结果。</p>
+<p>若变量是只读的，则不需要进行线程同步，若每个线程访问的变量都是不一样的，也不需要线程同步。</p>
+<p>当某个变量是可写的，且该变量在多个线程中会用到，则需要进行线程同步。</p>
+<p>若对变量执行的操作需要多于1个存储器访问周期，则另外的线程对该变量的访问可能得到不一致的结果。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/fOWE5QeZ6TtFoYp.png" alt="" loading="lazy"></figure>
+<p>每个线程通过对变量加锁，可以保证某个时刻只有该线程能够读写这些变量，能够实现线程同步。</p>
+<p>如果只是对变量的操作只是单纯的改变其值，不会用作后续的判断或其他操作，只要操作的存储器访问周期为1，则也不会出现不一致的问题，这时候数据是一致的。</p>
+<p>但一般而言，即使数据与线程执行的顺序是一致的，但某个线程后续用该变量进行了别的操作，例如判断，则还是会由于线程不同步导致判断的结果意料之外。</p>
+<p>互斥量</p>
+<p>一个程序中可以有多个互斥量，每一个互斥量负责的变量为声明其的作用域内的所有变量。例如在全局域声明了一个互斥量，一旦对该互斥量上锁，则所有的全局变量都会被锁上。</p>
+<p>可以使用pthread互斥接口来保护数据，确保同一时间只有一个线程能够访问数据。</p>
+<p>互斥量是一个变量，其类型是pthread_mutex_t，可以形象的理解为，若某个线程使用了互斥量，就相当于该线程有了一把锁，但具体是否锁上这把锁则需要调用相应的lock和unlock函数。</p>
+<p>互斥量在使用前，需要进行初始化，如果是静态分配的也即不是用new关键字分配的互斥量，可以将互斥量设置为常量PTHREAD_MUTEX_INITIALIZER，也可以用pthread_mutex_init函数进行初始化。</p>
+<p>如果互斥量是动态分配的，则在释放内存前需要使用pthread_mutex_destroy函数。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int  pthread_mutex_init(pthread_mutex_t* mutex, cosnt pthread_mutexattr_t* attr);</p>
+<p>int pthread_mutex_destroy(pthread_mutex_t*mutex);</p>
+<p>成功返回0，失败返回错误码</p>
+<p>attr是关于互斥量的属性，使用默认属性attr传入NULL即可。</p>
+<p>对互斥量加锁：</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_mutex_lock(pthread_mutex_t* mutex);</p>
+<p>int pthread_mutex_trylock(pthread_mutex_t*mutex);</p>
+<p>int pthread_mutex_unlock(pthread_mutex_t*mutex);</p>
+<p>成功0，失败返回错误码</p>
+<p>如果互斥量已经上锁，则再调用lock函数就会阻塞；如果不想阻塞可以调用trylock函数：若未加锁，则直接上锁返回，若已经加锁，直接错误返回，返回错误码EBUSY。</p>
+<p>避免死锁</p>
+<h5 id=""></h5>
+<p>死锁的出现是由于对相同的互斥量加锁，若该互斥量已经上锁，则会阻塞，且两个线程之间上锁的顺序不一致导致的。</p>
+<p>举例：若存在两个互斥量A和B，线程1的加锁顺序为A-&gt;B，而线程2的加锁顺序为B-&gt;A，那么当线程1和线程2分别都对其第一个互斥量加锁后，再对对方已加锁的互斥量进行加锁时，就会阻塞，此时两个线程都会阻塞，进入死锁状态。</p>
+<p>避免死锁的方法为线程之间的加锁顺序要一致，或者使用pthread_mutex_trylock函数，若发现返回错误码，则可以尝试解锁已锁的互斥量，使得程序能够继续向前运行。</p>
+<p>这样使用这两个互斥量就不会发生死锁，但是其他的资源仍有可能死锁。</p>
+<figure data-type="image" tabindex="7"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/54E911D76521440FB14AF964AB889FB8.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/R3c7SKFhemZWjHI.png" alt="" loading="lazy"></figure>
+<p>个人理解所谓锁的粒度是指其负责的变量的多少。</p>
+<p>函数pthread_mutex_timedlock</p>
+<p>该函数与pthread_mutex_lock作用类似，但多了一个时间参数，如果想要加锁的互斥量已经被上锁了，那么只阻塞指定的时间，超时后返回错误码，不会一直阻塞，如果要加锁的互斥量当前没有锁，那么就直接对其加锁。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>#include&lt;time.h&gt;</p>
+<p>int pthread_mutex_timedlock(pthread_mutex_t* mutex,struct timespec*tsptr);成功0，出错返回错误码</p>
+<p>tsptr指定的是绝对时间而不是相对时间。通过timespec结构的秒和纳秒来描述时间。</p>
+<p>读写锁</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_rwlock_init(pthread_rwlock_t* rwlock,pthread_rwlockattr_t* attr);</p>
+<p>int pthread_rwlock_destroy(pthread_rwlock*rwlock);成功0，出错返回错误码。</p>
+<p>读写锁与互斥量类似，但是其并发性会更好，因为每一把锁都有两种模式，读模式或者写模式。</p>
+<p>读写锁必须初始化和在内存释放前进行销毁。</p>
+<p>对于同一把锁，多个线程可以同时使用读模式，但对于写模式，与互斥量相同，只能有一个线程获得写模式，并且后续的对该锁的锁操作都会被阻塞（包括申请读模式和写模式）。因此读写锁也可称为共享互斥锁：当该锁为读模式时，则是共享模式，为写模式时则为互斥模式。</p>
+<p>当一把锁本身已经用读模式上锁后，若其他线程请求以写模式上锁，也能成功上锁，但后面的所有锁操作都会被阻塞。</p>
+<p>也就是对于只读的数据，多个线程都可以用读模式锁定，而如果一旦有线程要以写模式上锁改写某部分数据，则该锁就不能再被其他线程以任何模式上锁了，保证数据安全。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_rwlock_rdlock(pthread_rwlock_t*rwlock);读模式加锁</p>
+<p>int pthread_rwlock_wrlock(pthread_rwlock_t*rwlock);写模式加锁</p>
+<p>int pthread_rwlock_unlock(phread_rwlock_t*rwlock);解锁</p>
+<p>成功返回0，出错返回错误码</p>
+<p>各种不同的实现可能会对共享模式下的读写锁有加锁次数限制。可以通过每次调用pthread_rwlock_rdlock的返回值来判断当前是否还能继续获得读模式的锁。</p>
+<p>在调用函数时总是检查返回值。</p>
+<p>读写锁也提供了尝试加锁的函数：</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_rwlock_tryrdlock(phread_rwlock_t*rwlock);</p>
+<p>int pthread_rwlock_trywrlock(phread_rwlock_t*rwlock);获得锁返回0，否则返回错误码EBUSY</p>
+<p>带有超时的读写锁</p>
+<p>与互斥量对应</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>#include&lt;time.h&gt;</p>
+<p>int pthread_rwlock_timedrdlock(pthread_rwlock_t<em>rwlock,struct timespec</em>tsptr);</p>
+<p>int pthread_rwlock_timedwrlock(pthread_rwlock_t<em>rwlock,struct timespec</em>tsptr);</p>
+<p>成功0，出错返回错误码</p>
+<p>tsptr指定超时的绝对时间，在这个时间前如果获得了锁则成功返回，超时则出错返回，表名超时，避免永久阻塞。</p>
+<p>条件变量</p>
+<p>条件变量是线程可用的另一种线程同步机制，条件变量给多个线程提供了一个会和的场所。</p>
+<p>条件变量本身是由互斥量保护的，线程在改变条件状态之前必须先锁住互斥量</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_cond_init(pthread_cond_t<em>cond,strcut pthread_condattr_t</em>attr);</p>
+<p>int pthread_cond_destroy(pthread_cond_t*cond);</p>
+<p>必须初始化条件变量和释放内存前销毁</p>
+<p>int pthread_cond_wait(pthread_cond_t<em>cond,phtread_mutex_t</em>mutex);</p>
+<p>int pthread_cond_timedwait(pthread_cond_t<em>cond,pthread_mutext_t</em>mutex,struct timespec*tsptr);</p>
+<p>线程可以等待条件变量的改变，前者会一直阻塞，直到条件状态发生改变，而后者指定等到一个绝对时间，超时则出错返回。</p>
+<p>在调用wait之前，互斥量必须上锁，wait函数会将线程加入到该条件的等待列表中，等待条件的改变，随后会对互斥量解锁，因此这个期间其他的变量可以使用该互斥量，其他的线程可以一样加入到该条件的等待列表中，也即实现一个会和。wait函数返回后，互斥量重新上锁。</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/bXt1a3YmFlWoVEK.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/VlZ8nNbocF4fWgh.png" alt="" loading="lazy"></figure>
+<p>int pthread_cond_signal(pthread_cond_t*cond);</p>
+<p>int pthread_cond_broadcast(pthread_cond_t*cond);</p>
+<p>上面两个函数告知等待cond条件变量的线程条件已满足，可以从wait函数中返回，signal通告至少一个线程，broadcast通告所有等待cond的线程。由于wait函数返回后，互斥量又上锁了，所以执行顺序又是不定的。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/R2uLEfszgBhMv9Y.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/nrxdsGLo5VgQvqS.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/ObD7GhJTSQgFn5E.png" alt="" loading="lazy"></figure>
+<p>一定要在条件变量改变以后再使用signal函数再给线程发送信号。</p>
+<p>自旋锁</p>
+<p>自旋锁与互斥量类似，只不过互斥量在等待获取锁的期间是休眠状态也即被挂起了，这样cpu可以执行其他的任务，而自旋锁在等待过程中并不是进入休眠，而是处于一种忙等状态， 也即实质上此时一直都是在执行该线程，并没有被挂起，这样cpu在其时间片内就一直在执行该线程，无法跳去执行其他线程或者其他任务。</p>
+<p>自旋锁可被用于:锁的持有时间短，且线程并不希望在重新调度上花费太多成本。</p>
+<p>所以使用自旋锁的一般默认要保证使用时自旋锁只会自旋一小段时间，否则会造成执行效率的降低，且要避免在已经获得自旋锁的情况下调用可能会阻塞的函数，因为这样的话其他等待该自旋锁的线程的等待时间变长了，这样其他线程所在的cpu就可能一直在等待，不能执行其他的任务。</p>
+<p>由于互斥量也能达到自旋锁的性能，只有在特定的情况下才使用自旋锁。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_spin_init(pthread_spinlock_t*lock,int pshared);</p>
+<p>int pthread_spin_destroy(pthread_spinlock_t*lock);</p>
+<p>ss</p>
+<p>int pthread_spin_lock(pthread_spinlock_t*lock);</p>
+<p>int pthread_spin_trylock(pthread_spinlock_t*lock);</p>
+<p>int pthread_spin_unlock(pthread_spinlock_t*lock);</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/H1l7dvCyiMEnN6g.png" alt="" loading="lazy"></figure>
+<p>屏障</p>
+<p>屏障是用户协调多个线程并行工作的同步机制，屏障允许每个线程等待，直到所有的合作线程都到达某一点，然后从该店继续往下执行。</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/cibBvVQ8O4WsnoJ.png" alt="" loading="lazy"></figure>
+<p>屏障有一个屏障计数，这个计数是指使用屏障的线程数。</p>
+<p>#include&lt;pthread.h&gt;</p>
+<p>int pthread_barrier_init(pthread_barrier_t<em>barrier,struct pthread_barrierattr_t</em>attr,unsigned int count);</p>
+<p>int pthread_barrier_destroy(pthread_barrier_t*barrier);</p>
+<p>成功0，出错返回错误码</p>
+<p>int pthread_barrier_wait(pthread_barrier_t*barrier);成功返回0或PTHREAD_BARRIER_SERIAL_THREAD，否则返回错误码</p>
+<p>使用init函数初始化一个屏障，count参数是指定该屏障的屏障计数，只有当有count个线程都调用了wait函数，所有的线程才继续往下执行。</p>
+<p>屏障计数只能在初始化的时候给出，所以如果要更改屏障计数，必须先destroy再次init。</p>
+<p>调用wait函数，表明该线程已经做完指定的任务，等待其他线程的完成，在此阻塞。</p>
+<figure data-type="image" tabindex="16"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588997713942.png?lastModify=1625624567" alt="" loading="lazy"></figure>
+<p>一旦所有线程都到达了屏障，则屏障计数可以复用，可以重新进行计数。</p>
+<p>屏障相当于每个线程都设置了一个任务暂时的终点（pthread_barrier_wait），大家都到达各自的终点后，再一起向前执行代码。</p>
+<figure data-type="image" tabindex="17"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589113147310.png?lastModify=1625624567" alt="" loading="lazy"></figure>
+<p>两种情况都有一定的问题：第一种，由于是在释放锁之前广播条件变量，那么其他线程收到该信号后也是会阻塞的；第二种，有可能在第三和第四部之间，有其他的线程获得了锁之后修改了条件变量，使得原本生效的条件变量失效了，也即原本应该要实现某些工作的线程没有得到执行，所以我们在收到信号后还要再重新检测条件变量，不能仅仅因为pthread_cond_wait返回后就假定条件为真。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-zhang-xin-hao/">
+                <h3 class="post-title">
+                  APUE笔记-第十章-信号
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

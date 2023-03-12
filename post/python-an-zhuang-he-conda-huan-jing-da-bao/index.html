@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>python安装和conda环境打包 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>python安装和conda环境打包</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+                  python
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>https://zhuanlan.zhihu.com/p/93024522</p>
+<p>Centos7只有自带的Python2.7，所以要手动安装一下Python3。为了方便后续的Tensorflow环境搭建，选择Python3.6.8。同时直接使用yum install方式安装Python3.6可能会和系统自带的Python 2.7冲突所以采用源代码编译安装方式，如果编译时缺少了依赖的库文件，可能会安装成一个不完整的Python环境，且没有错误提示，会导致部分标准Python库无法使用。 步骤如下：</p>
+<h2 id="安装编译环境">安装编译环境</h2>
+<pre><code class="language-javascript">sudo yum -y groupinstall &quot;Development tools&quot;
+sudo yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel libffi-devel
+</code></pre>
+<h2 id="下载python安装包">下载python安装包</h2>
+<pre><code class="language-javascript">wget https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tar.xz
+# 解压包
+tar -xvf Python-3.6.8.tar.xz
+</code></pre>
+<h2 id="安装python">安装python</h2>
+<pre><code class="language-javascript"># 进入解压目录
+cd Python-3.6.8
+
+# 生成MakeFile
+sudo ./configure --prefix=/usr/local/python3.6.8 --enable-optimizations --enable-shared
+
+# 安装 使用make atinstall避免替换默认的python执行文件
+sudo make altinstall
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/dZIUYl59eXQiKH6.png" alt="" loading="lazy"></figure>
+<p>如果不加enable-shared，编译出来没有so文件，有些python包需要用so文件，因此会导致程序无法启动。</p>
+<p>如果通过enable-shared来编译了，但还是说没有发现相应的so文件：</p>
+<pre><code class="language-javascript">echo &quot;/usr/lib&quot; &gt; /etc/ld.so.conf.d/python3.6.conf 
+// echo的路径要看你的so文件在哪，一般是在/usr下的python路径
+ldconfig
+ldd /usr/bin/python3 //查看程序启动需要的so文件 用以检查
+</code></pre>
+<h2 id="设置软连接到userbin文件夹">设置软连接到/user/bin/文件夹</h2>
+<pre><code class="language-javascript">sudo ln -s /usr/local/python3.6.8/bin/python3.6 /usr/bin/python3
+sudo ln -s /usr/local/python3.6.8/bin/pip3.6 /usr/bin/pip3
+</code></pre>
+<p>---------------割---------------后续操作--------------割------------</p>
+<h2 id="更新pip">更新pip</h2>
+<pre><code class="language-javascript">pip3 install --upgrade --user pip setuptools
+</code></pre>
+<h2 id="更改pip源">更改pip源</h2>
+<pre><code class="language-javascript">mkdir ~/.pip
+cd ~/.pip
+vim pip.conf
+</code></pre>
+<h3 id="写入下面代码将pip源设置为阿里源">写入下面代码，将pip源设置为阿里源</h3>
+<pre><code class="language-javascript">[global]
+index-url=http://mirrors.aliyun.com/pypi/simple/
+
+[install]
+trusted-host=mirrors.aliyun.com
+</code></pre>
+<h2 id="python查看源的版本和安装">python查看源的版本和安装</h2>
+<p>查看pip3现在源有的版本：</p>
+<pre><code class="language-javascript">pip3 install tornado==
+</code></pre>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/1jIhH4knPKeWqV6.png" alt="" loading="lazy"></figure>
+<p>选择某个版本进行安装</p>
+<pre><code class="language-javascript">pip3 install tornado==6.0.4
+</code></pre>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/b6zgsYBxEJ4qec9.png" alt="" loading="lazy"></figure>
+<h2 id="python3-venv打包">python3 venv打包</h2>
+<p>https://docs.python.org/zh-cn/3/tutorial/venv.html</p>
+<h2 id="添加-删除环境变量">添加、删除环境变量</h2>
+<p>https://blog.csdn.net/mayue_web/article/details/97023615</p>
+<figure data-type="image" tabindex="4"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE593b27f65054bd49c54b6ed7fd62d1d9.png" alt="" loading="lazy"></figure>
+<p>对已有的环境变量项增加一项：</p>
+<h2 id="conda打包python环境">conda打包python环境</h2>
+<p>deactivate base环境的方法</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/bVYXqcrG167NdHT.png" alt="" loading="lazy"></figure>
+<p>打包环境的方法：</p>
+<p>https://blog.csdn.net/shirukai/article/details/108822729</p>
+<pre><code class="language-javascript">conda create -n env_name python=3.6.8
+conda activate env_name
+conda pack -n env_name -o env.tar.gz
+</code></pre>
+<p>https://docs.conda.io/en/latest/miniconda.html#linux-installersminiconda的下载链接</p>
+<p>注意下载miniconda的时候记得选好版本，不过问题不大，在创建环境的时候，可以指定conda用什么python环境。</p>
+<p>逻辑上，就是创建了一个虚拟环境后，并且进入这个环境，在这个状态下执行的所有pip install操作都会记录在这个环境下，然后执行打包，就可以一起把pip下载的打包了。</p>
+<p>然后在另一台机器解压这个环境，activate这个环境后，去执行自己的py文件就OK了。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/RJpkXxm2ZjUnCcN.png" alt="" loading="lazy"></figure>
+<p>导出依赖库</p>
+<p>pip freeze &gt; requirements.txt</p>
+<p>pip install -r requirements.txt # 安装依赖</p>
+<p>更新包</p>
+<p>pip3 install upgrade pkgname [--index-url url --extra-url url2]</p>
+<p>[]内可选</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/zheng-ze-biao-da-shi-ji-chu-shi-yong/">
+                <h3 class="post-title">
+                  正则表达式基础使用
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

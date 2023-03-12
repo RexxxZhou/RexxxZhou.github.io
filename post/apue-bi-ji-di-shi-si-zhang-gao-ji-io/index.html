@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十四章-高级IO | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十四章-高级IO</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十四章-高级I/O</p>
+<p>非阻塞I/O</p>
+<p>系统调用分为两类：低速系统调用和其他，低速系统调用是指可能会使进程永久阻塞的一类系统调用：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/1CZUsjX3EOuSiBM.png" alt="" loading="lazy"></figure>
+<p>特别指出，在网络通信中，如果在读取的时候，数据并未到达，则会一直阻塞，而如果对端的通告窗口为0，那么发送端的写操作也将一直阻塞至窗口恢复。两类常见的阻塞。</p>
+<p>虽然对磁盘的I/O可能会阻塞，但不能把他们看成是低速系统调用，因为我们可以设置他们为非阻塞模式，调用后如果阻塞了就立刻返回出错，表示该操作如果继续执行将会阻塞。</p>
+<p>对于一个给定的文件描述符，有两种方式使其变为非阻塞的：</p>
+<p>1.在open一个文件的时候，指定O_NONBLOCK标志。</p>
+<p>2.对一个已经打开的文件描述符，使用fcntl函数打开该描述符的O_NONBLOCK标志。</p>
+<p>注意对象是文件描述符。</p>
+<p>POSIX要求对于一个非阻塞的描述符，如果没有数据可读，则返回-1，errno置为EAGAIN。</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/yI17YkQDad3RN2c.png" alt="" loading="lazy"></figure>
+<p>问题：改的是文件描述符的标志，假设fd1和fd2打开的是同一文件，如果改了fd1的标志，fd2是否受影响？</p>
+<p>记录锁</p>
+<p>每个进程可以对一个文件的某个区域进行加锁，所以记录锁应当叫做字节范围锁，锁的是一个字节范围。类似于线程同步中的读写锁。</p>
+<p>记录锁分为三种状态：共享读，独占写，解锁。</p>
+<p>通过fcntl函数，对指定文件描述符进行加锁或解锁，实际上锁的就是文件描述符对应文件。</p>
+<p>#include&lt;fcntl.h&gt;</p>
+<p>int fcntl(int fd,int cmd,struct flock*lock);失败返回-1，成功则依赖cmd有不同的变化</p>
+<p>cmd可以为F_SETLK、F_GETLK、FSETLKW三种状态，lock参数为一个指向flock类型的指针，这个对象包含了锁的全部信息：</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/bgOwKSH7fqpmJ8A.png" alt="" loading="lazy"></figure>
+<p>l_type为锁的类型，：读锁、写锁、解锁</p>
+<p>l_start为指定的要使用记录锁的文件字节起始位置</p>
+<p>l_len为从l_start开始一共多少个字节，如果设置为0，表示从l_start开始一直到文件末尾</p>
+<p>l_whence是文件偏移量，指上锁后在哪开始读或写，有SEEK_SET,SEEK_CUR,SEEK_END三种。</p>
+<p>l_pid为哪个ID的进程正在阻塞调用者进行加锁操作，只能由F_GETLK返回</p>
+<p>记录锁要么是独占写，要么是共享读，即对于进程之间，对同一文件的同一区域，某个时刻该记录锁只能是读锁或者写锁中的一种，若已经是读锁，其他的进程不能对其加写锁，如果是写锁，其他进程不能对其进行任何操作。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/Qk9tTDCZWsEAom5.png" alt="" loading="lazy"></figure>
+<p>对于进程本身，如果进程多次调用了fcntl上锁，那么不会发生任何的阻塞，若对已加锁的区域再次加锁，那么该进程的对于该区域的锁被替换成新的锁。</p>
+<p>F_GETLK是想获得阻塞了自己设置锁的进程的ID，而对于进程自身的锁，多次设置会直接替换，不会被阻塞，所以F_GETLK不会报告自己持有的锁。</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/ijoG9eFMDAsCdbJ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/jQzub2J4PdFVRvZ.png" alt="" loading="lazy"></figure>
+<p>F_GETLK只是用来判断加锁的操作是否会被排斥或阻塞，如果是，也即已经由其他进程读该区域加锁并且两者操作是互斥的，那么lock参数指向的flock结构被写成已有锁的信息；否则，lock中的l_type改为F_UNLCK，其他的信息不变。调用者可以用F_GETLK来判断当前是否可以加锁。</p>
+<p>F_SETLK设置由lock参数描述的锁。如果已经被上锁并且冲突了，那么fcntl会立刻出错返回，errno设置为EAGAIN或EACCES。也可以用该命令来解锁，l_type设置为F_UNLCK即可。</p>
+<p>F_SETLKW表示阻塞的设置一把记录锁，如果已经被上锁并冲突了，那么会一直阻塞到可以设置为止，否则直接设置好返回。</p>
+<p>F_SETLK类似于trylock，而F_SETLKW类似于lock，一个不阻塞，一个阻塞。</p>
+<p>要注意的是，先用F_GETLK，判断是否可以加锁后再用F_SETLK加锁并不是原子操作，本来可以加锁的，但可能再两者调用之间其他的进程在这个窗口对同一区域加锁了，那么F_SETLK是失败的。</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/LXYdST73gGjplJR.png" alt="" loading="lazy"></figure>
+<p>如果已有进程获得了读锁，而第二个进程阻塞的想设置写锁，那么会阻塞，而此时如果还有其他的进程获取了读锁，那么请求写锁的进程可能一直阻塞下去！</p>
+<p>系统会按照要求组合或分裂记录锁区域：</p>
+<figure data-type="image" tabindex="8"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589599582151.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>因为独占写的存在，可能存在死锁，即已经占有区域A的进程尝试F_SETLKW加锁被另外一个进程占有的区域B，而该另一进程由试图F_SETLKW获取前者的区域A，就会死锁。</p>
+<p>锁的隐含继承和释放</p>
+<p>关于锁的自动继承和释放有三种情况;</p>
+<p>1.锁是与文件和进程两者关联的，所以，如果进程终止了，则该锁会自动释放；或者如果关闭了一个文件描述符，则通过该文件描述符设置的锁，也会自动释放。注意，如果有多个文件描述符例如fd1和fd2引用了同一个文件，就算只通过了fd1设置了记录锁，当close fd2时，会释放进程在该文件上的所有锁。</p>
+<figure data-type="image" tabindex="9"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589601611113.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>2.fork后的子进程不会继承父进程的锁，因为两者已经不是一个进程了，而由于子进程会继承父进程的所有文件描述符，所以此时子进程需要自己再调用fcntl进行想要的区域上锁。</p>
+<p>3.exec后的程序继承exec前的锁，因为本质上两者还是同一进程。但如果文件描述符设置了执行时关闭，那么该文件描述符关闭后，一样会自动释放其上的锁。</p>
+<p>注意：不管是同一进程中有多个fd指向同一文件，还是不同进程中都打开了同一文件，只要关闭这些fd中任意一个，都会释放掉该进程在这个文件上设置的锁。一个进程关闭自己打开的同一文件的任意一个描述符后，会自动释放该进程在其上设置所有的锁。</p>
+<p>以写锁为例:</p>
+<figure data-type="image" tabindex="10"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589601916058.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="11"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589601933661.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>关键就在于close的时候，会把该文件的所有的lockf给清除，所以才会有上述的效果。</p>
+<p>在文件尾端加锁</p>
+<p>如果记录锁中的l_len字段为0，表示一直锁到文件的末尾，其实对文件末尾的写，也即追加内容，这些内容一样是被锁上的，而其他的区域的锁，只会去修改该区域的内容，并不会追加内容，只会直接覆盖原来的值。</p>
+<figure data-type="image" tabindex="12"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589609461886.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>建议性锁和强制性锁</p>
+<p>建议性锁是指多个协调的进程按照一致的方法去处理锁，这些进程称为合作进程，否则为非合作进程。</p>
+<figure data-type="image" tabindex="13"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589609550819.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>可以形象的理解为，认为这些进程的操作不会冲突，例如人们红绿灯会遵守规则，就不会有冲突，而强制性锁，就是上面一直讲的各种锁机制。</p>
+<figure data-type="image" tabindex="14"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589609672953.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="15"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589609712431.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>如果一个进程open一个被其他进程已经打开的并且已经被上锁了，那么如果打开时指定了O_TRUNC或O_CREAT，则不论是否设置了O_NONBLOCK，open都会立刻出错返回，errno设置为EAGAIN。</p>
+<p>即使一个文件被一个进程给上锁了，但是其他进程可以直接删除这个文件，这样会绕过记录锁机制。</p>
+<p>I/O多路转接</p>
+<p>如果一个进程要执行多个读操作，那么不能设置为阻塞读，因为这是一个进程，如果其中一个读阻塞了，那么进程就会被挂起，而很可能此时其他的描述符已经准备好数据可以直接读了，所以这会导致效率的降低。</p>
+<p>一种解决方法是调用fork，分出不同的进程来执行对不同文件描述符的读操作，但这存在一个每个进程如何确定操作已经结束：</p>
+<figure data-type="image" tabindex="16"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589682061052.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>当然还可以采用多线程的形式，例如主线程和工作线程，但涉及多线程就要做好线程同步，代码也是相当复杂。</p>
+<p>虽然POSIX提供了异步I/O接口，即当描述符准备好时，通知进程进行读，读该信号进行处理，但是面对多个描述符，进程并不知道是谁准备好了，即使能够将描述符和信号对应起来，但这种信号的种类一般远远小于一个进程打开的描述符。</p>
+<p>一种比较好的计数就是I/O多路转接，也叫I/O多路复用，构造一张文件描述符的表，调用select，pselect，poll函数，直到这些描述符中有一个描述符已经准备好了，这些函数返回该描述符，这样进程就能直到到底是谁准备好了。但这些函数本质上都是同步的，都是顺序执行这些I/O的。</p>
+<p>调用这些函数，并不需要管具体的文件描述符本身是否是可阻塞描述符，这些函数并不受这些影响，也即不会因为这些fd的阻塞而导致函数阻塞。</p>
+<p>select、pselect、poll都是同步IO，判断是否为同步IO的标准是，调用了IO之后是否进程/线程会阻塞，直到实际的I/O完成了才能继续执行后续代码，是的话则为同步IO，否则为异步IO。同步IO一定要处理完IO后才能继续，不管阻塞的还是非阻塞的；而异步IO不需要管IO的实际处理，因为交给了内核。</p>
+<figure data-type="image" tabindex="17"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589689269276.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>函数select和pselect</p>
+<p>文件描述符是否阻塞不影响函数是否阻塞</p>
+<p>函数select告诉内核：</p>
+<p>我们所关心的描述符、对于每个描述符我们所关心的条件（读、写或异常），以及愿意等待的时间。</p>
+<p>从select返回时，内核告诉我们：</p>
+<p>已经准备好的文件描述符总数、和具体的哪些描述符准备好了</p>
+<p>#include&lt;sys/select.h&gt;</p>
+<p>int select(int maxfdp1,fd_set* readfds,fd_set* writefds,fd_set* exceptfds,timeval* tvptr);</p>
+<p>返回准备就绪的描述符总数，如果超过给定时长，返回0，出错返回-1</p>
+<p>最后一个参数表示我们愿意让select等待多长的时间，这段时间内select，select会一直测试所有的描述符集，如果都测完发现有准备好的，就会返回，如果超过这段时间一直没有发现有准备好的，就超时返回0.</p>
+<p>tvptr==NULL，则表示永久等待，直到测试所有描述符集有准备好的后返回</p>
+<p>tvptr-&gt;tv_sec<mark>0&amp;&amp;tvptr-&gt;tv_usec</mark>0，表示不等待，测试完一轮后没有准备好的也返回。</p>
+<p>若tvptr指定了一个时间，则在该时间内一直轮询直到有准备好的才返回。</p>
+<p>readfds,writefds,exceptfds表示我们关心的描述符集，select会对这些描述符集上的每个fd进行轮询。</p>
+<p>如果都置为nullptr，则相当于sleep，但其时间精度会比sleep更高。</p>
+<p>第一个参数maxfdp1是我们关心的文件描述符中最大的编号+1，内核根据这个值去查询文件描述符。</p>
+<figure data-type="image" tabindex="18"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589684765724.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>Linux中，如果在超时时间前返回了，那么内核会将tvptr修改为剩余的时间，要注意是会被修改的。</p>
+<figure data-type="image" tabindex="19"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589684230298.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>注意，文件描述符集是一个下标为描述符编号的数组，其元素值非0即1，表示一个描述符是否在该集中，所以一个文件描述符集在初始化后，其长度是我们进程打开的文件描述符的总数，我们可能关心不是所有的fd，所以maxfdp1参数就是指定内核搜索这个参数之前的所有fd。</p>
+<p>文件描述符集的类型为fd_set。</p>
+<p>#include&lt;sys/select.h&gt;</p>
+<p>int FD_ISSET(int fd,fd_set* fdset);//如果fd在描述符集中，则返回非0，否则返回0</p>
+<p>void FD_CLR(int fd,fd_set*fdset);</p>
+<p>void FD_SET(int fd,fd_set*fdset);</p>
+<p>void FD_ZERO(fd_set*fdset);</p>
+<p>使用一个fd_set变量前，必须调用FD_ZERO进行初始化。</p>
+<p>用FD_ISSET来判断某个描述符是否在描述符集中，这个可用于判断select返回后的每个描述符集中，是否已经有想要的fd准备好了。</p>
+<p>select的返回值：</p>
+<p>1.返回-1，表示出错，例如可能在select的过程中，有信号中断了select，则返回-1.</p>
+<p>2.返回0，要么没有准备好的fd，要么超时，此时select不会去修改每个文件描述符集。</p>
+<p>3.返回一个正数，表示准备好的fd的总数，select会修改文件描述符集，把原本的readfds,writefds,exceptfds中当前准备好的都置为1，没有准备好的置为0，这样用户调用FD_ISSET来判断某个fd是否准备好了。</p>
+<figure data-type="image" tabindex="20"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589684908628.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>注意对一个普通文件，读、写、异常条件一直是准备好的。</p>
+<p>调用select，如果我们指定了等待时间，那么select就会在这个时间内一直执行，进程会阻塞在这里，直到超时前有fd准备好了，或超时了才返回。</p>
+<p>如果一个fd到了文件末尾，select认为这个fd是可读的，只不过read返回0而已。</p>
+<p>还提供了一个pselect函数:</p>
+<p>#include&lt;sys/select.h&gt;</p>
+<p>int pselect(int maxfdp1,fd_set* readfds,fd_set* writefds,fd_set* exceptfds,const timespec* tsptr,sigset_t* sigmask);</p>
+<p>基本功能与select一样，区别：</p>
+<p>1.指定的等待时间是const类型，所以pselect不会更改这个时间</p>
+<p>2.多了一个sigmask参数，调用pselect可以指定在pselect执行期间，屏蔽的信号集，返回后恢复为原来的信号屏蔽字。</p>
+<p>3.时间类型是timespec，所以精度会被select高。</p>
+<p>函数poll</p>
+<p>poll和select类似，只不过接口不一样，与select一样，文件描述符是否阻塞不影响函数是否阻塞;</p>
+<p>#include&lt;poll.h&gt;</p>
+<p>int poll(struct pollfd fdarray[],nfds_t nfds, int timeout);返回准备就绪的fd总数，超时或无返回0，出错返回-1</p>
+<p>poll指定的关心的fd是通过一个pollfd类型的数组指定的：</p>
+<figure data-type="image" tabindex="21"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589686145591.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>该结构中的fd是关心的fd，events是一系列常量的按位或，表示想要关心的条件，而revents表示poll返回后，由内核设置，说明在该fd上发生了什么事件。</p>
+<p>这与select不同在于，它不会更改关心的事件events，而是将发生的事件放在revents上。</p>
+<figure data-type="image" tabindex="22"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589686263982.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>最后三个标志，即使events没有指定，如果发生了，也会写到revents中。</p>
+<p>当一个描述符被挂断（POLLHUP）后，就不能再写该描述符，但是能够继续读。</p>
+<p>timeout参数表明愿意等待的时间：</p>
+<p>timeout=-1，永远等待</p>
+<p>timeout=0，不等待</p>
+<p>timeout&gt;0，等待timeout毫秒</p>
+<figure data-type="image" tabindex="23"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589686394027.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>select和poll都是系统调用，都是不会自动重启动的系统调用，所以才有了如果信号中断了该函数，会返回-1，errno设置为EINTR。</p>
+<p>异步I/O</p>
+<figure data-type="image" tabindex="24"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589688550625.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>POSIX 异步I/O</p>
+<p>POSIX的异步I/O接口都使用了AIO控制块来描述I/O操作，aiocb结构（asynchronous I/O control block）定义了AIO控制块。</p>
+<figure data-type="image" tabindex="25"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589688698180.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>aio_fildes表示被打开用来读或写的文件描述符，读写操作从指定的aio_offset偏移量开始，读的数据写到aio_buf中，或将aio_buf中的数据写到fd中，aio_nbytes指定读写的字节数。</p>
+<figure data-type="image" tabindex="26"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589688858449.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>sigenv代表了在异步I/O完成后，如何通知应用程序。</p>
+<figure data-type="image" tabindex="27"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589688879232.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>在进行异步I/O之前必须初始化AIO控制块，调用aio_read，aio_write函数来进行异步读或写</p>
+<p>#include&lt;aio.h&gt;</p>
+<p>int aio_read(struct aiocb*aiocb);</p>
+<p>int aio_write(struct aiocb*aiocb);成功返回0，失败返回-1</p>
+<p>这两个函数只是将异步I/O请求加入队列中，然后立即返回，与实际的I/O没关系，加入操作系统等待处理队列后，内核会负责这个I/O，并当完成后根据sigenv设置的方式来通知应用程序。</p>
+<p>因此，使用异步I/O，调用了这些函数后，进程可以继续往下执行其他的代码。必须保证AIO控制块和数据库缓冲区保持稳定，在异步I/O返回之前都不要复用。</p>
+<p>如果想要强制所有等待中的异步操作不等待而写入持久化的存储中（例如磁盘），可以设置一个AIO控制块，并调用fsync函数</p>
+<p>因为我们的write函数，只是把用户的缓冲区复制到内核缓冲区，加入到写队列中就成功返回了，返回时候并不一定这些数据已经被写到文件上了，之前调用fsync或fdatasync就是为了让内核被这些数据都真正的写进磁盘中。</p>
+<p>write函数使用的是延迟写，也即从用户缓冲区复制到内核缓冲区后，加入到写队列中，就成功返回，晚些时候才真实写入文件中 。调用fsync或fdatasync就是促使内核现在就写入。</p>
+<p>下面的函数是异步IO中，将同步请求异步的提交给内核，让内核完成类似fsync的作用，aio_fsync只是一个请求，并不会像fsync那样等到数据真实写入文件了才返回，因为毕竟其本质是异步IO。</p>
+<p>int aio_fsync(int op,struct aio* aiocb);//成功0，出错-1</p>
+<p>AIO控制块中的aio_fildes字段指定了其异步写操作被同步的文件。op可以O_DSYNC和O_SYNC，前者类似于调用了fdatasync，后者类似于调用了fsync。这两个函数都是等待写操作完成后才返回。</p>
+<p>在安排了同步后，aio_fsync就返回，指定的同步的异步操作完成后，AIO控制块会告诉如果通知我们。</p>
+<p>int aio_error(struct aiocb* aiocb)；</p>
+<p>为了获取一个异步操作的状态，可以用aio_error来获取，根据其返回值可以进行判断：</p>
+<p>有四种情况：</p>
+<p>1.返回0，异步操作已经完成，此时可以调用aio_return获取异步操作的返回值</p>
+<p>2.-1，该函数调用失败，查看errno判断原因</p>
+<p>3.EINPROGRESS 异步操作正在执行</p>
+<p>4.其他情况，返回的是异步操作失败的错误码</p>
+<p>int aio_return(struct aiocb*aiocb);</p>
+<p>如果一个异步操作完成了，可以用aio_return获取异步操作的返回值，但必须是完成后才能调用，否则是未定义的情况。且必须小心调用aio_return，这个一旦调用后，内核会释放该返回值的记录，类似于wait或pthread_join一样，得到终止状态后这些资源就被释放了。</p>
+<p>返回-1，代表函数本身出错，其他情况下返回异步操作成功返回的值。</p>
+<figure data-type="image" tabindex="28"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589769634126.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>本身使用异步IO的原因就是不想阻塞在IO操作中，可以同时执行其他的代码，但如果其他的代码已经执行完了，而异步操作还没执行完，可以调用aio_suspend来阻塞进程，直到异步操作完成。</p>
+<p>int aio_suspend(struct aiocb* list[],int nent,timespec* timeout);成功返回0，失败返回-1</p>
+<p>如果aio_suspend被信号中断，那么返回-1，errno为EINTR；如果在timeout时间内，没有一个异步操作完成，那么返回-1，errno为EAGAIN；否则如果有任何一个完成了，则返回0。如果timeout置为空指针，那么相当于一直等待。</p>
+<p>list参数是AIO控制块的列表，表明一系列异步操作，如果某个位置的元素是空指针，则直接跳过。</p>
+<p>若调用时这些异步操作都完成了，则直接返回。</p>
+<p>int aio_cancel(int fd,struct aiocb*aiocb);</p>
+<p>如果不想再执行等待中的异步IO，则可以调用aio_cancel进行操作的取消。fd指定了那个未完成异步操作的文件描述符，aiocb表示该fd上的一个异步操作，如果aiocb为NULL，则取消该fd上所有的异步IO。</p>
+<figure data-type="image" tabindex="29"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589770029288.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>int lio_listio(int mode,struct aiocb* list[], int nent, struct sigevent* sigev);成功0，错误-1</p>
+<p>上述函数可以把一系列的异步IO操作都注册了，而对于每个异步IO是读还是写，由AIO控制块中的aio_lio_opcode来决定，这个字段可以为LIO_READ,LIO_WRITE,LIO_NOP，分别代表读，写，空操作。list参数给定了要注册的异步IO操作，nent是这个列表的大小，sigev参数指定了当这些所有的异步IO都完成后，会执行什么来通知我们。</p>
+<p>注意这个函数中的sigev和每个aiocb控制块中的sigev字段是独立的，也即每个异步操作完成了，会执行该控制块中的sigev指定的内容来通知我们，而该函数中的sigev只有在所有的异步IO都完成后才执行。</p>
+<p>该函数可以指定是同步还是异步的执行，由mode决定，如果mode为LIO_WAIT，那么必须所有注册IO操作执行完才会继续执行后续代码，如果为LIO_NOWAIT则是异步的，注册后直接返回并继续执行后续代码。</p>
+<figure data-type="image" tabindex="30"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589770452261.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>函数readv writev</p>
+<p>readv 理解成 readvec writev理解成writevec，用于在一次函数调用中读写多个非连续的缓冲区。</p>
+<p>用于同时读写多个缓冲区</p>
+<p>#include&lt;sys/uio.h&gt;</p>
+<p>ssize_t readv(int fd,struct iovec* iov, int iovcnt);</p>
+<p>ssize_t writev(int fd,struct iovec*iov,int iovcnt);</p>
+<p>两个函数成功返回已读或以写的字节数，错误返回-1</p>
+<p>第二个参数是一个指向iovec结构的指针</p>
+<figure data-type="image" tabindex="31"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589772990638.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>也即传给这两个函数一个iovec类型的数组，这两个函数在这些结构中指定的缓冲区中读或写指定的字节数。</p>
+<p>读写的顺序根据iovec数组中的顺序依次进行。</p>
+<p>writev通常返回值应等于所有缓冲区大小之和，代表所有缓冲区都被成功写入。</p>
+<figure data-type="image" tabindex="32"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589773148303.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>要注意的是readv函数会在前一个缓冲区填满的情况下再填入下一个缓冲区。</p>
+<figure data-type="image" tabindex="33"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589773275862.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="34"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589773280990.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>总之，如果写的数据量少，调用write比调用writev性能更好。</p>
+<p>什么是分段缓冲区？看完mmap再作判断</p>
+<p>函数readn和writen</p>
+<figure data-type="image" tabindex="35"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589774509318.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>通常对于write，只有当该描述符是非阻塞时，才会出现写的字节数少于指定的字节数的情况，但不论是否阻塞都可以用这两个函数来执行。</p>
+<p>readn和writen都不是标准定义的函数，是自己定义的，后续要用到，实现的功能是只要read和write不出错，就一直把要读或写的字节数都执行完，如果出错就直接返回已读或已写的字节数。</p>
+<p>自己写的版本和书中的版本差别在于第二个参数我指定的是char<em>而不是void</em>，因为设计到指针的偏移，而编译器不知道空指针+1应当在地址上移动几个字节，所以取此下策。</p>
+<p>存储映射I/O</p>
+<p>无法用在网络设备和终端设备上。</p>
+<p>存储映射I/O能将一个磁盘文件映射到存储空间中的一个缓冲区上。当在该缓冲区读相当于读文件，在该缓冲区写，相当于直接修改文件。这样就不需要调用read和write来执行IO。</p>
+<p>#include&lt;sys/mman.h&gt;</p>
+<p>void* mmap(void* addr,size_t len,int prot,int flag,int fd,off_t off);成功返回映射区的起始地址，出错返回MAP_FAILED.</p>
+<p>通过调用mmap函数实现文件映射到一个存储区域中。addr参数用于指定映射区的起始地址，但一般给0，这样系统会自动帮我们选择一个地址，并作为返回值返回给我们。fd为要映射的文件，必须在mmap前打开该fd，len表示要映射的字节数，off表示起始的偏移量。</p>
+<p>参数prot指定了对存储区域的保护要求：</p>
+<figure data-type="image" tabindex="36"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589856500101.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>这些保护权限的设置不能超过fd本身的权限。若指定多个保护要求，则多个常量按位或即可。</p>
+<p>flag参数，指定了存储区的多种属性：</p>
+<p>MAP_FIXED: 严格按照用户指定的addr来创建存储区，所以返回值必须等于addr，但这不具可移植性，一般不选用，如果不指定该标志，而且addr参数非0，那么系统只是把addr作为建议的起始地址，并不保证一定使用该地址作为起始地址。将addr置为0，可获得最大移植性。</p>
+<p>MAP_SHARED: 使用该标志，表明对存储区的修改就是对文件自身的修改。</p>
+<p>MAP_PRIVATE: 使用该标志，对存储区的修改会创建该文件的副本，此后的所有操作都是在这个副本上进行的，不会影响原文件的内容。有点像写时复制一样，第一次写之后就创建了自己的副本。</p>
+<p>还可以创建匿名存储映射，指定标志为MAP_ANON或MAP_ANONYMOUS，相应的fd指定为-1，那么系统会创建一块匿名的内存空间来用于映射，类似于共享存储。</p>
+<figure data-type="image" tabindex="37"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589856555929.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>注意：映射区是在堆和栈之间的，off和addr参数一般被要求为系统存储页长度的整数倍，调用sysconf以_SC_PAGESIZE为参数，获得系统得到存储也大小，Linux为4096。</p>
+<figure data-type="image" tabindex="38"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589857023348.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>由上可知，存储映射，只能修改文件中已有的字节，而不能够追加数据，且一般存储区域的大小为系统存储页。</p>
+<figure data-type="image" tabindex="39"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589857086452.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>与存储映射有关的信号为SIGSEGV和SIGBUS，前者是如果我们访问了不可用的存储区，则产生该信号，后者是当我们访问了已经不存在数据的存储区时，产生的信号。</p>
+<p>fork的子进程会继承存储映射区，因为这是父进程的地址空间中的一部分，但是exec后不会继承该存储映射区。</p>
+<p>调用mprotect，修改存储映射区的保护要求</p>
+<p>#include&lt;sys/mman.h&gt;</p>
+<p>int mprotect(void*addr,size_t len,int prot);成功0，出错-1</p>
+<p>addr参数必须是系统存储页的整数倍</p>
+<p>如果是用MAP_SHARED创建的存储映射区，对该映射区的修改并不是立刻写入对应文件的，这与write类似，存在一种延迟写的机制，系统自身会决定何时写入，并且写入的时候是整个页的数据都被写回。对于MAP_SHARED区磁盘文件的更新，会在我们写入映射区后的某个时刻，按内核虚拟存储算法自动更新相应文件。</p>
+<p>因此，有与write一样的延迟写机制，就有对应fsync的发起真实写入的函数。</p>
+<p>#include&lt;sys/mman.h&gt;</p>
+<p>int msync(void* addr,size_t len,int flags);//成功0，出错-1</p>
+<p>flags参数有MS_ASYNC、MS_SYNC两种，前者类似于aio_fsync一样，只是提交了写入文件的请求后就返回，而后者类似于fsync，直到真实写入文件了才返回。必须指定为其中的一个。</p>
+<p>当进程终止时，会自动解除存储映射区的映射，或者直接调用munmap函数进行解除。</p>
+<p>#include&lt;sys/mman.h&gt;</p>
+<p>int munmap(void* addr,size_t len);//成功0，出错-1</p>
+<p>munmap并不影响被映射的对象（即文件），调用munmap不会使映射区的内容写到文件上，也即不提供msync的功能，在调用munmap之后，不管是MAP_SHARED还是MAP_PRIVATE，映射区上的所有未真实写入的操作都会被丢弃，所以在进程终止之前，我们应该调用msync以MS_SYNC为参数，使其真实写入后才终止。</p>
+<p>只要已经创建了存储映射区，关闭文件描述符，不会使存储映射失效（读写）。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int ftruncate(int fd,off_t len);//成功0，出错-1</p>
+<p>ftruncate函数可以将给定文件描述符对应的文件truncate为指定的长度，如果原文件长度大于len则会被截断为len；若小于len，则多出来的部分填0。用来修改文件的大小。</p>
+<p>因为mmap只能对已有的长度内的数据进行修改和读取，不能追加，所以可以用ftruncate函数增加长度后，便可实现追加。</p>
+<figure data-type="image" tabindex="40"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1590122095226.png?lastModify=1625624614" alt="" loading="lazy"></figure>
+<p>存储映射mmap也是一种进程间通信的方式，并且是即时的。 不同的进程之间可以mmap同一块区域，但是必须做好同步。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-san-zhang-shou-hu-jin-cheng/">
+                <h3 class="post-title">
+                  APUE笔记-第十三章-守护进程
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言控制流 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言控制流</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h3 id="if条件语句">if条件语句</h3>
+<p>语法与C++一样，要注意的是：</p>
+<p>1.条件不需要用小括号括起来</p>
+<p>2.即使只有一条执行语句，也要有大括号，左括号必须与if、else、else if关键字同行</p>
+<p>3.if的条件判断语句可以引入声明，声明的对象只在该if语句块中可见（该语句块中的多个if、else分支均可见），声明与条件判断<strong>用分号</strong>分隔</p>
+<p>4.<strong>if语句的判断条件必须是布尔值</strong>，不能够是其他类型，也即不能像C++那样：非零值为true，零值为false。</p>
+<pre><code class="language-go">if a:=10; a&gt;1{
+	fmt.Print(a)
+} else {
+	fmt.Print(&quot;111&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="switch语句">switch语句</h3>
+<p>基本语法与C++一致，但<strong>每个case分支都默认加了break</strong>，不需手动添加。如果匹配了一个case后还想继续往下找case匹配，那么需要添加<strong>fallthrough</strong>关键字。（在break逻辑上刚好与C++相反的除了方式）</p>
+<p>由于Go会给每个分支默认加上break，本质上只要没有指定fallthrough，执行完一个分支后switch语句块就结束了，所以在分支中显式的写出break和不写是没有区别的，switch语句块都会退出，因此<strong>显式给出的break，并不会退出switch语句块所在的循环。</strong></p>
+<p>如果想要在switch中break掉外层的循环，可以<strong>给循环语句块加上label</strong>后，然后<strong>break label</strong>，这个label就是该循环语句的名字，<strong>label的下一行必须为循环语句</strong>，也即下一行必须紧接的是for：</p>
+<pre><code class="language-go">Loop:
+	for i := 0; i &lt;= 9; i++ {
+		fmt.Println(&quot;In loop&quot;, i)
+		switch {
+		case i == 5:
+			fmt.Println(&quot;Hit switch&quot;)
+			break Loop
+		}
+	}
+//output
+In loop 0
+In loop 1
+In loop 2
+In loop 3
+In loop 4
+In loop 5
+Hit switch
+</code></pre>
+<p>这种通过label来跳出循环的，<strong>内部可跨多层跳出外层循环</strong>，具体是：</p>
+<pre><code class="language-go">Loop:
+	for {
+		for i := 0; i &lt;= 9; i++ {
+			fmt.Println(&quot;In loop&quot;, i)
+			switch {
+			case i == 1:
+				fmt.Println(&quot;Hit switch&quot;)
+				break Loop
+			}
+		}
+	}
+//output
+In loop 0
+In loop 1
+Hit switch
+</code></pre>
+<p><strong>Label指向/代表的是其后紧跟的语句块或语句</strong>，一个label可以是一个if、for等语句块，也可以是一条语句，例如<code>fmt.Println(&quot;helloworld&quot;)</code>。</p>
+<p>continue也可以后接一个label：</p>
+<pre><code class="language-go">func main() {
+Loop:
+	for i := 0; i &lt; 10; i++ {
+		fmt.Println(&quot;before continue&quot;)
+		continue Loop
+		fmt.Println(&quot;after continue&quot;)
+	}
+}//这样after continue就不会打印出来
+</code></pre>
+<p>一个case分支可以<strong>判断多个值</strong>进行匹配，<strong>用逗号进行分隔：</strong></p>
+<p><code>case val1,val2,val3: </code></p>
+<pre><code class="language-go">switch var1 {
+    case val1:
+        ...
+    case val2:
+        ...
+    	fallthrough
+    default:
+        ...
+}//var1 可以是任意类型的变量，表达式。val1、val2可以是值也可以是表达式，但必须为同类型的值
+</code></pre>
+<p>没有写fallthrough的时候分支就好像一个断点一样，执行到下一个断点就结束该switch语句</p>
+<p><strong>fallthrough后的case不会进行匹配</strong>（ fallthrough 不会判断下一条 case 的表达式结果是否为 true ），直接执行语句：</p>
+<pre><code class="language-go">switch a {
+case 1, 23, 10:
+fmt.Println(&quot;case1&quot;)
+fallthrough
+case 20:
+fmt.Println(&quot;case2&quot;)
+default:
+fmt.Println(&quot;default case&quot;)
+}// 输出 case1 case2 
+</code></pre>
+<p>switch语句也可以搭配声明语句一起使用：</p>
+<pre><code class="language-go">map1 := map[string]string{}
+map1[&quot;hello&quot;] = &quot;world&quot;
+switch a,_:=map1[&quot;hello&quot;];a{
+	case &quot;world&quot;:
+		fmt.Println(&quot;hello-&gt;world&quot;)
+	case &quot;hello&quot;:
+		fmt.Println(&quot;hello-&gt;hello&quot;)
+	default:
+		fmt.Println(&quot;no needed &quot;)
+}
+//output
+hello-&gt;world
+</code></pre>
+<p>甚至switch后不需要跟变量，只要case后跟了一个布尔运算表达式即可：</p>
+<pre><code class="language-go">switch {
+case true:
+fmt.Println(&quot;hello-&gt;world&quot;)
+case false:
+fmt.Println(&quot;hello-&gt;hello&quot;)
+default:
+fmt.Println(&quot;no needed &quot;)
+}
+//output
+hello-&gt;world
+</code></pre>
+<h4 id="type-switch">Type Switch</h4>
+<p>switch语句可用于type-switch语句来判断某个interface变量中实际存储的变量类型</p>
+<p><strong>type-switch中不能使用fallthrough</strong></p>
+<pre><code class="language-go">switch x.(type){
+    case type:
+       statement(s);      
+    case type:
+       statement(s); 
+    /* 你可以定义任意个数的case */
+    default: /* 可选 */
+       statement(s);
+}
+
+</code></pre>
+<pre><code class="language-go">var b interface{}
+switch i := b.(type) {
+case nil:
+fmt.Println(&quot;case1&quot;, i)
+case int:
+fmt.Println(&quot;case2&quot;)
+default:
+fmt.Println(&quot;default case&quot;)
+}//输出case1 &lt;nil&gt;
+
+</code></pre>
+<p><strong>上述的i:=b.(type)，如果在switch语句中匹配到了某个类型，则i是这个类型的值；而如果都没有匹配到，例如最终到了default分支，则i是b的类型：</strong></p>
+<pre><code class="language-go">func do(i interface{}) {
+	switch v := i.(type) {
+	case int:
+		fmt.Printf(&quot;Twice %v is %v\n&quot;, v, v*2)
+	case string:
+		fmt.Printf(&quot;%q is %v bytes long\n&quot;, v, len(v))
+	default:
+		fmt.Printf(&quot;I don't know about type %T!\n&quot;, v)
+	}
+}
+
+func main() {
+	do(21)
+	do(&quot;hello&quot;)
+	do(true)
+}
+//output
+Twice 21 is 42
+&quot;hello&quot; is 5 bytes long
+I don't know about type bool!
+
+</code></pre>
+<p>其实上述这个type switch语句，还是根据i.(type)进行了分支判断，只不过v根据分支判断有不同的结果。</p>
+<hr>
+<h3 id="select语句">select语句</h3>
+<p>select语句可以看成是用于通信的switch语句，有点APUE中select函数的意思</p>
+<pre><code class="language-go">select {
+    case communication clause  :
+       statement(s);      
+    case communication clause  :
+       statement(s);
+    /* 你可以定义任意数量的 case */
+    default : /* 可选 */
+       statement(s);
+}
+
+</code></pre>
+<p>特点：</p>
+<p>1.每个case都是一个通信语句</p>
+<p>2.所有的channel表达式都会被求值、所有被发送的表达式也会被求值</p>
+<p>3.如有某个通信（case）可执行，则只执行这个，其他的忽略</p>
+<p>4.<strong>若有多个case满足条件，则会随机的选择一个case进行执行，其他的不会执行</strong></p>
+<p>​	否则：<br>
+​		1.如果有default分支，则执行该分支</p>
+<p>​		2.若无default分支，则select语句会阻塞（循环等待），直到有通信可以运行，Go不会重新对channel和值进行求值。</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+
+func main() {
+   var c1, c2, c3 chan int
+   var i1, i2 int
+   select {
+      case i1 = &lt;-c1:
+         fmt.Printf(&quot;received &quot;, i1, &quot; from c1\n&quot;)
+      case c2 &lt;- i2:
+         fmt.Printf(&quot;sent &quot;, i2, &quot; to c2\n&quot;)
+      case i3, ok := (&lt;-c3):  // same as: i3, ok := &lt;-c3
+         if ok {
+            fmt.Printf(&quot;received &quot;, i3, &quot; from c3\n&quot;)
+         } else {
+            fmt.Printf(&quot;c3 is closed\n&quot;)
+         }
+      default:
+         fmt.Printf(&quot;no communication\n&quot;)
+   }    
+}//输出 no communication
+
+</code></pre>
+<hr>
+<h3 id="for循环">for循环</h3>
+<p>Go语言的循环语句只有一个for语句，能够实现c++的条件循环、while循环相同的功能</p>
+<pre><code class="language-go">for init;condition;post{
+
+}//类似于C++中的for (int i =0;i&lt;100;i++)
+for condition {
+
+} //类似while (i&lt;100)
+for {
+
+} // 类似 while(1)
+
+//也有范围for的用法
+for key,value:=range oldMap{
+	newMap[key]=value
+}
+
+for key:=range oldMap{
+    fmt.Println(key)
+} 
+//通过这样range也可只取第一个返回值，不需要用下划线去忽略第二个返回值
+
+</code></pre>
+<pre><code class="language-go">package main
+import &quot;fmt&quot;
+
+func main() {
+        strings := []string{&quot;google&quot;, &quot;runoob&quot;}
+        for i, s := range strings {
+                fmt.Println(i, s)
+        }
+    
+        numbers := [6]int{1, 2, 3, 5}
+        for i,x:= range numbers {
+                fmt.Printf(&quot;第 %d 位 x 的值 = %d\n&quot;, i,x)
+        }  
+}
+
+</code></pre>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">
+                <h3 class="post-title">
+                  Go语言基础知识
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

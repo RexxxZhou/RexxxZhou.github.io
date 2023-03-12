@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Lua语言基础 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Lua语言基础</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+                  lua
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/17rcMwZsviYABlR.png" alt="" loading="lazy"></figure>
+<h2 id="lua教程">lua教程</h2>
+<p>https://moonbingbing.gitbooks.io/openresty-best-practices/content/lua/class.html</p>
+<p>lua最核心的就是table，table中的变量、函数就构成了一个对象，可以理解成，一个table就等同于面向对象编程。</p>
+<p>同时一个table，就可以成为一个module被别的lua代码导入，使用：</p>
+<p>require(&quot;module&quot;)就可以导入module.lua文件中定义的table作为一个模块。lua还会把这个模块的table声明为一个全局变量，这样在require之后，就可以直接使用table的名字来访问table里的函数或者变量了。</p>
+<h2 id="require的返回值">require的返回值</h2>
+<p>require “xxx” 某个模块后</p>
+<p>1.如果该模块自身有返回值，且模块加载成功，那么require 的返回值就是该模块的返回值</p>
+<p>2.如果模块没有返回值，如果require加载模块成功，就返回ture</p>
+<p>3.require 内部将返回值储存在：package.loaded表中。</p>
+<p>（即：package.loaded[xxx]中）</p>
+<p>4.例子</p>
+<pre><code class="language-javascript">(1)main.lua
+
+x = require &quot;test&quot;
+
+function Call()
+    x.show()
+end
+
+(2)test.lua
+
+local tb = {}
+function tb.show()
+    print(&quot;it is ok&quot;)
+end
+
+return tb
+
+(3)testLua.cpp
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    lua_State *L = luaL_newstate();
+    luaL_openlibs(L);
+    luaL_dofile(L,&quot;Lua//main.lua&quot;);
+
+    lua_getglobal(L,&quot;Call&quot;);
+    lua_pcall(L,0,0,0);
+
+    return 0;
+}
+</code></pre>
+<p>https://www.jianshu.com/p/d727825816ee</p>
+<p>2、--是注释符</p>
+<p>3、成员访问符</p>
+<p>有句号和冒号两种</p>
+<p>通过句号调用函数时，不会将self作为参数传入给函数，所以如果函数需要用self，则会报错。</p>
+<p>而冒号调用函数时，会将self作为参数传入。</p>
+<p>4、双点是字符串拼接</p>
+<pre><code class="language-javascript">local a = &quot;hello&quot;..&quot;world&quot;
+</code></pre>
+<p>上面的a就是helloworld，等价于别的语言的字符串+运算。</p>
+<p>5、and or</p>
+<p>逻辑运算时就是普通的与/或逻辑，在lua中，数值为0为true而不是false，这一点与其他语言不同</p>
+<p>但是lua的and和or会返回操作数</p>
+<ul>
+<li>and 返回第一个不为真的操作数，如果都为真，则返回最后一个操作数</li>
+</ul>
+<pre><code class="language-javascript">a = 0 and 1
+a为1
+a = nil and 1
+a为nil
+
+</code></pre>
+<ul>
+<li>or  返回第一个为真的操作数，如果都不为真，则返回最后一个操作数</li>
+</ul>
+<pre><code class="language-javascript">a = 0 or 1
+a 为0
+a = nil or false
+a 为false
+</code></pre>
+<p>6、ipairs pairs</p>
+<p>两个都是用来迭代遍历集合和table的，但有不同</p>
+<p>ipairs是将被迭代的对象当成数组一样，会从下标1开始遍历，一旦发现下一个下标的元素不存在，就会结束迭代。</p>
+<pre><code class="language-javascript">local tabFiles = {
+        [1] = &quot;test2&quot;,
+        [6] = &quot;test3&quot;,
+        [4] = &quot;test1&quot;
+    }
+
+for k, v in ipairs(tabFiles) do    --输出&quot;test2&quot;,在key等于2处断开
+    print(k, v)
+end
+</code></pre>
+<pre><code class="language-javascript">local tabFiles = {
+    [2] = &quot;test2&quot;,
+    [6] = &quot;test3&quot;,
+    [4] = &quot;test1&quot;
+}
+
+for k, v in ipairs(tabFiles) do  --[[什么都没输出，为什么？因为控制变量初始值是按升序来遍历的，当key为1时，value为nil，此时便停止了遍历， 所有什么结果都没输出]]--
+    print(k, v)
+end
+</code></pre>
+<p>而pairs就是普遍意义上的遍历所有的元素</p>
+<pre><code class="language-javascript">local tabFiles = {
+    [2] = &quot;test2&quot;,
+    [6] = &quot;test3&quot;,
+    [4] = &quot;test1&quot;
+}
+
+for k, v in pairs(tabFiles) do  --输出2 test2, 6 test3, 4 test1
+    print(k, v)
+end
+</code></pre>
+<pre><code class="language-javascript">local tabFiles = {&quot;alpha&quot;, &quot;beta&quot;, [3] = &quot;no&quot;, [&quot;two&quot;] = &quot;yes&quot;}  for i,v in ipairs(tabFiles ) do    --输出前三个   备注：因为第四个key不是整数
+    print( tabFiles [i] )   
+end   
+  
+for i,v in pairs(tabFiles ) do    --全部输出   
+    print( tabFiles [i] )   
+end 
+</code></pre>
+<p>https://www.runoob.com/note/11315</p>
+<p>7、变量类型</p>
+<p>Lua 变量有三种类型：全局变量、局部变量、表中的域。</p>
+<p>Lua 中的变量全是全局变量，哪怕是语句块或是函数里，除非用 local 显式声明为局部变量。</p>
+<p>局部变量的作用域为从声明位置开始到所在语句块结束。</p>
+<p>变量的默认值均为 nil。</p>
+<p>8、下标从1开始</p>
+<p>9、table</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/CLoa7zhRSjxPnkr.png" alt="" loading="lazy"></figure>
+<p>10、local xxx do xxx end</p>
+<figure data-type="image" tabindex="3"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE8eaf64476ef2bb9be9309f6da032b49c.png" alt="" loading="lazy"></figure>
+<p>上面的例子没有截取完整，下面的代码就是函数的定义和do语句块的结束。</p>
+<p>我们可以看到有两处声明了同名的对象fill_node_info，在lua中没有使用local前缀的都是全局对象，但是这个代码中里面的fill_node_info并不是一个全局对象，这其实是lua 的语法特性：</p>
+<p>function fill_node_info() 是等价于 fill_node_info=function()的，所以里面的fill_node_info只是对外面的local fill_node_info的重新赋值，这时候fill_node_info就变成了一个函数，也是局部对象；而这里的do的作用就是保护语句块中的一些数据而已。</p>
+<p>do end等价于c++的{}作用域。</p>
+<p>11、io.write</p>
+<p>io.write在没有指定文件时，等同于print</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/8wMtKdc6pbGaOQs.png" alt="" loading="lazy"></figure>
+<p>12、执行lua脚本</p>
+<p>和python类似，命令行执行lua进入console</p>
+<p>lua code_file.lua 运行代码</p>
+<p>13、判断lua的table是否为空</p>
+<pre><code class="language-javascript">local mytable = {}
+ 
+local mytable2 = {333,&quot;hello&quot;,666}
+ 
+if next(mytable) == nil then
+    print(&quot;mytable is true&quot;)
+else
+    print(&quot;mytable is false&quot;)
+end
+ 
+if next(mytable2) == nil then 
+    print(&quot;mytable2 is true&quot;)
+else
+    print(&quot;mytable2 is false&quot;)
+end
+</code></pre>
+<p>或者</p>
+<pre><code class="language-javascript">local mytable = {}
+if #mytable == 0 then
+    print(&quot;empty table&quot;)
+end
+</code></pre>
+<p>14、字符串日前转时间戳</p>
+<p>https://blog.csdn.net/chunniaozheng2370/article/details/101061249</p>
+<p>snippet</p>
+<pre><code class="language-javascript">local function get_timestamp(time_str)
+    -- format &quot;2022-02-25T21:54:07.7164964+08:00&quot;
+    local _, _, year, month, day, hour, min, sec = string.find(time_str, &quot;(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)&quot;)
+    return os.time({year=year, month = month, day = day, hour = hour, min = min, sec = sec})
+end
+</code></pre>
+<p>15、table.concat</p>
+<p>https://blog.csdn.net/LIQIANGEASTSUN/article/details/46592005</p>
+<p>http://lua-users.org/wiki/TableLibraryTutorial</p>
+<pre><code class="language-javascript">tab = {&quot;a&quot;, &quot;c&quot;, &quot;d&quot;, &quot;b&quot;}
+--(4)
+    -- 四个参数，参数一：表(tab)，参数二：分隔符 (&quot; - &quot;)，
+    -- 参数三：起始位置(2)，参数四：结束连接位置，作用为连
+    -- 接tab中所有的value，value 间以 &quot; - &quot; 隔开, 从 tab 
+    -- 的第二个value  开始连接，到 tab 的 第 3 个 value结束连接
+
+    print( table.concat(tab, &quot; - &quot;, 2, 3))  
+    --&gt; 输出结果： c - d
+</code></pre>
+<p>简单来说就是将table的字符串拼接起来，指定连接符，以及从第几个到第几个元素的拼接；只有table参数是必传的，其他的都是可选的，默认是连接符为空，从头到尾拼接</p>
+<p>将table中的元素拼接成字符串，每个元素都必须支持转换成字符串</p>
+<p>Concatenate the elements of a table to form a string. Each element must be able to be coerced into a string.</p>
+<p>concat will fail on a table that contains tables because they cannot be coerced into strings</p>
+<p>table中的数组或者kv对不能被concat，目前来看只有数字和字符串是可以concat的，而且只能是可以下标索引的元素才可以，例如 a = {1,2,3,&quot;hello&quot;} a[4]-&gt;&quot;hello&quot;，如果出现不能下标访问的，例如a = {1,2,3,x=1,y=2}，那么concat只会输出123，后面的x、y都不会拼接输出</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/xaD7uB2t9FqAsmb.png" alt="" loading="lazy"></figure>
+<p>并且，下标是跳过非下标访问元素的数值，例如下面的table，下标从1开始，最大的是5，对应的888</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/sAVDtEah6TJRbCG.png" alt="" loading="lazy"></figure>
+<p>16、select函数</p>
+<p>https://www.cnblogs.com/wangyueyouyi/p/9915644.html</p>
+<p>lua使用...来表示变长参数，{...}表示变长参数的数组，#{...}表示变长参数的长度，</p>
+<p>而select函数可以用来返回变长参数的长度，以及指定从第几个参数开始遍历</p>
+<pre><code class="language-javascript">function fun(...)                 --此处的...表示可变参数
+    for i in pairs({...})  do     --此处的｛...｝表示可变参数构成的数组
+        xxx
+    end
+end
+
+</code></pre>
+<p>select(n, ...)  --数字n表示起点，select(n, ...)返回从起点n到结束的可变参数，比如：</p>
+<p>n=3，... 是 0，1，2，3，4，5</p>
+<p>则 select(n, ...) 就表示...中从第3个到最后一个的多个数：2，3，4，5。并且2，3，4，5是4个数，不是列表或其他的数据结构</p>
+<p>select('#', ...)  --返回可变参数的数量</p>
+<pre><code class="language-javascript">方法1：
+
+function f(...)
+    print (#{...}))
+end
+f(1,2,3)&gt;&gt;3
+
+方法2：
+
+function f(...)
+    local x = {...}
+    print (#x))
+end
+f(1,2,3)&gt;&gt;3
+</code></pre>
+<p>17、lua的函数return</p>
+<p>这里是特意备注下，lua中函数如果没有在任何语句块直接return的话，必须结束函数</p>
+<pre><code class="language-javascript">function correct_example()
+    return 
+end
+
+function wrong_example()
+    return
+    print(123)
+end
+</code></pre>
+<p>如果想直接return，则需使用某个语句块，例如if或者do等</p>
+<pre><code class="language-javascript">function correct_example()
+    do
+        return
+    end                                 
+end
+</code></pre>
+<p>18、lua的table都是引用</p>
+<pre><code class="language-javascript">t1 = {a=123}
+t2 = {table1 = t1}
+t3 = {table2 = t1}
+print(t1.a) -- =&gt; 123
+print(t2.table1.a) -- =&gt; 123
+print(t3.table2.a)  -- =&gt; 123
+t1.a=456
+print(t1.a) -- =&gt; 456
+print(t2.table1.a) -- =&gt; 456
+print(t3.table2.a)  -- =&gt; 456
+</code></pre>
+<p>所以用lua写代码的时候，特别要注意这点，避免出现预料之外的数据</p>
+<p>在lua中，如果数据类型是引用传参的，例如table、string，即使使用了local的限制，都是引用处理，一处修改，别处也会可见。</p>
+<p>19、lua避免循环require的处理</p>
+<p>lua的require会先判断某个模块是否已经加载了，是的话就直接返回，否则才加载模块数据，因此来避免循环引用的问题。</p>
+<figure data-type="image" tabindex="7"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE8eeb5dd29cf677520405c078fb86aebd.png" alt="" loading="lazy"></figure>
+<p>20、lua数组append元素</p>
+<p>使用table.insert</p>
+<p>foo = {}</p>
+<p>table.insert(foo,&quot;bar&quot;)</p>
+<p>table.insert(foo,&quot;baz&quot;)</p>
+<p>21、lua string.find</p>
+<p>https://riptutorial.com/lua/example/20535/string-find--introduction-</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/yvErOaqKIM6kjf1.png" alt="" loading="lazy"></figure>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/json-validator-xiao-yan-gui-ze/">
+                <h3 class="post-title">
+                  json validator 校验规则
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

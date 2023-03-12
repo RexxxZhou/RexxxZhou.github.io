@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>makefile基础 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>makefile基础</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="make没有指定target">make没有指定target</h2>
+<p>在没有使用.DEFAULT_GOAL指定默认target的前提下，将默认使用第一个没有以.开头的target</p>
+<p>制定默认target的方法：</p>
+<p>1、使用.DEFAULT_GOAL指定</p>
+<pre><code class="language-javascript">.DEFAULT_GOAL:= default
+default:
+    @ echo &quot;helloworld&quot;
+</code></pre>
+<p>2、在你想要设为默认target前，清除.DEFAULT_GOAL</p>
+<pre><code class="language-javascript"># other targets
+.DEFAULT_GOAL:= default
+# no targets here
+default:
+    @ echo &quot;helloworld&quot;
+</code></pre>
+<p>这样，default就成为了默认target，而不是第一个目标是默认target</p>
+<h2 id="makefile中一些指代参数的符号自动变量">makefile中一些指代参数的符号(自动变量)：</h2>
+<p>$@  表示当前目标名</p>
+<p>$^  表示所有的依赖文件</p>
+<p>$&lt;  表示第一个依赖文件</p>
+<p>$?  表示比目标还要新的依赖文件列表</p>
+<p>Make命令还提供一些自动变量，它们的值与当前规则有关。主要有以下几个。</p>
+<p>（1）$@</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi mathvariant="normal">@</mi><mi mathvariant="normal">指</mi><mi mathvariant="normal">代</mi><mi mathvariant="normal">当</mi><mi mathvariant="normal">前</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">标</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">就</mi><mi mathvariant="normal">是</mi><mi>M</mi><mi>a</mi><mi>k</mi><mi>e</mi><mi mathvariant="normal">命</mi><mi mathvariant="normal">令</mi><mi mathvariant="normal">当</mi><mi mathvariant="normal">前</mi><mi mathvariant="normal">构</mi><mi mathvariant="normal">建</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">那</mi><mi mathvariant="normal">个</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">标</mi><mi mathvariant="normal">。</mi><mi mathvariant="normal">比</mi><mi mathvariant="normal">如</mi><mi mathvariant="normal">，</mi><mi>m</mi><mi>a</mi><mi>k</mi><mi>e</mi><mi>f</mi><mi>o</mi><mi>o</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal"> </mi></mrow><annotation encoding="application/x-tex">@指代当前目标，就是Make命令当前构建的那个目标。比如，make foo的 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord">@</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">代</span><span class="mord cjk_fallback">当</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">标</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">就</span><span class="mord cjk_fallback">是</span><span class="mord mathdefault" style="margin-right:0.10903em;">M</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord cjk_fallback">命</span><span class="mord cjk_fallback">令</span><span class="mord cjk_fallback">当</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">构</span><span class="mord cjk_fallback">建</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">那</span><span class="mord cjk_fallback">个</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">标</span><span class="mord cjk_fallback">。</span><span class="mord cjk_fallback">比</span><span class="mord cjk_fallback">如</span><span class="mord cjk_fallback">，</span><span class="mord mathdefault">m</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">o</span><span class="mord mathdefault">o</span><span class="mord cjk_fallback">的</span><span class="mord"> </span></span></span></span>@ 就指代foo。</p>
+<blockquote></blockquote>
+<p>a.txt b.txt:<br>
+touch $@</p>
+<p>等同于下面的写法。</p>
+<blockquote></blockquote>
+<p>a.txt:<br>
+touch a.txt<br>
+b.txt:<br>
+touch b.txt</p>
+<p>（2）$&lt;</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>&lt;</mo><mi mathvariant="normal">指</mi><mi mathvariant="normal">代</mi><mi mathvariant="normal">第</mi><mi mathvariant="normal">一</mi><mi mathvariant="normal">个</mi><mi mathvariant="normal">前</mi><mi mathvariant="normal">置</mi><mi mathvariant="normal">条</mi><mi mathvariant="normal">件</mi><mi mathvariant="normal">。</mi><mi mathvariant="normal">比</mi><mi mathvariant="normal">如</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">规</mi><mi mathvariant="normal">则</mi><mi mathvariant="normal">为</mi><mi>t</mi><mo>:</mo><mi>p</mi><mn>1</mn><mi>p</mi><mn>2</mn><mi mathvariant="normal">，</mi><mi mathvariant="normal">那</mi><mi mathvariant="normal">么</mi></mrow><annotation encoding="application/x-tex">&lt; 指代第一个前置条件。比如，规则为 t: p1 p2，那么</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.61508em;vertical-align:0em;"></span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">代</span><span class="mord cjk_fallback">第</span><span class="mord cjk_fallback">一</span><span class="mord cjk_fallback">个</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">置</span><span class="mord cjk_fallback">条</span><span class="mord cjk_fallback">件</span><span class="mord cjk_fallback">。</span><span class="mord cjk_fallback">比</span><span class="mord cjk_fallback">如</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">规</span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">为</span><span class="mord mathdefault">t</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8388800000000001em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">p</span><span class="mord">1</span><span class="mord mathdefault">p</span><span class="mord">2</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">那</span><span class="mord cjk_fallback">么</span></span></span></span>&lt; 就指代p1。</p>
+<blockquote></blockquote>
+<p>a.txt: b.txt c.txt<br>
+cp $&lt; $@</p>
+<p>等同于下面的写法。</p>
+<blockquote></blockquote>
+<p>a.txt: b.txt c.txt<br>
+cp b.txt a.txt</p>
+<p>（3）$?</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>?</mo><mi mathvariant="normal">指</mi><mi mathvariant="normal">代</mi><mi mathvariant="normal">比</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">标</mi><mi mathvariant="normal">更</mi><mi mathvariant="normal">新</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">所</mi><mi mathvariant="normal">有</mi><mi mathvariant="normal">前</mi><mi mathvariant="normal">置</mi><mi mathvariant="normal">条</mi><mi mathvariant="normal">件</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">之</mi><mi mathvariant="normal">间</mi><mi mathvariant="normal">以</mi><mi mathvariant="normal">空</mi><mi mathvariant="normal">格</mi><mi mathvariant="normal">分</mi><mi mathvariant="normal">隔</mi><mi mathvariant="normal">。</mi><mi mathvariant="normal">比</mi><mi mathvariant="normal">如</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">规</mi><mi mathvariant="normal">则</mi><mi mathvariant="normal">为</mi><mi>t</mi><mo>:</mo><mi>p</mi><mn>1</mn><mi>p</mi><mn>2</mn><mi mathvariant="normal">，</mi><mi mathvariant="normal">其</mi><mi mathvariant="normal">中</mi><mi>p</mi><mn>2</mn><mi mathvariant="normal">的</mi><mi mathvariant="normal">时</mi><mi mathvariant="normal">间</mi><mi mathvariant="normal">戳</mi><mi mathvariant="normal">比</mi><mi>t</mi><mi mathvariant="normal">新</mi><mi mathvariant="normal">，</mi></mrow><annotation encoding="application/x-tex">? 指代比目标更新的所有前置条件，之间以空格分隔。比如，规则为 t: p1 p2，其中 p2 的时间戳比 t 新，</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mclose">?</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">代</span><span class="mord cjk_fallback">比</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">标</span><span class="mord cjk_fallback">更</span><span class="mord cjk_fallback">新</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">所</span><span class="mord cjk_fallback">有</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">置</span><span class="mord cjk_fallback">条</span><span class="mord cjk_fallback">件</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">之</span><span class="mord cjk_fallback">间</span><span class="mord cjk_fallback">以</span><span class="mord cjk_fallback">空</span><span class="mord cjk_fallback">格</span><span class="mord cjk_fallback">分</span><span class="mord cjk_fallback">隔</span><span class="mord cjk_fallback">。</span><span class="mord cjk_fallback">比</span><span class="mord cjk_fallback">如</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">规</span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">为</span><span class="mord mathdefault">t</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8388800000000001em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">p</span><span class="mord">1</span><span class="mord mathdefault">p</span><span class="mord">2</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">其</span><span class="mord cjk_fallback">中</span><span class="mord mathdefault">p</span><span class="mord">2</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">时</span><span class="mord cjk_fallback">间</span><span class="mord cjk_fallback">戳</span><span class="mord cjk_fallback">比</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">新</span><span class="mord cjk_fallback">，</span></span></span></span>?就指代p2。</p>
+<p>（4）$^</p>
+<p>$^ 指代所有前置条件，之间以空格分隔。比如，规则为 t: p1 p2，那么 $^ 就指代 p1 p2 。</p>
+<p>（5）$*</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>∗</mo><mi mathvariant="normal">指</mi><mi mathvariant="normal">代</mi><mi mathvariant="normal">匹</mi><mi mathvariant="normal">配</mi><mi mathvariant="normal">符</mi></mrow><annotation encoding="application/x-tex">* 指代匹配符 % 匹配的部分， 比如% 匹配 f1.txt 中的f1 ，</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.46528em;vertical-align:0em;"></span><span class="mord">∗</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">代</span><span class="mord cjk_fallback">匹</span><span class="mord cjk_fallback">配</span><span class="mord cjk_fallback">符</span></span></span></span>* 就表示 f1。</p>
+<p>（6）$(@D) 和 $(@F)</p>
+<p>$(@D) 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi mathvariant="normal">@</mi><mi>F</mi><mo>)</mo><mi mathvariant="normal">分</mi><mi mathvariant="normal">别</mi><mi mathvariant="normal">指</mi><mi mathvariant="normal">向</mi><mi mathvariant="normal"> </mi></mrow><annotation encoding="application/x-tex">(@F) 分别指向 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">@</span><span class="mord mathdefault" style="margin-right:0.13889em;">F</span><span class="mclose">)</span><span class="mord cjk_fallback">分</span><span class="mord cjk_fallback">别</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">向</span><span class="mord"> </span></span></span></span>@ 的目录名和文件名。比如，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi mathvariant="normal">@</mi><mi mathvariant="normal">是</mi><mi>s</mi><mi>r</mi><mi>c</mi><mi mathvariant="normal">/</mi><mi>i</mi><mi>n</mi><mi>p</mi><mi>u</mi><mi>t</mi><mi mathvariant="normal">.</mi><mi>c</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">那</mi><mi mathvariant="normal">么</mi></mrow><annotation encoding="application/x-tex">@是 src/input.c，那么</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">@</span><span class="mord cjk_fallback">是</span><span class="mord mathdefault">s</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">c</span><span class="mord">/</span><span class="mord mathdefault">i</span><span class="mord mathdefault">n</span><span class="mord mathdefault">p</span><span class="mord mathdefault">u</span><span class="mord mathdefault">t</span><span class="mord">.</span><span class="mord mathdefault">c</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">那</span><span class="mord cjk_fallback">么</span></span></span></span>(@D) 的值为 src ，$(@F) 的值为 input.c。</p>
+<p>（7）$(&lt;D) 和 $(&lt;F)</p>
+<p>$(&lt;D) 和 $(&lt;F) 分别指向 $&lt; 的目录名和文件名。</p>
+<p>所有的自动变量清单，请看手册。下面是自动变量的一个例子。</p>
+<blockquote></blockquote>
+<p>dest/%.txt: src/%.txt<br>
+@[ -d dest ] || mkdir dest<br>
+cp $&lt; $@</p>
+<p>上面代码将 src 目录下的 txt 文件，拷贝到 dest 目录下。首先判断 dest 目录是否存在，如果不存在就新建，然后，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>&lt;</mo><mi mathvariant="normal">指</mi><mi mathvariant="normal">代</mi><mi mathvariant="normal">前</mi><mi mathvariant="normal">置</mi><mi mathvariant="normal">文</mi><mi mathvariant="normal">件</mi><mi mathvariant="normal">（</mi><mi>s</mi><mi>r</mi><mi>c</mi><mi mathvariant="normal">/</mi></mrow><annotation encoding="application/x-tex">&lt; 指代前置文件（src/%.txt）， </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">代</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">置</span><span class="mord cjk_fallback">文</span><span class="mord cjk_fallback">件</span><span class="mord cjk_fallback">（</span><span class="mord mathdefault">s</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">c</span><span class="mord">/</span></span></span></span>@ 指代目标文件（dest/%.txt）。</p>
+<h2 id="命令前有和无的区别">命令前有@和无@的区别</h2>
+<p>make的时候，会默认对执行的命令行进行回显，使用@可以取消回显：</p>
+<pre><code class="language-javascript">all:
+    echo &quot;helloworld&quot;
+# output:
+# echo &quot;helloworld&quot;
+# &quot;helloworld&quot;
+</code></pre>
+<pre><code class="language-javascript">all:
+    @ echo &quot;helloworld&quot;
+# output:
+# &quot;helloworld&quot;
+</code></pre>
+<h2 id="小括号和大括号的区别">小括号和大括号的区别</h2>
+<p>在makefile中小括号和大括号都可以用来引用变量：</p>
+<pre><code class="language-javascript">tmp:=rex
+all:
+    @ echo ${tmp}
+    @ echo $(tmp)
+#两者均输出rex
+</code></pre>
+<p>makefile中小括号可以用于执行命令</p>
+<pre><code class="language-javascript">all:
+    $(netstat -tanp)
+</code></pre>
+<p>在shell中只支持大括号，需要用大括号引用变量；而由于makefile两种都支持，所以在makefile中要执行shell命令就不用管大小括号引用了。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/mysql-ri-chang-wen-ti-ding-wei-ji-lu/">
+                <h3 class="post-title">
+                  MySQL日常问题定位记录
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

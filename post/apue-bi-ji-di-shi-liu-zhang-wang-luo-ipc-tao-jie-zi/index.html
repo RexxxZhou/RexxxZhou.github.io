@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十六章-网络IPC 套接字 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十六章-网络IPC 套接字</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十六章-网络IPC 套接字</p>
+<p>套接字描述符</p>
+<p>套接字是通信端点的抽象，套接字描述符和文件描述符类似，很多文件描述符的能使用的函数，套接字描述符也能使用。例如write和read，但有些是未定义或有实现定义的行为，为了可移植性，一般不适用这类函数来操作套接字描述符/</p>
+<p>#Include&lt;sys/socket.h&gt;</p>
+<p>int socket(int domain,int type,int protocol);成功返回套接字描述符，失败-1</p>
+<p>参数domain（域）确定通信的特性，包括地址格式，表示每个域的参数都是AF_开头，代表地址族(address family)的意思：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/Bupj9SqOMFRysTl.png" alt="" loading="lazy"></figure>
+<p>其中AF_UNIX和AF_LOCAL同义，AF_UNSPEC可以代表任何域。</p>
+<p>参数type指定套接字的类型：</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/OdlfCRSKnqYy7t1.png" alt="" loading="lazy"></figure>
+<p>参数protocol通常是0，表示由系统为给定的域和类型指定默认协议；在AF_INET和SOCK_DGRAM组合下，系统默认协议为UDP，而AF_INET和SOCK_STREAM组合下系统默认协议为TCP。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/MvPyi6pK74VsH39.png" alt="" loading="lazy"></figure>
+<p>对于SOCK_DGRAM数据报，类似于我们发快递一样，我们只需要往一个给定的地址发送快递，却不用管有没有人签收，或者该地址是否真实存在，所以数据报类型的套接字是无连接的；而SOCK_STREAM字节流数据，类似于我们打电话，只有在拨通后对方接听电话了才能进行通话一样，SOCK_STREAM是面向有连接的，发送数据之前必须先建立连接。</p>
+<p>但由于SOCK_STREAM提供的是字节流的数据传输服务，因此没有消息边界，一是可能出现应用程序读取接收的数据一次不能全部读完，需要多次读才能完全读完，二是会出现粘包问题，两个不同的包之间，由于是读字节流，可能读了并不需要的包。</p>
+<p>SOCK_SEQPACKET是对应于SCTP协议的类型，SCTP和TCP一样是面向有连接的，但存在消息边界，不会出现粘包，相应的选项控制更为复杂。接收的数据量域对方发送的数据量一致。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/ukMrAOmTNHdE341.png" alt="" loading="lazy"></figure>
+<p>SOCK_RAW提供一个数据报接口，可以绕过传输层，直接访问网络层，所以必须由有超级用户权限的进程使用，避免恶意进程绕过内建安全机制来创建数据报。</p>
+<p>使用SOCK_RAW时，必须注意应用程序自身在发包前要组装好头部，因为绕过了传输层，少了传输层的头部，我们需要自己补上。</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/HGKPAFDLljE5ych.png" alt="" loading="lazy"></figure>
+<p>套接字是双向的，我们可以使用close来关闭套接字，但套接字跟文件描述符一样，存在一个引用计数，表示有多少个文件描述符打开了同一个文件，所以使用close关闭套接字描述符时，并不一定真实的关闭了该连接或者说该套接字。因为可能有子进程还在使用该套接字或close之前dup了该套接字。</p>
+<p>使用shutdown函数，能够直接关闭套接字，并且能关闭套接字的指定功能。</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>int shutdown(int sockfd,int how);成功0，出错-1</p>
+<p>sockfd指定要shutdown的套接字</p>
+<p>how有三种参数：</p>
+<p>1.SHUT_RD，关闭读端，使用该选项后，不能再在该套接字上读取任何数据，读取都会出错</p>
+<p>2.SHUT_WR，关闭写端，使用该选项后，不能再在该套接字上写入(发送)任何数据，写会出错</p>
+<p>3.SHUT_RDWR，同时关闭读写端，相当于该套接字完全关闭。</p>
+<p>应用在TCP的连接中，就可以实现半打开状态。</p>
+<p>寻址</p>
+<p>字节序分为两种，一种为大端字节序，一种为小端字节序，先声明，由于不同的实现可能使用的时不同的字节序，为了能够在网络上进行数据的正常传输，需要转换到网络字节序，相当于转换成同一个标准一样。</p>
+<p>对于一个字节，其高位一定在左边，地位一定在右边。</p>
+<p>大端字节序表示每个字节的起始地址是从该字节的最高位往最低位增长的；</p>
+<p>而小端字节序表示每个字节的起始地址是从该字节的最低位向最高位增长的。</p>
+<p>所以在两个不同字节序的主机间若不处理字节序直接传送数据，那么数据很可能不是想要的结果，我们在网络上传输数据前必须对数据转换成网络字节序：</p>
+<p>#include&lt;apra/inet.h&gt;</p>
+<p>uint32_t htonl(uint32_t hostint32); host to net</p>
+<p>uint16_t htons(uint16_t hostint16);</p>
+<p>uint32_t ntohl(uint32_t hostint32);net to host</p>
+<p>uint16_t ntohs(uint16_t hostint16);</p>
+<p>上面四个函数一般是用在填写地址结构时使用，例如将端口号、IP地址从主机字节序转换成网络字节序。</p>
+<p>地址格式</p>
+<p>不同的套接字域类型有不同的套接字地址结构</p>
+<p>AF_INET的地址结构类型位sockaddr_in；AF_INET6的地址结构类型位sockaddr_in6</p>
+<p>一般在需要使用到地址结构的套接字接口函数时，我们都需要将其转换成通用套接字地址结构，并且给出该地址结构的大小（sizeof），这样可以对不同套接字类型提供相同的结构，并且由于不同的套接字地址结构的大小不一样，数据成员也不一样，所以需要转成通用地址结构并给出大小。</p>
+<p>我们一般习惯的都使用点分十进制来表示地址，例如192.168.1.1，但地址结构中使用的是与其对应的一个数来标识的，我们需要将这种字符串表示的转换成相应的数，可以使用下面的函数来进行两者之间的互相转换：</p>
+<p>#inlcude&lt;arpa/inet.h&gt;</p>
+<p>int inet_pton(int domain,char* str,void* addr);成功0，出错-1</p>
+<p>char* inet_ntop(int domain,void* addr,char* str,sokclen_t size);//成功返回点分十进制表示的地址的指针，出错为NULL</p>
+<p>这两个函数可用于IPv4和IPv6的地址，所以我们需要指定域domain</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/LBoY6vOSwXKINAd.png" alt="" loading="lazy"></figure>
+<p>inet_ntop中的addr参数为地址结构类型的指针，根据该地址结构，函数将相应的网络地址转换成字符串输出到str指向的缓冲区中，size指定该缓冲区的大小。</p>
+<p>inet_pton的str为点分十进制表示的网络地址，意在将该字符串转换成相应的数，写入到addr指向的地址结构中的地址成员中。</p>
+<p>size参数可以直接指定为INET_ADDRSTRLEN或INET6_ADDRSTRLEN，分别表示IPv4和IPv6的地址字符串的长度。</p>
+<p>地址查询</p>
+<p>理想状态下，应用程序并不需要查询一个套接字地址的内部结构，但系统实现提供了访问各种网络配置信息的结构</p>
+<p>内容过多，具体使用的时候查书</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/cIobRvpBFP4xUQS.png" alt="" loading="lazy"></figure>
+<p>#include&lt;netdb.h&gt;</p>
+<p>struct hostent* gethostent();</p>
+<p>void sethostent(int stayopen);</p>
+<p>void endhostent();</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/c2uRbD4GtYB8sTQ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/bx1Sg5UCIdwOK8v.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/E2i5cn7ZVsO6dHp.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/kBdzXGA52HZ1Wlf.png" alt="" loading="lazy"></figure>
+<p>https://www.cnblogs.com/fnlingnzb-learner/p/7542770.html</p>
+<p>getaddrinfo的详解，一般用于获取某个主机或服务的地址，来进行进一步的网络连接。</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/Dg9sYowhCaZyTdk.png" alt="" loading="lazy"></figure>
+<p>将套接字与地址进行关联</p>
+<p>我们可以将本地的地址绑定到一个套接字上，对于服务器而言这是必须的，因为要告诉监听套接字在什么地址上监听连接请求，而对于客户端则没调用bind的需要。</p>
+<p>#include&lt;sys/socket.h&gt;<br>
+int bind(int sockfd,sockaddr* addr,socklen_t size);成功0，出错-1</p>
+<p>bind函数将套接字绑定到指定的地址中，其中地址有以下限制：</p>
+<p>1.该地址必须是本机有效的地址，不能是其他主机的地址</p>
+<p>2.地址的类型与所创建的套接字的类型要匹配，例如套接字是IPv4的，不能绑定IPv6的地址</p>
+<p>3.地址中的端口号应大于1024，否则小于1024的端口都是保留端口，需要进程有超级用户权限才能进行绑定</p>
+<p>4.一般一个套接字只绑定一个地址，但有些协议允许重复绑定，看具体协议和选项</p>
+<p>我们可以将套接字绑定到IP地址INADDR_ANY上，这个常量定义在&lt;netinet/in.h&gt;中，如果用了这个地址，表示通配地址，该套接字绑定到该主机的所有系统网络接口上，意味着可以接收这个系统安装的任意一个网卡的数据包，一般用在绑定监听套接字中。</p>
+<p>调用getsockname可以获取绑定在套接字上的本地地址</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>int getsockname(int sockfd,sockaddr<em>addr,socklen_t</em> size);成功0，出错-1</p>
+<p>由于该函数可以用于各种域套接字，所以参数必须是通用套接地址结构的指针，该函数会将套接字的地址结构写入到该指针指向的对象中，size参数在传入前必须设置为addr对象的大小，因为该参数是一个inout参数，getsockname一开始用该参数的大小和addr来确定具体的地址结构的写入，而后该参数被修改成所查套接字地址结构的大小。</p>
+<p>getsockname一般用于客户端在连接后查询系统给该套接字绑定的本地地址，或当服务器的监听套接字绑定的是INADDR_ANY，可用于查询accept后的连接套接字具体绑定了本地的哪个地址，也即可以表明这个连接到底是在哪个IP地址上的。</p>
+<p>我们也可以获取对端的地址结构</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>int getpeername(int sockfd,sockaddr<em>addr,socklen_t</em> size);成功0，出错-1</p>
+<p>各个参数的含义和getsockname中一样。</p>
+<p>因为一个已连接的套接字，其上是有两端的地址结构信息的，我们称源目IP地址和端口为一个连接的四元组，即一个套接字对，一般用在服务器获取客户端的地址结构。</p>
+<p>建立连接</p>
+<p>如果套接字类型为SOCK_STREAM或SOCK_SEQPACKET，则需要连接后，才能进行数据传输：</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>int connect(int sockfd,sockaddr* addr,socklen_t size);成功0，失败-1</p>
+<p>connect函数指定套接字连接到给定的地址上，若成功返回，则可以在该套接字上进行数据传输。</p>
+<p>如果调用connect之前，应用程序没有在该套接字上绑定一个本地地址，则在调用connect时会自动给其绑定一个默认地址。系统会根据读端的ip地址通过查路由表，寻找外出接口，并将本地地址设置为该外出接口的主IP地址。</p>
+<p>connect函数是会阻塞的，如果sockfd是非阻塞的，则connect函数不会阻塞，当无法立马成功建立连接，会直接返回-1，errno设为EINPROGRESS。</p>
+<p>connect阻塞的可能原因是对端的连接队列数已满，或者瞬时的网络原因导致的。</p>
+<p>如果一次调用失败，不代表真的无法连接，我们需要多次connect。</p>
+<p>注意：我们不能对一个已经connect失败的套接字继续connect，在connect失败后，该套接字变成未定义的，若仍对其进行connect，则必定是出错返回的，所以多次尝试connect，我们需要使用不同的套接字。</p>
+<p>同时对于TCP套接字，connect只能调用一次。</p>
+<p>我们也可以对一个SOCK_DGRAM类型的套接字使用connect，使用后，该套接字在每次发送数据时，就不需要再指定对端的地址，并且也只能接收该地址的报文，这与UNP中提到的一样。对UDP连接的套接字调用connect之后，双方都知道对方的源地址了。</p>
+<p>服务器调用listen函数，在监听套接字上监听、等待连接的到来。</p>
+<p>#include&lt;sys/socket.h&gt;<br>
+int listen(int sockfd,int backlog);成功0，出错-1</p>
+<p>listen函数告诉系统将在哪个套接字上等待连接，backlog参数指定了最大已完成连接数，一个监听套接字有两个队列，一个是连接已完成队列，一个是连接未完成队列，当队列满了，监听套接字会拒绝客户端的连接请求。</p>
+<p>我们必须根据对服务器期望的负载能力来设置backlog参数。</p>
+<p>服务器一旦调用了listen后，便可执行accept函数来生成一个连接套接字，对于服务器而言，监听套接字只能作监听作用，实际与客户端进行数据传输的是accept返回的连接套接字。</p>
+<p>#inlcude&lt;sys/socket.h&gt;</p>
+<p>int accept(int listenfd,sockaddr<em>addr,socklen_t</em> size);成功返回连接套接字，出错-1</p>
+<p>accept函数是可能阻塞的，若监听套接字是阻塞的，当监听套接字中的已完成连接队列中为空时，accept会一直阻塞到有为止，若为非阻塞的，则会直接返回-1，errno为EWOULDBLOCK，EWOULDBLOCK和EAGAIN同义。</p>
+<p>accept函数相当于读监听套接字的已完成队列，并将队头的连接信息以连接套接字的形式返回，用户通过连接套接字就能直接进行通信。</p>
+<p>当服务器想要知道对端的地址信息时，我们传入addr和size参数，accept函数会为我们填好这些信息，注意size参数在这里是一个inout参数，它先作为输入表示传入的addr对象的大小，然后系统会将对端地址的大小再写到该值上。</p>
+<p>如果不关心对端地址信息，addr和size置为NULL即可。</p>
+<p>数据传输</p>
+<p>套接字描述符和文件描述符类似，我们可以使用read和write实现网络数据的读取和发送，如果需要指定额外的一些选项，我们可以使用下面六个函数中来进行数据传输。</p>
+<p>发送：</p>
+<p>#include&lt;sys/socket.h&gt;<br>
+ssize_t send(int sockfd,void*buf,size_t nbytes,int flags);成功返回发送的字节数，出错-1</p>
+<p>对于有连接的套接字，例如TCP套接字，在连接后使用send和write一样，但对于无连接的套接字，例如UDP，如果没有调用connect函数，则不能使用该函数进行传输。</p>
+<p>send函数和write类似，必须用于一个已连接的套接字，但和write不同的是支持第四个参数flag：</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/2yVhk1zqPxQftrd.png" alt="" loading="lazy"></figure>
+<p>send成功返回，并不代表对端一定收到了数据，和write一样，只是将数据成功写入到发送缓冲区后就返回，进行延迟写。对于有消息边界的协议例如UDP和SCTP，如果要发送的报文大小超过了最大报文大小上限，那么send会出错返回；而对于字节流协议，例如TCP，会一直等到所有数据都写入缓冲区后才返回。</p>
+<p>类似于send，sendto函数多了一个指定对端地址的参数，一般用于无连接的套接字，例如UDP；而对于一个有连接的套接字，给定的对端地址将会被忽略。</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>ssize_t sendto(int sockfd,void* buf,size_t nbytes,int flags,sockaddr* addr,socklen_t len);成功返回发送的字节数，出错-1</p>
+<p>最后一个发送数据的函数，我们可以调用带有msghdr结构的sendmsg函数来指定多重缓冲区传输数据，类似于我们的writev。</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>ssize_t sendmsg(int sockfd,struct msghdr*msg,int flags);成功返回发送的字节数，出错-1</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/p3C4TzQ5HUGJo9A.png" alt="" loading="lazy"></figure>
+<p>待发送的数据在msghdr结构中的msgiov成员中指定。</p>
+<p>接收：</p>
+<p>Q：UDP连接可以用recv吗?对于基于报文的数据，接收时指定的缓冲区大小如果小于报文长度，会怎样？</p>
+<p>A：UDP可以使用recv函数，但要注意的是，如果接收缓冲区的大小小于数据报的大小，那么多出来的数据报数据将会被丢弃，而TCP是字节流的，下一次read还可以继续读上次剩下的数据。</p>
+<p>并且，如果UDP的接收缓冲区有两个报文，而指定读取的大小大于报文的大小，也只会读取第一个报文，因为UDP的报文是有消息边界的。</p>
+<p>UDP的一个数据报在传输层不应也不要分组再发送，因为两个UDP数据报之间是没有任何联系的，而TCP可以分节的原因是它有字节序号来标识述属于同一个报文的内容，如果UDP在传输层分组了，那么接收方无法知道这两个包的确切含义。但是UDP一样是可以进行ip分片的，这个是由网络层ip协议完成的，不管是TCP还是UDP，ip分片对其都是透明的，TCP和UDP根本不知道有分片这回事，重组装也是接收方网络层进行的，注意区分~~！</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>ssize_t recv(int sockfd,void* buf,size_t nbytes,int flags);成功返回读取的字节数，出错-1</p>
+<p>recv和read类似，只不过多了一个flag参数可以指定一些标志：</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/Vzel1pkYU6vXKRf.png" alt="" loading="lazy"></figure>
+<p>MSG_PEEK类似于栈的top函数一样，只读取其值，但不从接收缓冲区中取走数据。</p>
+<p>MSG_WAITALL，对于字节流数据，使用该标志，我们一直等到该数据完全读取后才返回。</p>
+<p>对于基于报文的协议，我们每次读都是完整的读取整个报文，而字节流数据并非如此，这也即有无消息边界导致的。</p>
+<p>如果在读取消息时，想要获取对端的地址，我们可以使用recvfrom函数</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>ssize_t recvfrom(int sockfd,void* buf,size_t nbytes,int flags,sockaddr* addr,socklen_t* len);成功返回读取的字节数，出错-1</p>
+<p>我们传给recvfrom一个地址对象的指针的其大小类型的指针，recvfrom函数会为我们填入对端地址的信息。</p>
+<p>recvfrom经常用于UDP连接中。因为我们一般不会在UDP编程中调用connect，所以每次发送数据都需要给出对方的地址，recvfrom可以获取对方的地址，方便我们在下次回送数据时，直接使用recvfrom获取的地址就行。</p>
+<p>函数recvmsg可以将读取的数据写入到指定的多个缓冲区中，类似于readv</p>
+<p>#include&lt;sys/socket.h&gt;</p>
+<p>ssize_t recvmsg(int sockfd,msghdr* msg,int flags);成功返回读取的字节数，出错-1</p>
+<p>类似于sendmsg，使用了msghdr结构来表示要多个接收缓冲区，返回时，msghdr中的msg_flags字段被设置为所接收数据的各种特征，调用recvmsg时，该字段是被忽略的。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-wu-zhang-jin-cheng-jian-tong-xin/">
+                <h3 class="post-title">
+                  APUE笔记-第十五章-进程间通信
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

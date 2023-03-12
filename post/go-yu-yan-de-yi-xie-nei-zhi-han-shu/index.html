@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言的一些内置函数 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言的一些内置函数</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h4 id="new">new</h4>
+<p><code>new(type)</code>返回的是类型type对象的指针</p>
+<p>和直接通过var声明变量一样，new会根据不同的类型，赋予相应的零值（未初始化）</p>
+<p>例如new([]int)得到的是一个<strong>nil</strong>切片的头指针</p>
+<h4 id="make">make</h4>
+<p>make函数只能用于创建切片、map和通道channel变量，并且会对这些变量进行初始化，不再是零值，可以直接进行使用，例如make 生成的切片可以直接赋值使用。</p>
+<p>make返回的是变量而不是指针，由于make的变量都是些数据结构，所以必须要初始化，保证后续代码对这些变量的正确使用。</p>
+<p>new和make的区别</p>
+<pre><code class="language-go">var p *[]int = new([]int)       // allocates slice structure; *p == nil; rarely useful
+var v  []int = make([]int, 100) // the slice v now refers to a new array of 100 ints
+</code></pre>
+<h4 id="打印函数">打印函数</h4>
+<p>Go的标准库fmt中包含了许多用于打印的函数</p>
+<p>例如Print,Println,Sprintf,Fprintf等等，<strong>其中Sprintf返回的是一个字符串</strong>，而不是像C++那样将格式化后的字符串写入缓冲区中。</p>
+<p>下面的几种打印方式，结果是一样的。</p>
+<pre><code class="language-go">fmt.Printf(&quot;Hello %d\n&quot;, 23)
+fmt.Fprint(os.Stdout, &quot;Hello &quot;, 23, &quot;\n&quot;)
+fmt.Println(&quot;Hello&quot;, 23)
+fmt.Println(fmt.Sprint(&quot;Hello &quot;, 23))
+</code></pre>
+<p>注意到Fprintf的第一个参数是一个实现了io.Writer接口的类型。</p>
+<p>格式化字符：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">**格式   **</th>
+<th style="text-align:center"><strong>含义</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">%%</td>
+<td style="text-align:center">一个%字面量</td>
+</tr>
+<tr>
+<td style="text-align:right">%b</td>
+<td style="text-align:center">一个二进制整数值(基数为2)，或者是一个(高级的)用科学计数法表示的指数为2的浮点数</td>
+</tr>
+<tr>
+<td style="text-align:right">%c</td>
+<td style="text-align:center">字符型。可以把输入的数字按照ASCII码相应转换为对应的字符</td>
+</tr>
+<tr>
+<td style="text-align:right">%d</td>
+<td style="text-align:center">一个十进制数值(基数为10)</td>
+</tr>
+<tr>
+<td style="text-align:right">%e</td>
+<td style="text-align:center">以科学记数法e表示的浮点数或者复数值</td>
+</tr>
+<tr>
+<td style="text-align:right">%E</td>
+<td style="text-align:center">以科学记数法E表示的浮点数或者复数值</td>
+</tr>
+<tr>
+<td style="text-align:right">%f</td>
+<td style="text-align:center">以标准记数法表示的浮点数或者复数值</td>
+</tr>
+<tr>
+<td style="text-align:right">%g</td>
+<td style="text-align:center">以%e或者%f表示的浮点数或者复数，任何一个都以最为紧凑的方式输出</td>
+</tr>
+<tr>
+<td style="text-align:right">%G</td>
+<td style="text-align:center">以%E或者%f表示的浮点数或者复数，任何一个都以最为紧凑的方式输出</td>
+</tr>
+<tr>
+<td style="text-align:right">%o</td>
+<td style="text-align:center">一个以八进制表示的数字(基数为8)</td>
+</tr>
+<tr>
+<td style="text-align:right">%p</td>
+<td style="text-align:center">以十六进制(基数为16)表示的一个值的地址，前缀为0x,字母使用小写的a-f表示</td>
+</tr>
+<tr>
+<td style="text-align:right">%q</td>
+<td style="text-align:center">使用Go语法以及必须时使用转义，以双引号括起来的字符串或者字节切片[]byte，或者是以单引号括起来的数字</td>
+</tr>
+<tr>
+<td style="text-align:right">%s</td>
+<td style="text-align:center">字符串。输出字符串中的字符直至字符串中的空字符（字符串以'\0‘结尾，这个'\0'即空字符）</td>
+</tr>
+<tr>
+<td style="text-align:right">%t</td>
+<td style="text-align:center">以true或者false输出的布尔值</td>
+</tr>
+<tr>
+<td style="text-align:right"><strong>%T</strong></td>
+<td style="text-align:center">使用Go语法输出的值的类型</td>
+</tr>
+<tr>
+<td style="text-align:right">%U</td>
+<td style="text-align:center">一个用Unicode表示法表示的整型码点，默认值为4个数字字符</td>
+</tr>
+<tr>
+<td style="text-align:right"><strong>%v</strong></td>
+<td style="text-align:center">使用默认格式输出的内置或者自定义类型的值，或者是使用其类型的String()方式输出的自定义值，如果该方法存在的话</td>
+</tr>
+<tr>
+<td style="text-align:right">%x</td>
+<td style="text-align:center">以十六进制表示的整型值(基数为十六)，数字a-f使用小写表示</td>
+</tr>
+<tr>
+<td style="text-align:right">%X</td>
+<td style="text-align:center">以十六进制表示的整型值(基数为十六)，数字A-F使用小写表示</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-Go">o := 0666
+fmt.Printf(&quot;%d %[1]o %#[1]o\n&quot;, o) // &quot;438 666 0666&quot;
+x := int64(0xdeadbeef)
+fmt.Printf(&quot;%d %[1]x %#[1]x %#[1]X\n&quot;, x)
+// Output:
+// 3735928559 deadbeef 0xdeadbeef 0XDEADBEEF
+</code></pre>
+<p>请注意fmt的两个使用技巧。通常Printf格式化字符串包含多个%参数时将会包含对应相同数量的额外操作数，但是%之后的<code>[1]</code>副词告诉Printf函数<strong>再次使用第一个操作数</strong>。第二，%后的<code>#</code>副词告诉Printf在用%o、%x或%X输出时生成0、0x或0X前缀。</p>
+<p>当打印一个结构体时，使用%+v同时打印结构体的字段名和该字段对应的值，使用%#v则能够打印出Go中完整的符号：</p>
+<pre><code class="language-go">m2:= map[int]string{2:&quot;world&quot;}
+fmt.Printf(&quot;%+v\n&quot;, m2)
+fmt.Printf(&quot;%#v\n&quot;, m2)
+//output
+map[2:world]
+map[int]string{2:&quot;world&quot;}
+</code></pre>
+<p>如果想通过%v按照自己想要的输出内容打印自己定义的类型，可以为自己的类型添加String() string 方法，fmt包打印时会调用这个函数。</p>
+<pre><code class="language-go">type newStruct struct {
+	a, b int
+}
+
+func (ns *newStruct) String() string {
+	return fmt.Sprintf(&quot;In newStruct a is %d b is %d&quot;, ns.a, ns.b)
+}
+
+func main(){
+	ns := new(newStruct)
+	ns.a = 123
+	ns.b = 456
+	fmt.Printf(&quot;%v\n&quot;, ns)
+}
+//output
+In newStruct a is 123 b is 456
+</code></pre>
+<p>如果说想通过%v既可以自定义打印对象指针，也可以打印对象，<strong>那么String方法的接收者必须为该类型的值类型，而不是指针类型：</strong></p>
+<pre><code class="language-go">type newStruct struct {
+	a, b int
+}
+
+func (ns newStruct) String() string {
+	return fmt.Sprintf(&quot;In newStruct a is %d b is %d&quot;, ns.a, ns.b)
+}
+func main(){
+	ns := new(newStruct)
+	ns.a = 123
+	ns.b = 456
+	nns := newStruct{a: 777, b: 888}
+	fmt.Printf(&quot;%v\n&quot;, ns)
+	fmt.Printf(&quot;%v\n&quot;, nns)
+}
+//output
+In newStruct a is 123 b is 456
+In newStruct a is 777 b is 888
+</code></pre>
+<p>Sprintf函数<strong>以%s字符串的形式</strong>打印一个类型对象时，也会去调用该类型的实现的String方法，因为它想要一个字符串结果，所以，<strong>要注意不能在实现类型A的String函数的内部调用Sprintf去打印A，因为会一直递归调用String</strong>。如果真要在String函数内部打印类型A对象本身，一个简单的方法就是强制转换成没有实现String函数的类型，例如基本的string类型就没有实现该方法：</p>
+<pre><code class="language-go">type MyString string
+func (m MyString) String() string {
+    return fmt.Sprintf(&quot;MyString=%s&quot;, string(m)) // OK: note conversion.
+}
+</code></pre>
+<p>fmt包的打印函数都可以接收多个参数，打印多个变量的内容，因为空接口类型可以接收任何类型的对象，所以这些函数原型大致如下：</p>
+<pre><code class="language-go">func Printf(format string, v ...interface{})
+</code></pre>
+<p>Within the function <code>Printf</code>, <code>v</code> acts like a variable of type <code>[]interface{}</code> but if it is passed to another variadic function, it acts like a regular list of arguments.</p>
+<p>其中...代表这个变量其实是一个包，作为参数时可以理解成v是一个包，而在函数内部使用时，可以看成是一个列表：</p>
+<pre><code class="language-go">// Println prints to the standard logger in the manner of fmt.Println.
+func Println(v ...interface{}) {
+    std.Output(2, fmt.Sprintln(v...))  // Output takes parameters (int, string)
+}
+
+</code></pre>
+<p>在这个参数的函数内部，这个变量如同一个切片一样，而如果把他传给另外一个支持可变参数的函数，那么这个就可以看成是一个参数列表，所以上面的Sprintln中的v后缀必须要加...，不然传给这个函数的v是一个值，而不是一个列表（包）。</p>
+<p>其实对于这种...的参数，可以看成是一个切片：</p>
+<pre><code class="language-go">func listParams(a ...int) {
+	for _, val := range a {
+		fmt.Println(val)
+	}
+
+}
+func main(){
+	listParams(1,2,3)
+}
+//output
+1
+2
+3
+
+</code></pre>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">
+                <h3 class="post-title">
+                  Go语言错误处理
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

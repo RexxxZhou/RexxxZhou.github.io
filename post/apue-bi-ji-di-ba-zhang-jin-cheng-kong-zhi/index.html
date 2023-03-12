@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第八章-进程控制 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第八章-进程控制</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第八章-进程控制</p>
+<p>进程标识PID</p>
+<p>每个进程都有自己唯一的进程标识PID，所以进程经常将pid作为其所创建文件的名字的一部分来唯一的标识一个文件。当一个进程终止后，PID就被回收了，下次新的进程执行后可以复用该PID，Unix提供了延迟复用算法，即新的进程的pid不会是最近回收的pid，避免将新进程误认为是以前该pid对应的旧进程。</p>
+<p>系统中有一些专用进程，pid为0的进程一般是调度进程，这是内核的进程，常被称为交换进程，其并不执行任何磁盘上的程序。pid为1的一般是init进程，在系统自举结束后由内核调用，是一个普通的进程，不是系统进程，在自举内核后启动unix系统，读取与系统有关的初始化文件，将系统引导到一个状态，init进程绝不会终止，是以超级用户权限运行的，会成为所有孤儿进程的父进程。</p>
+<figure data-type="image" tabindex="1"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/5A5D13ABBB7547E6BE4A4F0E243A128E.png" alt="" loading="lazy"></figure>
+<p>函数fork</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>pid_t fork(void);//父进程返回子进程的pid，子进程返回0，出错返回-1</p>
+<p>由fork创建的进程叫子进程，fork函数被调用一次但是返回两次，一次是在父进程调用点返回，另一次是在子进程中相同代码位置返回，所以才有了两次返回。因为子进程和父进程在fork之后会继续执行fork点之后的代码，如果不对父子进程要执行的代码进行区分，则fork点后的所有代码父子进程都会执行。子进程和父进程之间除了正文段以外，获得父进程数据段（初始化和未初始化数据段），堆和栈的副本，注意是副本，所以父进程和子进程对于这些数据各自有自己的副本，互不影响。</p>
+<p>fork后，父进程的缓冲区会复制给子进程。</p>
+<p>现在很多系统实现使用写时复制的算法，当fork之后，数据段（初始化和未初始化数据段），堆和栈对于两者都是只读的，当任何一个要修改其值时，会拷贝该数据的副本，这就是写的时候才复制副本。</p>
+<figure data-type="image" tabindex="2"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/41ED0BA63FE0460FB57B1D95561D6F39.png" alt="" loading="lazy"></figure>
+<p>父子进程的文件共享</p>
+<p>fork的一个特性时父进程的所有打开的文件描述符都被复制到子进程中，就好像对每个fd都执行了dup函数，父子进程每个相同的描述符共享同一个文件表项。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/sBFpWErKYNROIV2.png" alt="" loading="lazy"></figure>
+<p>父子进程共享文件偏移量。所以在子进程中的读写操作会更新文件偏移量，会影响到父进程，如果两者没有做好同步，可能出现读写交叉混合的现象。</p>
+<p>在fork之后处理文件描述符有两种常见的情况;</p>
+<p>1.父进程等待子进程完成。在子进程终止后，文件偏移量已经被更新了，这样父进程什么也不用做就能避免混合输出。</p>
+<p>2.父进程和子进程各自执行不同的程序段。两者分别关闭自己不需要的文件描述符，使得两者的文件描述符没有重叠，这样对fd的操作就不会出现干扰。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/7lzry32xAPwDEsp.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/FbH2TVyzYi84rZP.png" alt="" loading="lazy"></figure>
+<p>fork失败的原因主要有：</p>
+<p>1.系统的进程太多 2.该实际用户ID的子进程数超过了系统限制，CHILD_MAX规定了每个实际用户id在任意时刻可以拥有的子进程数量上限。</p>
+<p>fork的两种常用用法：</p>
+<p>1.父进程希望子进程复制自己，然后执行不同的代码段。这种在网络中常见，父进程监听请求，收到请求后，fork子进程，让子进程对请求进行处理。而父进程则继续监听请求。</p>
+<p>2.一个进程要执行不同的程序。一般为fork后执行exec函数，相当于在这个进程中打开了其他的进程（程序）。例如在shell中启动其他的程序（例如mysql），那么mysql的父进程就是shell进程。</p>
+<p>函数vfork</p>
+<p>vfork的语义与fork一样，创建子进程，返回值也与fork一样。</p>
+<p>而vfork用于创建子进程后，让子进程执行新的程序（exec），对于可移植的程序而言，不要用vfork。<br>
+vfork后的子进程在执行exec或exit函数之前，其与父进程共享空间，也即这时子进程能不仅能读还能写父进程空间中的数据，但要注意可能这样会出现与自己想要的结果不同的结果。</p>
+<p>vfork与fork的另一个不同点在于，父进程一直等到子进程执行了exec或exit函数才继续执行，也即实现了父子进程间的同步，不需要像fork那样进行同步控制。</p>
+<p>但是如果子进程在exec或exit之前需要等待父进程的动作，那么就会形成死锁。</p>
+<p>函数exit</p>
+<p>exit是标准C库函数，_exit是系统调用</p>
+<p>5种正常终止方式：</p>
+<p>1.在main函数内执行return，等价于执行exit</p>
+<p>2.调用exit函数。</p>
+<p>3.调用_exit/_Exit函数。无需处理终止处理程序，直接进入内核的终止函数，是否对标准I/O进行冲刷取决于实现。_exit由exit调用。</p>
+<p>4.进程的最后一个线程执行return语句，但该返回值并不是进程的返回值，进程的返回值为0。线程的返回值与进程无关。</p>
+<p>5.当最后一个线程调用pthread_exit，与4种一样，该进程以0作为返回值。</p>
+<p>3种异常终止方式：</p>
+<p>1.调用abort。产生SIGABRT信号。</p>
+<p>2.当进程接收到某种信号时。信号可由自身（如SIGABRT），其他进程或内核产生，例如数组越界访问，除以0等，内核就会为该进程产生相应的信号。</p>
+<p>3.最后一个线程对取消请求作出响应。默认情况下， 取消以延迟方式发生：一个线程要求取消另一个线程，一段时间后，目标线程终止。</p>
+<p>不管以何种方式终止了进程，内核都会执行同一段代码，关闭进程所有打开的文件描述符和回收相应的资源（释放它所使用的存储器等）。</p>
+<p>如何处理孤儿进程：</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/LqdelSwXOpxf8F5.png" alt="" loading="lazy"></figure>
+<p>init的子进程要么是自己直接创建的子进程，要么是孤儿进程，init进程会在其子进程终止后立刻调用wait函数以获取其终止状态，防止系统中塞满了僵尸进程。</p>
+<p>不管是不是僵尸进程，只要父进程先于子进程终止，其成为了孤儿进程后就会被init进程接收，能够得到释放。</p>
+<p>僵尸进程的产生和处理：</p>
+<figure data-type="image" tabindex="7"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/1A02EDC78729497AAD9F3A43E72F7AF6.png" alt="" loading="lazy"></figure>
+<p>内核为每个终止进程维护了一定量的信息，如其PID，终止状态，以及使用得到CPU时间总量；其他的资源则被系统回收。如果父进程不调用wait或waitpid对这些进程进行处理，释放这些信息，则这些进程称为僵尸进程。</p>
+<p>函数wait waitpid</p>
+<p>#include&lt;sys/wait.h&gt;</p>
+<p>pid_t wait(int* statloc);</p>
+<p>pid_t waitpid(pid_t pid,int *statloc,int options);</p>
+<p>成功则返回子进程pid，否则返回0或-1</p>
+<p>statloc是一个整型指针，若不为空，则子进程的终止状态值会被存到该对象中，如果不关心该值，可以置空。</p>
+<p>对于wait若不存在子进程则出错返回，而对于waitpid，若其指定的子进程或进程组ID不存在则出错返回。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/Tfvp3tHsMWc627S.png" alt="" loading="lazy"></figure>
+<p>参数pid等于0，等待与调用进程组ID一样的子进程。</p>
+<p>参数pid小于-1，等待与该参数绝对性相等的进程组ID的子进程。</p>
+<p>options参数：</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/VKuEiWcOFtb1v3q.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/zS8ZuFHhjwfLQUI.png" alt="" loading="lazy"></figure>
+<p>waitpid通过设置WNOHANG可以不阻塞的立刻返回。</p>
+<p>当一个进程终止时，内核会向其父进程发送SIGCHLD信号，子进程终止是一个异步事件，可以在父进程执行的任何过程种发生，所以这种信号也叫内核向父进程发送的异步信号。</p>
+<p>父进程可以选择忽略信号或者提供相应的信号处理程序，而系统默认是忽略的。</p>
+<p>调用wait和waitpid后：</p>
+<p>1.若所有子进程都在运行，则父进程阻塞等待子进程终止。</p>
+<p>2.若所等待的子进程（对于wait是所有子进程的任何一个，对于waitpid是其所指定要等待的子进程）终止了，则取得其终止状态并立即返回。</p>
+<p>3.若无子进程，则调用出错，立即返回。</p>
+<p>waitpid有option参数，可以设置其不阻塞执行。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/CVk2atN3YT4Fljy.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/m4MLslGwXzEF9xj.png" alt="" loading="lazy"></figure>
+<p>可以利用上述的宏，判断子进程返回的终止状态（终止状态是通过参数statloc得到的）是由于什么原因终止的。</p>
+<p>函数waitid</p>
+<p>#include&lt;sys/wait.h&gt;</p>
+<p>int waitid(idtype_t idtype,id_t id,siginfo_t * infop,int options);//成功返回0，失败返回-1</p>
+<p>waitid和waitpid类似，等待指定的进程，只不过提供了更多的灵活性。</p>
+<p>使用id和idtype两个参数来指定特定进程，id与idtype有关系：</p>
+<p>idtype可以取：</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/6rxmtzbLS8Bugnj.png" alt="" loading="lazy"></figure>
+<p>infop参数是指向siginfo的指针，它保存了进程状态改变有关信号的详细信息。</p>
+<p>options参数根据下列常量按位或，表明调用者关心哪些状态变化：</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/i7zI5jXScMsUoux.png" alt="" loading="lazy"></figure>
+<p>注意必须为其三者之一。</p>
+<p>函数wait3 wait4</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/zCjQsO47Beid2lI.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/YtUbrFkj6mB2veW.png" alt="" loading="lazy"></figure>
+<p>竞争条件</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/aLmnhJBo5WY69T1.png" alt="" loading="lazy"></figure>
+<p>如果不对进程之间的执行顺序进行控制，若对逻辑上有冲突的内容进行运行时，可能得到的结果不是想要的。我们可以通过进程间通信，信号，管道等机制实现多进程之间的协调。</p>
+<p>函数exec</p>
+<p>当我们fork一个进程后，对其子进程调用exec函数，则子进程会执行新的程序，并将从新程序的main函数开始执行，用新程序替换了当前进程的正文段，数据段，堆，栈。也即当执行了exec函数后，父进程和子进程分离了，就是两个完全不同的程序了，例如shell中fork后exec其他的应用程序。但由于是在子进程上执行新的程序，所以新程序的进程ID还是子进程的进程ID。</p>
+<p>基本的进程控制原语：fork--&gt;exec--&gt;exit--&gt;wait，fork产生子进程，子进程exec执行新程序，exit退出进程并返回终止状态，wait获取终止状态。</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/IJiSoWcL29Hdlpq.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/5BtQKLGwOdrYpfk.png" alt="" loading="lazy"></figure>
+<p>每个系统对环境表和参数表的长度（数组中所有字符的总长度）有限制，这个限制是由ARG_MAX常量给出的。</p>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/S3DuPVKY6oOsRBz.png" alt="" loading="lazy"></figure>
+<p>对于进程中已打开的文件，如果没有设置执行时关闭标志位（FD_CLOEXEC）,则执行exec后的文件描述符还是打开状态，否则执行exec后，这些文件描述符会被关闭，若不用fcntl设置该位，系统默认是关闭该位，也即exec后文件描述符还是打开的。</p>
+<p>POSIX.1要求对于打开的目录流在执行exec后是关闭的，这是由opendir函数打开目录后用fcntl设置FD_CLOEXEC标志位。</p>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/HmsizN2CAfSZqY6.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/YOz9UbBdfc4K8Nx.png" alt="" loading="lazy"></figure>
+<p>execve为系统调用，其他的为库函数，这些库函数最后都调用execve。</p>
+<p>fexecve将文件描述符转换成路径名，再调用execve。（Linux中就是采用这种实现）。</p>
+<p>更改用户ID和更改组ID</p>
+<p>在系统中，特权和访问控制是基于用户ID和组ID的，有时候我们需要更改进程的用户ID和组ID来提升权限访问更多的文件或者降低权限，限制程序的访问。</p>
+<p>可以用setuid和setgid来设置进程的实际和有效用户ID以及实际和有效组ID。</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int setuid(uid_t uid);</p>
+<p>int setgid(gid_t gid);//成功返回0，失败返回-1；</p>
+<p>用户ID和组ID的设置思路一样，这里以用户ID为例：</p>
+<p>1.若进程有超级用户权限，则将进程的实际、有效、和保存的设置用户ID设置为uid。</p>
+<p>2.若没有特权的一般用户，若uid是进程的实际用户ID或保存的设置用户ID，则将进程的有效用户ID设置为uid，其他的不改变。</p>
+<p>3.其他情况则出错。</p>
+<p>所谓保存的设置用户ID是指进程将执行后的进程有效用户ID保存到一个副本中，这就是保存的设置用户ID。</p>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/Ot5exDqAhCVpY7T.png" alt="" loading="lazy"></figure>
+<p>Linux除了提供getuid，geteuid以外，还提供了getresuid，getresgid，获得保存的设置用户ID和组ID。</p>
+<p>r为real  e为efficient s为set</p>
+<p>1.函数setreuid setregid</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int setreuid(uid_t ruid,uid_t euid);</p>
+<p>int setregid(gid_t rgid,gid_t egid);//成功返回0，失败返回-1</p>
+<p>如果任一参数为-1，则表示相应的ID保持不变</p>
+<p>一个非特权用户可以将进程的有效用户ID和实际用户ID交换，或者将保存的设置用户ID设置为有效用户ID。</p>
+<p>组类似。</p>
+<p>2.函数seteuid setegid</p>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/wDM2zFdlPefjC1X.png" alt="" loading="lazy"></figure>
+<p>只更改进程有效用户ID和有效组ID</p>
+<p>一个非特权用户可以将有效用户ID或组ID设置为实际用户ID和组ID或者保存的设置用户ID和组id</p>
+<figure data-type="image" tabindex="25"><img src="https://s2.loli.net/2022/08/28/djulAoc5YL7Tk9p.png" alt="" loading="lazy"></figure>
+<p>附属组ID不受这些函数的控制，其他组ID与这些函数对用户ID的行为一样。</p>
+<p>解释器文件或解释器脚本</p>
+<p>解释器文件是一个文本文件，其起始第一行必须为;</p>
+<p>#! pathname [options]</p>
+<p>当我们exec解释器文件时，并不是真的执行该文件，而是执行该文件第一行给定的pathname的程序，一般pathname是绝对路径。</p>
+<p>当我们使用exec函数时，如果执行的不是机器可执行文件，就会判断成解释器文件，进而进行相应的操作。</p>
+<p>options可以是给定的选项，或者想要执行该文件时的命令行参数argv。所以，如果用exec函数执行解释器文件，其最终命令行参数是解释器文件中给出的参数和exec函数传递的命令行参数;</p>
+<p>如果对应的解释器，其具备-f选项，一般都会使用-f选项，该选项表明该解释器（一般为程序）执行-f后的文件名的文件：</p>
+<figure data-type="image" tabindex="26"><img src="https://s2.loli.net/2022/08/28/Gthowy76C2UAEBq.png" alt="" loading="lazy"></figure>
+<p>注意这里是读awk程序，也即读awk程序可以执行的文件代码。</p>
+<p>一个exec解释器文件的案例：</p>
+<p>解释器文件内容：</p>
+<p>#! /home/rex/test -f、</p>
+<p>用exec执行该文件：</p>
+<p>exec判断该文件不是机器可执行文件，认为其是解释器文件，转而执行其指定的程序，也即/home/rex/test</p>
+<p>则实际上执行该指定程序的本质等价于（命令行代码）：</p>
+<p>/home/rex/test -f pathname arg1 arg2 arg3...</p>
+<p>其中pathname是exec函数的pathname参数 arg1 arg2 arg3则为其传递给执行文件的参数，举例：</p>
+<p>execl(pathname,testinterp,arg1,arg2);</p>
+<p>/home/rex/test -f pathname arg1arg2</p>
+<p>记住这个过程就能理解解释器文件了，所谓的解释器文件对应的解释器也即其#号后指定的可执行文件</p>
+<figure data-type="image" tabindex="27"><img src="https://s2.loli.net/2022/08/28/mewYZPxU5slJ8DO.png" alt="" loading="lazy"></figure>
+<p>第一点等价于上述笔记中的过程。</p>
+<figure data-type="image" tabindex="28"><img src="https://s2.loli.net/2022/08/28/idlXyxArhBR3ZLe.png" alt="" loading="lazy"></figure>
+<p>如果相同的功能用过shell脚本实现，在shell中执行时，因为不是机器可执行文件，会判断其为shell脚本，然后打开shell执行该文件，然后又要fork，exec来执行awk程序，会增加开销。</p>
+<figure data-type="image" tabindex="29"><img src="https://s2.loli.net/2022/08/28/kW85ianVX9soAdP.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="30"><img src="https://s2.loli.net/2022/08/28/oAfr9nyiuT5gL7E.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="31"><img src="https://s2.loli.net/2022/08/28/IF5kjvyCKgEA7op.png" alt="" loading="lazy"></figure>
+<p>函数system</p>
+<p>#include&lt;stdlib.h&gt;</p>
+<p>int system(const char* cmdstr);</p>
+<p>若cmdstr是空指针，返回非0值，可用于判断系统是否支持system函数。</p>
+<p>system函数的本质是调用了fork、exec和waitpid函数，执行了shell程序，然后将cmdstr作为命令传给了shell程序，让shell对命令进行执行。</p>
+<p>一个简单的system实现</p>
+<figure data-type="image" tabindex="32"><img src="https://s2.loli.net/2022/08/28/GwKB78MXz3UuNr4.png" alt="" loading="lazy"></figure>
+<p>返回值有三种：</p>
+<p>1.fork失败或者waitpid返回除EINTR之外的出错，则system返回-1.</p>
+<p>2.若传递给shell的执行命令有误，则其返回值如同shell执行了exit(127)一样。</p>
+<p>3.否则若fork、exec、waitpid都成功，则返回shell的终止状态。</p>
+<figure data-type="image" tabindex="33"><img src="https://s2.loli.net/2022/08/28/wxHGnI5jX8BlDk1.png" alt="" loading="lazy"></figure>
+<p>注意，不要在一个设置用户ID或组ID的程序中调用system：</p>
+<p>因为system函数自身调用了fork、exec、waitpid函数，fork函数会将父进程的用户ID赋给子进程的用户ID。如果调用system函数的进程刚好是有root权限的，那么其所exec的shell程序也将具有root权限，可能会被恶意用户利用进行攻击。</p>
+<p>所以，设置用户ID和组ID的程序绝不应该调用system</p>
+<figure data-type="image" tabindex="34"><img src="https://s2.loli.net/2022/08/28/5TpHhG9r4vtuoCl.png" alt="" loading="lazy"></figure>
+<p>进程会计</p>
+<p>每当进程结束后，内核就会写一个会计记录，一般包括命令名，所使用的cpu时间，用户ID，组ID，启动时间等。</p>
+<p>标准并没有对进程会计进行说明，所以不同系统的进程会计记录结构有差别，相同的字段表达的意思也可能有差</p>
+<p>打开和关闭进程会计功能是使用acct函数，该函数在#include&lt;sys/acct.h&gt;中。</p>
+<figure data-type="image" tabindex="35"><img src="https://s2.loli.net/2022/08/28/tm1KqH9kJOesrV8.png" alt="" loading="lazy"></figure>
+<p>该函数只能超级用户调用。</p>
+<p>大多数系统上，时间是以时钟滴答来记录的，也即每秒多少滴答。</p>
+<figure data-type="image" tabindex="36"><img src="https://s2.loli.net/2022/08/28/I8JWNLSD1C9eM4l.png" alt="" loading="lazy"></figure>
+<p>会计记录的所需数据，由内核保存在进程表中，并在进程被创建时初始化，只有当进程结束后，内核写入该记录。</p>
+<p>会计记录是针对进程的，不是程序的，不管一个进程exec了多少个程序，其进程记录只有一个，cpu时间是其进程执行的总cpu时间。我们永远无法得到正在运行的进程的会计记录，所以init和内核守护进程我们是无法得到其会计记录的。</p>
+<p>在进程会计记录中记录的顺序对应于进程的终止顺序，而不是其启动顺序，为了确定启动顺序，需要获得记录文件的所有记录并按启动时间字段进行排序，但这是欠缺的，因为日历时间是秒，而墙上时间单位是时钟滴答，所以不能按照这种方法精确重构启动顺序。</p>
+<p>在Linux中，#ifdef后不能加枚举类型的值</p>
+<p>进程会计记录中会记录该进程的I/O量，也即读和写的字节数，读和写都会被记录，即使输出到空设备也会记录相应的写字节数。</p>
+<p>一个进程的core文件所需的I/O不是该进程负责的，是内核负责的，所以core文件的I/O量不会被记录到会计记录中。</p>
+<p>用户标识</p>
+<p>有时候我们希望获得运行该程序的用户登录名，可以使用下列函数;</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>char * getlogin();</p>
+<p>getlogin返回登录名的字符串。</p>
+<p>一个人在口令文件中，可以有多个登录项，其用户ID相同，当登录的shell不同，所以就可以有相同的用户ID，都能不同的登录名，系统通常记录用户登录时的登录名（例如 rex）。</p>
+<p>如果调用此函数的进程没有连接到用户登录时所用的终端，则函数会失败，这些进程通常称为守护进程。</p>
+<p>进程调度</p>
+<p>进程可以通过调整其nice值来调整进程自身的优先级，更高的nice值其优先级越低，也即对CPU越友好。</p>
+<p>只有特权进程允许提高调度权限。</p>
+<p>NZERO是系统默认的nice值。</p>
+<p>进程可以通过nice函数来获取和修改自己的nice值，使用这个函数只能更改本进程的nice值</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int nice(int incr);//进程的nice值被更改为原本的nice值+incr，并返回其更改后的nice值，若出错，返回-1.</p>
+<p>如果指定的incr超过了nice的范围，则系统会自动设置为边界值。</p>
+<p>getpriority函数可以像nice函数一样获取进程的nice值，也可以获取一组相关进程的nice值（只能返回其中一个进程的nice值，因为返回类型是int，不是数组类型）</p>
+<p>#include&lt;sys/resource.h&gt;</p>
+<p>int getpriority(int which,int who);</p>
+<figure data-type="image" tabindex="37"><img src="https://s2.loli.net/2022/08/28/NoBO3bZ8cvETwsk.png" alt="" loading="lazy"></figure>
+<p>setpriority函数可以为进程，进程组，属于特定用户ID的所有进程设置优先级</p>
+<p>int setpriority(int which,int who,int value);参数which和who与上面含义相同，相应进程的nice值增加value。</p>
+<p>子进程从父进程中继承nice值。</p>
+<p>进程的nice值不同，会产生不同的CPU占用比。</p>
+<p>进程时间</p>
+<p>#include&lt;sys/times.h&gt;</p>
+<p>clock_t times(struct tms* buf);</p>
+<p>times函数获取进程的用户CPU时间、系统CPU时间和墙上时钟时间。</p>
+<figure data-type="image" tabindex="38"><img src="https://s2.loli.net/2022/08/28/UI9yxrjznPXuQ1N.png" alt="" loading="lazy"></figure>
+<p>该结构中得所有时间都是以滴答为单位的，需要除以每秒滴答数才能得到秒为单位的数据。</p>
+<p>上述结构中没有墙上时钟时间，墙上时钟时间作为其返回值（返回的是滴答数）返回给调用者，这个值是绝对值，我们需要进行两次调用times，将两次的返回值相减并除以每秒滴答数，便能得到墙上时钟时间。</p>
+<p>注意这和获取时间的函数time的区别，time获取的是time_t类型的时间，是UTC以来的秒数。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-qi-zhang-jin-cheng-huan-jing/">
+                <h3 class="post-title">
+                  APUE笔记-第七章-进程环境
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

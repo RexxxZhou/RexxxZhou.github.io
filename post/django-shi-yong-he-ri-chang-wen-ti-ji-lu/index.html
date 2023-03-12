@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Django使用和日常问题记录 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Django使用和日常问题记录</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>django.db.models.Model</p>
+<figure data-type="image" tabindex="1"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/2B0795D6E53842108A96AC4435BAEEF4.png" alt="" loading="lazy"></figure>
+<p>model中的每个类就是一张表，类成员变量则是表的字段。</p>
+<p>model中字段类型api：</p>
+<p>https://docs.djangoproject.com/en/3.1/ref/models/fields/#django.db.models.ForeignKey</p>
+<p>django中的model是数据库中的表的，django会根据这些继承了models.Model的类，来生成相应的表，其中可以指定外键，而指定外键的函数中有个参数on_delete，表明被引用的字段被删了之后，该外键如何处理，具体有七种方法，最常见的是on_delete=models.CASCADE，代表删除被引字段的同时，删除该外键。其余处理方式见下链接：</p>
+<p>https://stackoverflow.com/questions/38388423/what-does-on-delete-do-on-django-models</p>
+<p>django中默认对每个表生成id主键，可以覆写；另外被设为外键的字段会在字段名后添加后缀_id，像上图的外键写法，默认引用Question表中的主键。</p>
+<p>python3 manage.py sqlmigrate apps_name migrationsfilenum</p>
+<p>e.g</p>
+<p>python3 manage.py sqlmigrate polls 0001</p>
+<p>python3 manage.py migrate可以执行数据库，代码的更新，而使用sqlmigrate可以直观的看出数据库是如何更新建立的：</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/LwOU4ZH5rmKTobQ.png" alt="" loading="lazy"></figure>
+<p>model的primary key在django中也可以用pk代替，pk=1，等价于id=1。</p>
+<p>django.db.models.F/Q方法</p>
+<p>F方法用来获取记录的某个字段的值：</p>
+<figure data-type="image" tabindex="3"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/5D010EA215CD4A77B285DB3AC856DE5B.png" alt="" loading="lazy"></figure>
+<p>这样可以直接获取这条记录的字段值来更新或者其他作用，而不需要先用order.amount来获取该值。</p>
+<p>Q方法是用于复杂查询的：</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/GF3QkmosvxKPHS7.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/cFk5wHPAnm93l2i.png" alt="" loading="lazy"></figure>
+<p>可在model定义中添加class Meta</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/vNRZ3tLcokGfJqB.png" alt="" loading="lazy"></figure>
+<p>views</p>
+<p>一个view要返回的内容要么是一个HttpResponse对象，要么是抛出一个异常，例如Http404</p>
+<p>template</p>
+<p>每一个html就是一个template，我们可以通过使用这些template，并向其传递上下文（template中所需的参数），来返回请求的应答结果。上下文必须是一个字典，其中key是模板中所需要的参数名。</p>
+<p>一种返回方法：</p>
+<p>return HttpResponse(template.render(context,request))</p>
+<p>其中template是一个加载后的模块对象，request是view中的第一个参数</p>
+<p>另一种快捷模板返回方法：<br>
+return render(request,'polls/index.html',context)</p>
+<p>render内部去加载模块并返回一个HttpResponse对象，用于返回给前端。</p>
+<p>from django.shortcuts import render</p>
+<p>url相关</p>
+<p>https://docs.djangoproject.com/en/3.1/topics/http/urls/</p>
+<p>include函数</p>
+<p>可用于扩展url，传递给其一个URLconf，或者一个二元组；include需要的是一个path对象的列表，来扩展url</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/wlukHe6LCgUs1oG.png" alt="" loading="lazy"></figure>
+<p>url命名空间</p>
+<p>有时候不同的app有相同的url后缀，例如polls/detail和anotherpolls/detail，若这两个url都在各自的urlpatterns中用name指定了该url的名字为detail，则在使用名字来代替完整url的地方则会出现二义性，例如在模板中：</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/WPNdStsnZuQAOEl.png" alt="" loading="lazy"></figure>
+<p>该detail不知道是到底是对应哪个url，所以需要对url进行命名空间，隔离同名的url（在此，也可看出在没有使用命名空间前，所有的url的name都是全局的）。</p>
+<p>我们可以在app各自的urls.py文件中指定一个变量：app_name，来作为其命名空间的名字：</p>
+<p>e.g app_name=polls</p>
+<p>则，后续引用该url名字时，则需指定为polls:detail。</p>
+<figure data-type="image" tabindex="9"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/BB56198946134F22BA6C64F03165CBD1.png" alt="" loading="lazy"></figure>
+<p>HttpRequest类</p>
+<p>成员变量</p>
+<p>body</p>
+<p>请求体的原始字节流数据，一般用在二进制数据处理时。可以用成员函数read,readline进行读取，但一旦使用了这些io读取body后，再去访问该body则会抛RawPostDataException异常。</p>
+<p>path</p>
+<p>除去域名/ip+端口后的url</p>
+<p>Example: &quot;/music/bands/the_beatles/&quot;</p>
+<p>method</p>
+<p>用于判断是什么类型的请求：</p>
+<p>HttpRequest.method=='GET'</p>
+<p>HttpRequest.method=='POST' //注意请求类型是大写</p>
+<p>GET</p>
+<p>当请求为Get请求时，该属性是一个QueryDict对象(类似字典)，是Get的参数与其值的字典。</p>
+<p>POST</p>
+<p>当请求为Post请求时，该属性是一个QueryDict对象(类似字典)，是Post的参数与其值的字典。</p>
+<p>FILES</p>
+<p>若请求中含有文件，则该属性是一个字典，key是文件名，value则是UploadedFile对象。</p>
+<p>META</p>
+<p>一个描述元数据的字典，要注意在头部中自定义的头部信息，在该字典中对应的键为HTTP_前缀加上原头部名的大写。</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/AdC9wscr53IYWOS.png" alt="" loading="lazy"></figure>
+<p>headers</p>
+<p>这是一个key大小写不敏感的字典，存放着头部的信息</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/OLDwtnjgGeZVo3H.png" alt="" loading="lazy"></figure>
+<p>成员函数</p>
+<p>get_host()</p>
+<p>返回请求的主机名，若没有指定，则为ip+端口</p>
+<p>get_port()</p>
+<p>返回请求的端口号</p>
+<p>get_full_path()</p>
+<p>获取成员变量path</p>
+<p>is_secure()</p>
+<p>若链接为https，则为TRUE</p>
+<p>accepts(mime_type)</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>HttpRequest.accepts('text/html')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>True</p>
+<p>可用来判断mime的类型。</p>
+<p>QueryDict类</p>
+<p>django.http.QueryDict</p>
+<p>一个类似字典的用来处理一个key对多个value的自定义类。</p>
+<p>成员方法</p>
+<p>QueryDict实现了所有字典有的方法，因为其是字典的子类。</p>
+<p>以下的这些是例外：</p>
+<p>QueryDict.<strong>init</strong>(query_string=None,mutable=False,encoding=None)</p>
+<p>通过query_string来实例化一个QD对象:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>QueryDict('a=1&amp;a=2&amp;c=3')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>&lt;QueryDict: {'a': ['1', '2'], 'c': ['3']}&gt;</p>
+<p>大部分QD对象都是不可变的，例如HttpRequest中的GET和POST，如果要可变则在构造时调用mutable=True。</p>
+<p>classmethod QueryDict.fromkeys(iterable, value='', mutable=False, encoding=None)</p>
+<p>传递一个可迭代的对象，该对象的元素为key的名字，且该QD的每个value均为指定的值：</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>QueryDict.fromkeys(['a', 'a', 'b'], value='val')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>&lt;QueryDict: {'a': ['val', 'val'], 'b': ['val']}&gt;</p>
+<p>QueryDict.<strong>getitem</strong>(key)</p>
+<p>获取key的值，该key有多个值，则返回最后一个值，若不存在则抛 django.utils.datastructures.MultiValueDictKeyError异常。</p>
+<p>QueryDict.<strong>setitem</strong>(key,value)</p>
+<p>设置key的值，该值是一个列表，表中元素为value；要注意修改的QD必须是一个mutable的，否则不行。</p>
+<p>QueryDict.<strong>contains</strong>(key)</p>
+<p>若存在key，则为True</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/SbuxM2zGegcqF4k.png" alt="" loading="lazy"></figure>
+<p>QueryDict.update(other_dict)</p>
+<p>传入一个QD或dict对象来更新QD：</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1', mutable=True)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q.update({'a': '2'})</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q.getlist('a')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>['1', '2']</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q['a'] # returns the last</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>'2'</p>
+<p>QueryDict.copy()</p>
+<p>深复制，返回一个新的QD对象，新对象是mutable的，即使原QD不可变。</p>
+<p>QueryDict.getlist(key, default=None)</p>
+<p>获取key对应的list，若key不存在且default指定为None，则为空list。</p>
+<p>QueryDict.setlist(key,list_)</p>
+<p>设置key的value为指定的list。</p>
+<p>QueryDict.appendlist(key, item)</p>
+<p>对指定的key对应的list进行append</p>
+<p>QueryDict.pop(key)</p>
+<p>删除指定的key，并返回其对应的value，若不存在key，则抛出KeyError异常。</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1&amp;a=2&amp;a=3', mutable=True)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q.pop('a')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>['1', '2', '3']</p>
+<p>QueryDict.popitem()</p>
+<p>随机删除一个kv，返回该kv的元组，若为空QD，则抛出KeyError异常。</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1&amp;a=2&amp;a=3', mutable=True)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q.popitem()</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>('a', ['1', '2', '3'])</p>
+<p>QueryDict.items()</p>
+<p>返回QD中所有的kv对，但value如果是多个，只返回最后一个，且返回的是一个可迭代对象：</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1&amp;a=2&amp;a=3')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>list(q.items())</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>[('a', '3')]</p>
+<p>QueryDict.dict()</p>
+<p>返回一个包含QD中所有kv的字典。</p>
+<p>QueryDict.values()</p>
+<p>返回所有的value，若一个key对应多个value，则返回最后一个值。返回的也是一个可迭代对象</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1&amp;a=2&amp;a=3')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>list(q.values())</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>['3']</p>
+<p>QueryDict.lists()</p>
+<p>与items一样，也是返回kv对，但对于一对多的情况，lists返回所有key对应的value：</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q = QueryDict('a=1&amp;a=2&amp;a=3')</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>q.lists()</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>[('a', ['1', '2', '3'])]</p>
+<p>HttpResponse</p>
+<p>不同于HttpRequest，HttpResponse是编写者负责管理的，而前者是django自动生成的；HttpResponse在django.http模块中。</p>
+<p>设置头部字段</p>
+<p>添加答复的头部字段，可以像字典的操作一样使用：</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>response = HttpResponse()<br>
+response['Age'] = 120<br>
+del response['Age']</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>不同于dict的点是，如果不存在某个头部字段，使用了del也不会抛异常。</p>
+<p>对于想要设置Cache-Control和Vary字段的情况，推荐使用patch_cache_control()和patch_vary_headers()，因为这两个字段一般是有多个用逗号分隔开的值组成的，使用这两个api不会导致中间件添加的信息被覆盖。同时，由于HTTP的头部不允许有换行，如果有换行符例如CR或这LF，则会抛BadHeaderError异常。</p>
+<p>告知浏览器把响应当作文件附加物</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/w7HUkgK1GufI4iP.png" alt="" loading="lazy"></figure>
+<p>成员变量</p>
+<p>content</p>
+<p>一个字节串，代表了相应的内容。</p>
+<p>charset</p>
+<p>一个字符串，用以标识当前响应使用什么字符集来编码的，若在response对象实例时没有给出，则会从content_type中提取，若提取失败，则使用默认字符集。</p>
+<p>status_code</p>
+<p>http响应的状态码，例如200，404。。。</p>
+<p>reason_phrase</p>
+<p>与每个状态码对应的信息，和errmsg相似，若不主动设置，则使用默认的内容。</p>
+<p>streaming</p>
+<p>默认为false，用于区分streaming response和普通的response</p>
+<p>closed</p>
+<p>当response已经关闭了，该对象为True</p>
+<p>成员方法</p>
+<p><strong>init</strong>( content=b'', content_type=None, status=200, reason=None, charset=None )</p>
+<p>构造函数，用于实例化一个response对象</p>
+<p>content可以是一个迭代器，字节串，字符串或者memoryview，其他的类型则会被编码成字节串，迭代器应当返回字符串或字节串。content就是要返给前端的内容。</p>
+<p>content_type是MIME type，被用来设置头部中的Content-Type字段，如果没有指定，默认为'text/html; charset=utf-8'</p>
+<p>status是http响应码；reason和成员变量reason_phrase同义；charset代表response的内容会按照何种字符集编码。</p>
+<p>get(header,alternate=None)</p>
+<p>返回指定头部字段的信息，若没有的话，返回alternate</p>
+<p>has_header(header)</p>
+<p>判断有无指定头部字段，有则True</p>
+<p>items()</p>
+<p>类似字典的items，返回头部的所有字段kv对。</p>
+<p>setdefault(header,value)</p>
+<p>设置头部字段的默认值</p>
+<p>close()</p>
+<p>对于WSGI服务器，需要通过close来关闭连接</p>
+<p>write(content)</p>
+<p>This method makes an HttpResponse instance a file-like object.</p>
+<p>flush()</p>
+<p>This method makes an HttpResponseinstance a file-like object.</p>
+<p>tell()</p>
+<p>This method makes an HttpResponseinstance a file-like object.</p>
+<p>getvalue()</p>
+<p>返回成员变量content。</p>
+<p>下面的几个方法是流式传输，长连接才用的，和websocket类似。</p>
+<p>HttpResponse.readable()¶</p>
+<p>Always False. This method makes an HttpResponse instance a stream-like object.</p>
+<p>HttpResponse.seekable()¶</p>
+<p>Always False. This method makes an HttpResponse instance a stream-like object.</p>
+<p>HttpResponse.writable()¶</p>
+<p>Always True. This method makes an HttpResponse instance a stream-like object.</p>
+<p>HttpResponse.writelines(lines)¶</p>
+<p>Writes a list of lines to the response. Line separators are not added. This method makes an HttpResponse instance a stream-like object.</p>
+<p>Cookie相关成员函数</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/lFMImjsD4HquPpQ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/BQWpxFjEmZHY4So.png" alt="" loading="lazy"></figure>
+<p>HttpResponse的子类</p>
+<p>django提供了多个HttpResponse的子类来处理不同类型的响应，这些子类都在django.http模块中</p>
+<ul>
+<li>class HttpResponseRedirect¶</li>
+</ul>
+<p>The first argument to the constructor is required – the path to redirect to. This can be a fully qualified URL (e.g. 'https://www.yahoo.com/search/'), an absolute path with no domain (e.g. '/search/'), or even a relative path (e.g. 'search/'). In that last case, the client browser will reconstruct the full URL itself according to the current path. See HttpResponse for other optional constructor arguments. Note that this returns an HTTP status code 302.url¶This read-only attribute represents the URL the response will redirect to (equivalent to the Location response header).</p>
+<ul>
+<li>class HttpResponsePermanentRedirect¶</li>
+</ul>
+<p>Like HttpResponseRedirect, but it returns a permanent redirect (HTTP status code 301) instead of a “found” redirect (status code 302).</p>
+<ul>
+<li>class HttpResponseNotModified¶</li>
+</ul>
+<p>The constructor doesn’t take any arguments and no content should be added to this response. Use this to designate that a page hasn’t been modified since the user’s last request (status code 304).</p>
+<ul>
+<li>class HttpResponseBadRequest¶</li>
+</ul>
+<p>Acts just like HttpResponse but uses a 400 status code.</p>
+<ul>
+<li>class HttpResponseNotFound¶</li>
+</ul>
+<p>Acts just like HttpResponse but uses a 404 status code.</p>
+<ul>
+<li>class HttpResponseForbidden¶</li>
+</ul>
+<p>Acts just like HttpResponse but uses a 403 status code.</p>
+<ul>
+<li>class HttpResponseNotAllowed¶</li>
+</ul>
+<p>Like HttpResponse, but uses a 405 status code. The first argument to the constructor is required: a list of permitted methods (e.g. ['GET', 'POST']).</p>
+<ul>
+<li>class HttpResponseGone¶</li>
+</ul>
+<p>Acts just like HttpResponse but uses a 410 status code.</p>
+<ul>
+<li>class HttpResponseServerError¶</li>
+</ul>
+<p>Acts just like HttpResponse but uses a 500 status code.</p>
+<p>JsonResponse对象</p>
+<p>class JsonResponse(data, encoder=DjangoJSONEncoder, safe=True, json_dumps_params=None, kwargs)</p>
+<p>这是一个用json格式编码content的response，因此，其Content-Type头部信息被设置为application/json.</p>
+<p>传给data的实参应是一个dict，而如果safe参数指定为False后，data可以为任何可进行Json序列化的对象。若safe为True，但data传了一个非dict，则会抛TypeError错误。</p>
+<p>encode参数默认是Json的编码器，一般不需要更改。</p>
+<p>StreamingHttpResponse and FileResponse</p>
+<p>https://docs.djangoproject.com/en/3.1/ref/request-response/#streaminghttpresponse-objects</p>
+<p>https://docs.djangoproject.com/en/3.1/ref/request-response/#fileresponse-objects</p>
+<p>Forms in Django</p>
+<p>https://docs.djangoproject.com/en/3.1/topics/forms/</p>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/YL5hoWgXlDuKOZV.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="17"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/1ADECDBED86344A787E2B983EC016F4E.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/C1rFlmIyaKSv4VQ.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/sPznEkGTFXctVg1.png" alt="" loading="lazy"></figure>
+<p>django.contrib.auth.authenticate</p>
+<p>https://docs.djangoproject.com/en/3.1/topics/auth/default/#authenticating-users</p>
+<p>使用django默认的或自定义的后台鉴权方法来对用户鉴权；自定义后端鉴权：</p>
+<p>https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#authentication-backends</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/docker-shi-yong/">
+                <h3 class="post-title">
+                  Docker使用
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge warning">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

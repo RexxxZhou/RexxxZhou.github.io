@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Cmake入门介绍 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Cmake入门介绍</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>CMake</p>
+<p>cmake的关键词大小写不敏感，在cmake中，变量名直接给出，不需要声明，和shell语言一样，引用变量时用<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mrow><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">名</mi></mrow><mi mathvariant="normal">，</mi><mi mathvariant="normal">大</mi><mi mathvariant="normal">多</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">见</mi><mi mathvariant="normal">到</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">都</mi><mi mathvariant="normal">是</mi><mi mathvariant="normal">字</mi><mi mathvariant="normal">符</mi><mi mathvariant="normal">串</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">如</mi><mi mathvariant="normal">果</mi><mi mathvariant="normal">不</mi><mi mathvariant="normal">是</mi><mi mathvariant="normal">却</mi><mi mathvariant="normal">又</mi><mi mathvariant="normal">想</mi><mi mathvariant="normal">转</mi><mi mathvariant="normal">成</mi><mi mathvariant="normal">字</mi><mi mathvariant="normal">符</mi><mi mathvariant="normal">串</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">则</mi><mi mathvariant="normal">用</mi><mi mathvariant="normal">&quot;</mi></mrow><annotation encoding="application/x-tex">{变量名}，大多数变量见到的都是字符串，如果不是却又想转成字符串，则用&quot;</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord"><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">名</span></span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">大</span><span class="mord cjk_fallback">多</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">见</span><span class="mord cjk_fallback">到</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">都</span><span class="mord cjk_fallback">是</span><span class="mord cjk_fallback">字</span><span class="mord cjk_fallback">符</span><span class="mord cjk_fallback">串</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">如</span><span class="mord cjk_fallback">果</span><span class="mord cjk_fallback">不</span><span class="mord cjk_fallback">是</span><span class="mord cjk_fallback">却</span><span class="mord cjk_fallback">又</span><span class="mord cjk_fallback">想</span><span class="mord cjk_fallback">转</span><span class="mord cjk_fallback">成</span><span class="mord cjk_fallback">字</span><span class="mord cjk_fallback">符</span><span class="mord cjk_fallback">串</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">用</span><span class="mord">&quot;</span></span></span></span>{变量名}&quot;，这和shell也是如出一辙。</p>
+<p>cmake_minimum_required(VERSION 3.10) 指定CMake的最低版本要求</p>
+<p>project(Tutorial VERSION 1.0) 指定该编译项目的名字和迭代版本</p>
+<p>各种路径解释（均为绝对路径）</p>
+<p>PROJECT_SOURCE_DIR</p>
+<p>是最近给出project命令的CMakeLists.txt所在的路径。一般为顶层CMakeLists.txt所在的目录</p>
+<p>PROJECT_BINARY_DIR</p>
+<p>是cmake构建时的文件路径，例如如果我们在build目录下构建，则build目录就是一个该路径。</p>
+<p>CMAKE_CURRENT_SOURCE_DIR</p>
+<p>指CMakeLists.txt所在的源文件目录</p>
+<p>CMAKE_CURRENT_BINARY_DIR</p>
+<p>指构建时CMakeLists.txt所在的目录</p>
+<p>CMAKE_SOURCE_DIR</p>
+<p>顶层CMakeLists.txt所在的源文件目录，所谓的顶层source tree目录</p>
+<p>CMAKE_BINARY_DIR</p>
+<p>顶层CMakeLists.txt在构建时所在的目录，所谓的顶层binary tree目录</p>
+<figure data-type="image" tabindex="1"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/475BC043D60045B4AF611A314B516293.png" alt="" loading="lazy"></figure>
+<p>简单来说，*_binary_dir是指构建的目录，例如如果在build目录下构建，则会是...../build/</p>
+<p>如果在最顶层的当前目录下构建，则这些目录都会相等。</p>
+<p>source和源文件相关，即没有执行cmake前的文件；而binary则和构建的文件相关，即执行了cmake后的文件。由于源文件和构建后的文件存在很多相同文件，需要特此注意，自己留意下build目录的文件和原始文件就能发现该现象。</p>
+<p>add_library(Name [STATIC|SHARED] [EXCLUDE_FROM_ALL] source1 [source2...])</p>
+<p>add_library使cmake编译一个库，要么是STATIC静态库，要么是SHARED动态库，EXCLUDE_FROM_ALL指代这个库不会被默认构建，除非有组件依赖或手工构建。</p>
+<p>编译出来的库文件名为libName.a或libName.so</p>
+<p>重名的add_library命令只会执行第一条，例如add_library(mylib staic helloworld.cc), add_library(mylib shared helloworld.cc)，编译出来只有libmylib.a。</p>
+<p>SET_TARGET_PROPERTIES(mylib-shared PROPERTIES OUTPUT_NAME &quot;mylib&quot;)</p>
+<p>可以设置库的输出文件名。</p>
+<p>SET_TARGET_PROPERTIES(hello PROPERTIES VERSION 1.2 SOVERSION 1)</p>
+<p>#VERSION 指代动态库版本,SOVERSION 指代 API 版本。</p>
+<p>add_executable(OutPutName [WIN32] [MACOSX_BUNDLE] [EXCLUDE_FROM_ALL] source1 [source2...])</p>
+<p>add_executable生成指定OutPutName的可执行文件，编译source1...等一系列源文件，该文件名必须是在项目中全局唯一的，可以理解为类似makefile中的一个target名。该名字会和target_link_libraries、target_include_directories相对应，指定编译出这个target所需的库文件和库目录。add_executable和add_library都是会生成ELF文件的，也即都是一个target，所以target_XXX_XXX命令都需要在这两者之后给出。</p>
+<p>编译的CMake的版本需求即可通过cmake_minimum_required给出，也可以通过configure_file()命令给出，配置文件中的相应宏会被替换并注入到源文件中，配置文件会写入到bin目录中.</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/EeyHA8nk4T3boK2.png" alt="" loading="lazy"></figure>
+<p>.in后缀的文件中写好cmake能够识别的替换代码，执行该语句后会生成.h头文件，此时相应的需要替换的内容已经完成</p>
+<figure data-type="image" tabindex="3"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/59D320458DF04DE9BADE17F662AEA756.png" alt="" loading="lazy"></figure>
+<p>#cmakedefine这句会在cmake执行后在相应的目标头文件(这里为TutorialConfig.h)中#define指定宏名(这里为#define USE_MYMATH)，需要注意的是，#cmakedefine是指如果在当前的可见域中，定义了某个量，则在config文件中才会去定义同名的宏</p>
+<p>源文件需要引用，所以需要把搜索路径也添加到项目的当前搜索路径中，使用</p>
+<p>target_include_directories(targetname &lt;PUBLIC,PRIVATE,INTERFACE&gt; search_dir)</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/IuZBqEbgXfRxwiG.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/SjlXGRyn4o8U5C3.png" alt="" loading="lazy"></figure>
+<p>要注意这个不等同于g++中的-L选项，-L是指定库文件的搜索路径，而include_directories是指定头文件的搜索路径，两者有区别。</p>
+<p>target_link_libraries(targetname libname)</p>
+<p>指定target需要链接的库文件</p>
+<p>add_subdirectory(sourcedir [binary_dir] [EXCLUDE_FROM_ALL])</p>
+<p>sourcedir告诉cmake还有哪个路径下也有CMakeLists.txt和源文件，binary_dir指定在哪个目录下放置输出文件（指sourcedir下的CMakeLists.txt编译出来的输出文件），sourcedir和binary_dir可用绝对/相对路径。如果不指定binary_dir，输出文件则直接生成在sourcedir中。</p>
+<p>该语句还会将该目录添加到库文件搜索路径中：</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/b5J1k9qBrshlRIS.png" alt="" loading="lazy"></figure>
+<p>上图中MathFunctions库文件在./MathFunctions/下，而extra_libs并没有指定该路径，却能找到该库，是因为add_subdirectory已经把该路径添加到库文件搜索路径了。</p>
+<p>值得注意的是：在上层CMakeLists.txt中执行到add_subdirectory时，会立刻去执行子目录的CMakeLists.txt，执行完之后才会回到上层继续执行，所以需要注意该语句的顺序，例如如果要先编译静态库再进行主函数的编译，则应在主函数cc文件编译之前给出这句语句。</p>
+<p>option(optionName &quot;annotation&quot; ON)</p>
+<p>指定一个选项名，双引号给出其注释，ON表示打开该选项，可用于控制选择性编译某些文件。</p>
+<p>e.x. option(USE_MYMATH “use my math implementation” ON)</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/vjb3zSqPIVshAFR.png" alt="" loading="lazy"></figure>
+<p>默认情况下，若不指定选项的值，则以CMakeLists.txt文件中的值为准，例如如果要关闭该选项可执行: cmake ../ -DUSE_MYMATH=off 命令，注意是在build之前执行的cmake命令行。</p>
+<hr>
+<p>指定C++标准号</p>
+<p>set(CMAKE_CXX_STANDARD 11)</p>
+<p>设置项目需要设置C++标准号</p>
+<p>set(CMAKE_CXX_STANDARD_REQUIRED True)</p>
+<p>CMake中的语句有顺序要求，例如上面这两句必须在add_executable之前输入，而target_include_directories在文件最后输入。具体命令具体分析</p>
+<p>我们一般都会建立一个build文件夹，进入build目录，如果这个目录在最顶层CMakeLists.txt文件所在的目录下，那么执行</p>
+<p>cmake ..</p>
+<p>该命令行实际作用是用cmake程序执行一些预处理，例如将源代码中注入配置文件的代码，还有设置编译参数等一系列设置操作，也可以理解为用cmake对CMakeLists.txt转换成makefile：（CMakeFiles目录下有处理后的源文件等内容）</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/qd8JivltxZoYhTB.png" alt="" loading="lazy"></figure>
+<p>而且build目录中会有预处理后的所有文件，在获取这些文件之后，在build目录下执行：</p>
+<p>cmake --build .</p>
+<p>实现真正的编译、链接，得到最终的可执行文件(ELF文件)</p>
+<hr>
+<p>如果一个库或者可执行文件的编译不需要依赖别的文件，只需要自己就可以编译，而别人又需要依赖这个库或者可执行文件，那么这个库或可执行文件就称作是一个INTERFACE，对于这种INTERFACE，在他的CMakeLists.txt文件下可将target_include_directories指定为：</p>
+<p>e.x. target_include_directories(MathFunctions INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})</p>
+<p>该语句会为target将其指定目录填充到INTERFACE_INCLUDE_DIRECTORIES。</p>
+<p>如果别的文件A依赖这个target，使用target_link_libraries后，cmake会自动去INTERFACE_INCLUDE_DIRECTORIES找这些库文件进行链接，保证成功编译(在A文件编译的CMakeLists.txt文件中就不需要再把这个依赖文件的路径写到include_directories里了)。</p>
+<p>https://cmake.org/cmake/help/latest/guide/tutorial/index.html#adding-usage-requirements-for-library-step-3 Step3</p>
+<p>CMAKE_CURRENT_SOURCE_DIR指代当前正在执行的CMakeLists.txt文件所在的目录。</p>
+<p>Install Rules</p>
+<p>我们一致使用的build是构建整个项目，不包括install和测试的内容，而install的主要作用是将某些文件指定安装到CMAKE_INSTALL_DIR里面，两者不冲突。</p>
+<p>可以用来指定安装ELF文件或者头文件：</p>
+<p>install(TARGETS MathFunctions DESTINATION lib)</p>
+<p>install(FILES MathFunctions.h DESTINATION include)</p>
+<p>没有指定绝对路径的话，路径前缀使用CMAKE_INSTALL_PREFIX，在UNIX下默认为/usr/local.</p>
+<p>使用cmake --install . 进行安装，若要指定安装的前缀路径则命令为 cmake --install . --prefix &quot;/home/rex/&quot;</p>
+<p>Testing Support （cmake支持测试）</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/GVkZ3LgrqWyHpaK.png" alt="" loading="lazy"></figure>
+<p>在顶层CMakeLists.txt中使能测试，并指定测试的方法。PASS_REGULAR_EXPRESSION是传递一个正则表达式，查看测试单元输出的结果中是否有包含给定的字符串。</p>
+<p>照常编译即可，在编译后的可执行文件目录下，执行ctest -N查看所有测试的内容，ctest -VV执行这些测试</p>
+<hr>
+<p>增加系统检查</p>
+<p>由于不同的平台可能有些函数并不存在，需要在编译的时候进行系统检查，判断函数是否存在，不存在应使用哪种函数替代。</p>
+<p>使用CheckSymbolExits模块实现该功能</p>
+<p>e.x.</p>
+<p>include(CheckSymbolExists)</p>
+<p>check_symbol_exists(log &quot;math.h&quot; HAVE_LOG)</p>
+<p>在使用该模块前，需要在CMakeLists.txt文件中include该模块，随后使用它提供的check_symbol_exists函数检查指定名字(log)是否存在文件中(math.h)，把检查结果1或0赋给变量(HAVE_LOG)</p>
+<p>打印变量值</p>
+<p>set(variable1 value)</p>
+<p>message(STATUS &quot;the value is ${variable1}&quot;)</p>
+<p>status表示一般的打印，还有error可以指代，用于打印错误信息</p>
+<p>变量作用域</p>
+<p>和c++一样，外层作用域的量对内层可以，反之不可见，当前可以简单的理解成CMakeLists.txt的层级关系就是所谓的内层和外层。</p>
+<p>例如如果顶层CMakeLists.txt定义了变量A，则在下层CMakeLists.txt中能够引用该变量</p>
+<p>SET与UNSET</p>
+<p>1.SET可用来设置普通变量、CACHE变量、环境变量，后两者具体应用时再补充</p>
+<p>SET(variableName &lt;values... &gt; [PARENT_SCOPE])</p>
+<p>在当前作用域或函数中定义一个变量并赋值，若变量未定义则定义一个新变量，若已定义，则对该变量赋值为value，如果value是一系列值，则该变量是一个列表，每个值都会用分号分隔开。如果values为空，其作用与unset一样，相当于取消该变量的定义，该变量变为未定义状态。</p>
+<p>指定PARENT_SCOPE代表该变量可被其上层作用域可见，否则上层均不可见。</p>
+<p>2.UNSET用来取消普通变量、CACHE变量、环境变量的定义</p>
+<p>unset(variableName [CACHE | PARENT_SCOPE])</p>
+<p>取消普通变量的定义，指定CACHE则取消CACHE变量的定义，指定PARENT_SCOPE则同时取消上层作用域的该同名变量的定义。</p>
+<p>使用${variable}时，cmake先查普通变量中是否有该变量，若无则继续在CACHE变量中查找。所以如果unset一个变量A，则可以在CACHE变量中暴露出来，因为最终找到的是CACHE变量中的A变量。</p>
+<p>unset(ENV{variable})</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/mMOi9L2HrhGlBC8.png" alt="" loading="lazy"></figure>
+<p>cmake保留变量名规范</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/v3CHUD2a8xglFLz.png" alt="" loading="lazy"></figure>
+<p>cache变量含义</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/mqBMAN26zwietQC.png" alt="" loading="lazy"></figure>
+<p>cmake环境变量</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/AC4wtiDgxOb6IaS.png" alt="" loading="lazy"></figure>
+<p>增加编译定义</p>
+<p>target_compile_definitions(targetName [PUBLIC|PRIVATE|INTERFACE] item1,item2...)</p>
+<p>给指定的目标文件注入宏定义</p>
+<p>e.x.</p>
+<p>target_compile_definitions(MathFunctions PRIVATE HAVE_LOG)</p>
+<p>向目标文件注入HAVE_LOG宏定义</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/EKrTzN54Jnltedm.png" alt="" loading="lazy"></figure>
+<p>若被指定item没有使用=号，则默认定义为1，若想指定则需item=value来指定。</p>
+<hr>
+<p>添加自定义命令和生成的文件</p>
+<p>add_custom_command(OUTPUT filename COMMAND targetname args DEPENDS target)</p>
+<p>上面的命令只给出了该命令的一个示例，其有很多参数，需要具体应用时查询。</p>
+<p>COMMAND是让cmake在构建时执行的命令，DEPENDS指执行COMMAND依赖的东西（只有这个依赖已存在了才能执行COMMAND）。</p>
+<p>OUTPUT是指定COMMAND命令语句生成的文件名，可以看待成是一个target，如果有别的语句用到了这个OUTPUT后的变量，cmake才会去执行add_custom_command语句，也即被依赖了才会去执行。</p>
+<p>https://www.cnblogs.com/dangerman/p/6529742.html</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/TShVMerCiIm3Fx2.png" alt="" loading="lazy"></figure>
+<p>这个命令的作用是在构建时生成一些文件，而这些文件可以被其他的源文件引用，这样可以增加编译的灵活性。</p>
+<p>编译文件的顺序</p>
+<p>如果A库依赖B库，则在g++命令行中，B文件名应在A文件名右边。g++优先编译右侧文件生成obj文件，再来编译左侧的文件。有时候发现未定义的引用，但明明给定的文件有该引用，往往是因为这个问题。</p>
+<p>在cmake中也有一样的问题，add_library和add_executable的源文件列表也要注意相应的顺序问题。</p>
+<hr>
+<p>include(ModuleName)</p>
+<p>在cmake中引用某个模块</p>
+<p>源码/可执行文件的分发</p>
+<p>include(InstallRequiredSystemLibraries)</p>
+<p>set(CPACK_RESOURCE_FILE_LICENSE &quot;${CMAKE_CURRENT_SOURCE_DIR}/License.txt&quot;)</p>
+<p>set(CPACK_PACKAGE_VERSION_MAJOR &quot;<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mrow><mi>T</mi><mi>u</mi><mi>t</mi><mi>o</mi><mi>r</mi><mi>i</mi><mi>a</mi><msub><mi>l</mi><mi>V</mi></msub><mi>E</mi><mi>R</mi><mi>S</mi><mi>I</mi><mi>O</mi><msub><mi>N</mi><mi>M</mi></msub><mi>A</mi><mi>J</mi><mi>O</mi><mi>R</mi></mrow><mi mathvariant="normal">&quot;</mi><mo>)</mo><mi>s</mi><mi>e</mi><mi>t</mi><mo>(</mo><mi>C</mi><mi>P</mi><mi>A</mi><mi>C</mi><msub><mi>K</mi><mi>P</mi></msub><mi>A</mi><mi>C</mi><mi>K</mi><mi>A</mi><mi>G</mi><msub><mi>E</mi><mi>V</mi></msub><mi>E</mi><mi>R</mi><mi>S</mi><mi>I</mi><mi>O</mi><msub><mi>N</mi><mi>M</mi></msub><mi>I</mi><mi>N</mi><mi>O</mi><mi>R</mi><mi mathvariant="normal">&quot;</mi></mrow><annotation encoding="application/x-tex">{Tutorial_VERSION_MAJOR}&quot;)
+set(CPACK_PACKAGE_VERSION_MINOR &quot;</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mord mathdefault">u</span><span class="mord mathdefault">t</span><span class="mord mathdefault">o</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">i</span><span class="mord mathdefault">a</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.01968em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.22222em;">V</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.05764em;">E</span><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="mord mathdefault" style="margin-right:0.05764em;">S</span><span class="mord mathdefault" style="margin-right:0.07847em;">I</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.09618em;">J</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault" style="margin-right:0.00773em;">R</span></span><span class="mord">&quot;</span><span class="mclose">)</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.07153em;">K</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.07153em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.13889em;">P</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="mord mathdefault" style="margin-right:0.07153em;">K</span><span class="mord mathdefault">A</span><span class="mord mathdefault">G</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.05764em;">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.05764em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.22222em;">V</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.05764em;">E</span><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="mord mathdefault" style="margin-right:0.05764em;">S</span><span class="mord mathdefault" style="margin-right:0.07847em;">I</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault" style="margin-right:0.07847em;">I</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="mord">&quot;</span></span></span></span>{Tutorial_VERSION_MINOR}&quot;)<br>
+include(CPack)</p>
+<p>InstallRequiredSystemLibraries模块是用来包含项目在当前平台下所需的运行时库，FILE_LICENSE是指定一个文件，在他人使用到我们分发的包时，会提醒别人我们的许可证情况。CPack模块是用来打包项目的</p>
+<p>在执行完cmake --build .命令后，再执行cpack，即可将可执行文件打包成tar格式，其中打包的规则是由CMakeList.txt中的install命令指定的，如果不指定，则打包后为空。</p>
+<p>若想改成其他打包文件格式可以-G指定：</p>
+<p>cpack -G ZIP</p>
+<p>如果想打包源文件则</p>
+<p>cpack --config CPackSourceConfig.cmake</p>
+<p>打包的都是我们build之后的所有文件</p>
+<hr>
+<p>测试结果在面板上显示</p>
+<p>将enable_testing()替换成include(CTest)，该语句会自动执行enable_testing()。</p>
+<p>在顶层目录新建CTestConfig.cmake文件，指定我们测试的参数和想要在哪里展示测试结果</p>
+<p>set(CTEST_PROJECT_NAME &quot;CMakeTutorial&quot;)</p>
+<p>set(CTEST_NIGHTLY_START_TIME &quot;00:00:00 EST&quot;)</p>
+<p>​</p>
+<p>set(CTEST_DROP_METHOD &quot;http&quot;)</p>
+<p>set(CTEST_DROP_SITE &quot;my.cdash.org&quot;)</p>
+<p>set(CTEST_DROP_LOCATION &quot;/submit.php?project=CMakeTutorial&quot;)</p>
+<p>set(CTEST_DROP_SITE_CDASH TRUE)</p>
+<p>CTest在执行时会读取该文件</p>
+<p>ctest [-VV] -D Experimental</p>
+<p>在网页上dashboard显示测试结果</p>
+<figure data-type="image" tabindex="16"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/7CEC097575A244BDA40BA559E72965A3.png" alt="" loading="lazy"></figure>
+<hr>
+<p>静态、动态库混合</p>
+<p>可以通过变量BUILD_SHARED_LIBS来控制是编译动态库还是静态库，该变量可作为选项在顶层CMakeLists.txt中给出</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/N2ZTzx58hnFseAo.png" alt="" loading="lazy"></figure>
+<p>option(BUILD_SHARED_LIBS &quot;Build shared libraries&quot; ON)</p>
+<p>打开该选项后，项目的所有库都会默认以动态库的进行编译，若要指定某个库为静态库，可以</p>
+<p>add_library(libName STATIC source_file...)</p>
+<p>但要注意的是，动态库一般都是位置无关代码position independent code(PIC)，而静态库不是，所以在混合编译时，需要将静态库的属性指定PIC</p>
+<p>set_target_properties(staticLibName PROPERTIES POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})</p>
+<p>若不指定，则会：</p>
+<figure data-type="image" tabindex="18"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/157EB607DBC64AC094479FB3966040AE.png" alt="" loading="lazy"></figure>
+<hr>
+<p>PUBLIC,PRIVATE,INTERFACE总结</p>
+<p>基本上所有命令有这几个参数的都可以用下面的方式去理解。</p>
+<p>先了解一个interface library:</p>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/T9A5mxyF8JbYuQX.png" alt="" loading="lazy"></figure>
+<p>一个interface library可以被当成一般的library使用，一些有library的命令可以使用这个库，但是这个库并没有实际文件对应，可以看成是一个标志性的库。在cmake中，每个target都有自己的编译属性，编译参数，例如c++标准，所链接的库，include的目录等等，这些信息都是可以传递给使用者的，例如：</p>
+<p>target_link_libraries(使用者(target名) [PUBLIC|PRIVATE|INTERFACE] 生产者(库名))</p>
+<p>这样，一个target的编译信息就可以传递给依赖这各target的其他target，而这些参数的传递是通过PUBLIC,PRIVATE,INTERFACE来控制的。</p>
+<p>PUBLIC和PRIVATE为一类，INTERFACE为一类</p>
+<p>对于在命令中被指定INTERFACE的对象obj，表示使用者(A)不需要这个对象，但这个对象的信息可以传递给别的使用者(假设为B)，则B可以通过使用A来获得对象obj的编译信息。</p>
+<p>例如，一个源文件编译所需的头文件目录就在其当前目录下，所以该头文件的路径本质上是不需要用target_include_directories指定的，也即使用者A不需要的，但可以用INTERFACE来指定该路径，那么，当别的target使用A时，该路径便可被别的target继承，别的target自然而然就把这个目录添加到头文件搜索路径中去了。</p>
+<p>而PUBLIC,PRIVATE指定的对象obj，使用者A都会使用到对象obj，两者的区别在于，PUBLIC指定下，obj的信息给传递给别的使用者B，而PRIVATE指定下，obj的信息将无法传递给别的使用者。</p>
+<p>PUBLIC和PRIVATE的逻辑可以和类的公有和私有继承想类比。而INTERFACE为单独一种逻辑，需要额外记忆。</p>
+<p>下面的例子可用于了解三者区别。</p>
+<p>add_library(archive archive.cpp)</p>
+<p>target_compile_definitions(archive INTERFACE USING_ARCHIVE_LIB)</p>
+<p>​</p>
+<p>add_library(serialization serialization.cpp)</p>
+<p>target_compile_definitions(serialization INTERFACE USING_SERIALIZATION_LIB)</p>
+<p>​</p>
+<p>add_library(archiveExtras extras.cpp)</p>
+<p>target_link_libraries(archiveExtras PUBLIC archive)</p>
+<p>target_link_libraries(archiveExtras PRIVATE serialization)</p>
+<h1 id="archiveextras-is-compiled-with-dusing_archive_lib">archiveExtras is compiled with -DUSING_ARCHIVE_LIB</h1>
+<h1 id="and-dusing_serialization_lib">and -DUSING_SERIALIZATION_LIB</h1>
+<p>​</p>
+<p>add_executable(consumer consumer.cpp)</p>
+<h1 id="consumer-is-compiled-with-dusing_archive_lib">consumer is compiled with -DUSING_ARCHIVE_LIB</h1>
+<p>target_link_libraries(consumer archiveExtras)</p>
+<hr>
+<p>Generator Expression</p>
+<p>$&lt;command: ...&gt;</p>
+<p>生成器表达式是在构建的时候才会求值，表达式有很多种类型，可用于条件、逻辑、变量评估等等，具体参考官方文档</p>
+<p>https://cmake.org/cmake/help/latest/manual/cmake-generator-expressions.7.html#introduction</p>
+<p>对于条件表达式</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>&lt;</mo><mn>0</mn><mo>:</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo>&gt;</mo><mi mathvariant="normal">则</mi><mi mathvariant="normal">得</mi><mi mathvariant="normal">到</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">是</mi><mi mathvariant="normal">空</mi><mi mathvariant="normal">字</mi><mi mathvariant="normal">符</mi><mi mathvariant="normal">串</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">若</mi></mrow><annotation encoding="application/x-tex">&lt;0: ...&gt;则得到的是空字符串，若</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord">.</span><span class="mord">.</span><span class="mord">.</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">得</span><span class="mord cjk_fallback">到</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">是</span><span class="mord cjk_fallback">空</span><span class="mord cjk_fallback">字</span><span class="mord cjk_fallback">符</span><span class="mord cjk_fallback">串</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">若</span></span></span></span>&lt;1: ...&gt;则得到的是...指定的内容</p>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/heim5WEjSfYdMlb.png" alt="" loading="lazy"></figure>
+<p>确定编译的语言和编译平台：</p>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/jZ5ACnmPKFzQgc6.png" alt="" loading="lazy"></figure>
+<p>修改编译属性和参数</p>
+<p>target_compile_features(targetName INTERFACE cxx_std_11)</p>
+<p>使用上述命令，可以替代</p>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/iImK2FuSz5CUvR8.png" alt="" loading="lazy"></figure>
+<p>target_compile_options(targetName INTERFACE -Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused)</p>
+<p>用于指定编译参数</p>
+<hr>
+<p>添加导出配置</p>
+<p>可以将我们自己项目构建的库给别的项目使用，导出我们项目的信息，别的项目include该信息文件即可使用我们指定导出的target</p>
+<p>install(TARGETS ${installable_libs} DESTINATION lib EXPORT MathFunctionsTargets)</p>
+<p>该命令相应的会生成一个MathFunctionsTargets.cmake文件和安装指定的库到指定的目录中，别的项目使用include命令include该路径即可引用我们安装的这些库了。</p>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/cGX185KaeEwNpMY.png" alt="" loading="lazy"></figure>
+<p>打包debug和release版本</p>
+<p>https://cmake.org/cmake/help/latest/guide/tutorial/index.html#packaging-debug-and-release-step-12</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/django-shi-yong-he-ri-chang-wen-ti-ji-lu/">
+                <h3 class="post-title">
+                  Django使用和日常问题记录
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

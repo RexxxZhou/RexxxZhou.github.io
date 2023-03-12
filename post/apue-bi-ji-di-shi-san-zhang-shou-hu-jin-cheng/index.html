@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十三章-守护进程 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十三章-守护进程</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十三章-守护进程</p>
+<p>用户级守护进程是如何启动的？</p>
+<p>在/etc/init.d下，所有开机自启动的程序都有一个对应的shell脚本，开机时，会自动执行这些脚本，进而启动了一些程序。 https://jingyan.baidu.com/article/9f63fb91e6b26288400f0e81.html</p>
+<p>守护进程的特征</p>
+<p>守护进程是一种生存期长的进程，常常在系统引导装入时启动，仅在系统关闭时才终止。</p>
+<p>守护进程英文为daemon，所以很多守护进程的名字最后会有个d。</p>
+<p>它们没有控制终端，都是在后台运行的。</p>
+<p>使用 ps -axj 显示所有用户的进程(a)，显示没有控制终端的进程(x),显示与作业相关的信息(j)：进程ID，进程组ID，会话ID，控制终端，以及终端进程组ID。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/Q1pdDfAnijhIGmz.png" alt="" loading="lazy"></figure>
+<p>方括号括起来的就是守护进程。</p>
+<p>系统进程依赖系统实现，父进程ID为0的进程通常为内核进程，也是当系统引导装入时启动。</p>
+<p>init进程是一个由内核在装入时启动的用户层次的命令。</p>
+<p>Linux用kthreadd这一个特殊的内核进程来创建其他内核进程，所以会看到很多内核进程的父进程ID为2.所以内核进程的父进程ID要么是0要么是1.</p>
+<p>内核进程是特殊的，通常存在于系统的整个生命周期，以超级用户特权执行，没有控制终端，无命令行。</p>
+<p>对于需要在进程上下文执行工作但却不被用户层进程调用的每一个内核组件，都有自己的内核守护进程。可以理解成一些内核的功能用户进程不能直接调用，但内核守护进程可以使用。</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/SEvXp973F1xTL4H.png" alt="" loading="lazy"></figure>
+<p>守护进程分为内核守护进程（inetd）和用户级守护进程（例如mysqld）。</p>
+<p>要注意的是，用户级守护进程的父进程均为init进程。</p>
+<p>所以总结为：用户级守护进程的父进程ID为1，也即从init进程中fork而来。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/EnjPog7DKV2ms5t.png" alt="" loading="lazy"></figure>
+<p>大多数用户级守护进程是进程组的组长进程，且是会话的首进程，且是进程组和会话的唯一进程。</p>
+<p>编程规则</p>
+<p>1.首先要讲文件创建屏蔽字通过umask设置为想要的值，因为继承而来的文件创建屏蔽字可能屏蔽某些想要权限，如果守护进程需要创建文件，可能就需要设定特定的屏蔽字。如果守护进程调用了会创建文件的库函数，那么也需要给出屏蔽字，因为这些库函数没有传入创建文件屏蔽字的参数。</p>
+<p>2.调用fork，然后让父进程exit。这样，虽然子进程继承了父进程的组ID，但是其进程ID肯定不等于组ID，这样满足了创建会话的进程不能是组长进程的前提。是调用setsid的先决条件。</p>
+<p>3.调用setsid创建一个会话。这样该进程变成会话首进程，进程组组长进程，且没有控制终端。</p>
+<p>4.将工作目录更改到根目录。或者更改到某个指定位置，并在此执行它的全部工作。下图可以理解成fork之前，父进程引用了一个文件系统，那么如果子进程不更改工作目录，由于是守护进程，会一直存在到系统关闭，那么该文件系统就不能被关闭/卸载。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/rZjicmb7pJueKWv.png" alt="" loading="lazy"></figure>
+<p>5.关闭不再需要的文件描述符。</p>
+<p>6.某些守护进程打开/dev/null使得其具有文件描述符0，1，2，也即此时的标准输入、输出、标准错误都是对/dev/null进行操作，然而这样的操作不会有任何效果，用以保证不会读取或显示内容到终端上。虽然本身守护进程就是没有控制终端的。</p>
+<p>出错记录</p>
+<p>守护进程的出错记录使用了syslog设施。</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/hkNp5dfcmgW17oy.png" alt="" loading="lazy"></figure>
+<p>有三种办法能够产生日志消息：</p>
+<p>1.内核例程可以调用log函数。任何一个用户进程都可以open并read /dev/klog设备来读取这些消息。</p>
+<p>2.大多数用户进程调用syslog函数来产生日志消息。</p>
+<p>3.本机或其他通过网络连接到本机的主机都可以向UDP514端口发送日志消息。</p>
+<p>对于/dev/log 和/dev/klog上的日志消息，syslogd守护进程直接读取，对于发送到UDP514端口的数据，syslogd监听该端口并将传过来的信息读取出来。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/NXsH2yfqWhc5PjY.png" alt="" loading="lazy"></figure>
+<p>#include&lt;syslog.h&gt;</p>
+<p>void openlog(char* ident,int option, int facility);</p>
+<p>void syslog(int facility,char* format);</p>
+<p>void closelog();</p>
+<p>int setlogmask(int maskpri);返回之前的日志记录优先级屏蔽字</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/oQec6DsATYUr3aw.png" alt="" loading="lazy"></figure>
+<p>***openlog是可选的，不调用openlog时，syslog会自动调用openlog；clostlog也是可选的，它只是关闭曾被用于与syslogd守护进程进行通信的描述符。</p>
+<p>***openlog的作用相当于是配置了如何记录日志信息，option指定了记录的方式，facility在日志记录中表明该日志信息式由谁产生的。</p>
+<p>***通过调用syslog记录一个日志信息，priority中给出level表明该日志信息的级别。</p>
+<p>参数ident指定一个信息，这样ident的字样每次都会被加入到记录中，ident一般为程序的名字。</p>
+<p>option参数是指定各种选项的位屏蔽：</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/wTSMRFPn6QZNJIm.png" alt="" loading="lazy"></figure>
+<p>facility参数表明指定某种设施的日志消息以不同的方式进行处理，如果不调用openlog或facility置为0来调用，那么可以在调用syslog时将facility作为priority参数的一部分说明。</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/VqX3f2kIjZA9NGC.png" alt="" loading="lazy"></figure>
+<p>调用syslog产生一个日志消息，其priority参数时facility和level的组合（通过按位或组合）：</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/XAl4Jjerkvp1HB2.png" alt="" loading="lazy"></figure>
+<p>format参数则是要进行转换的格式化字符串，这个字符串会被写到日志记录中，而其中转换控制%m会被转换成与errno对应的出错消息字符串。</p>
+<p>setlogmask设置一个记录优先级屏蔽字，这里不是说设置要屏蔽的优先级信息，而是如果没有被设置，则会被屏蔽。例如，一个LOG_DEBUG信息没有被设置到记录有限屏蔽字中 ，则这类信息不会被记录。</p>
+<p>在这低8位中，如果相应位是0，则不记录，如果是1，相应级别log记录。例如：bit6，bit5，bit4位是1，其他位是0，则只记录LOG_INFO,LOG_NOTICT,LOG_WARNING级别的日志，其他的过滤掉。但是有一点要注意，如果bit7是1，LOG_DEBUG级别日志依然不记录到syslog中，其他位如果有1，相应级别日志则依然记录。猜测bit7已经不属于屏蔽字中。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/pgzsHt6knBc9vxh.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/dhqlMeBYPuX6ytU.png" alt="" loading="lazy"></figure>
+<p>大多数syslog实现会使消息短时间处于队列中，如果一个消息在队列中出现了多次，syslog守护进程不会写入多次该记录，而是打印输出一条类似&quot;上一条消息重复了N次&quot;的消息。</p>
+<p>单实例守护进程</p>
+<figure data-type="image" tabindex="13"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589508750688.png?lastModify=1625624601" alt="" loading="lazy"></figure>
+<p>守护进程的惯例</p>
+<p>守护进程遵循以下通用惯例：</p>
+<p>1.若守护进程使用锁文件，那么该文件通常存储在/var/run中。可能需要超级用户权限才能在该目录下创建文件，锁文件的名字通常为name.pid，name是守护进程或服务的名字。</p>
+<p>2.若守护进程需要配置文件，则配置文件应当存储在/etc目录下，名字通常为name.conf，例如syslog的配置文件为syslog.conf。</p>
+<p>3.守护进程可以用命令行启动，但通常是由系统初始化脚本之一（例如/etc/rc<em>或/etc/init.d/</em>）启动的。如果当守护进程终止时，想要自动重启它，则可以在/etc/inittab中为该守护进程包括respawn记录项。</p>
+<p>4.若守护进程有配置文件，应当在启动的是读且只读一次，若配置文件被修改了，应该接收一定的信号，来重新读取该配置文件，一般为用SIGHUP信号来处理。</p>
+<p>客户进程-服务器进程模型</p>
+<figure data-type="image" tabindex="14"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1589510959676.png?lastModify=1625624601" alt="" loading="lazy"></figure>
+<p>getlogin是否调用了类似getpwuid的函数，而不是真的看有无控制终端？</p>
+<p>通过ps -ax显示出调用damonize函数（13-1的程序）后，进程确实是没有控制终端的，但是getlogin还是返回了登录名，stackflow论坛中指出getlogin可能实际上调用了getpwuid函数，所以还是能返回登录名，而不是getlogin说的在没有控制终端时返回NULL。</p>
+<p>为什么关闭了标准输入后，cout没反应？</p>
+<p>猜测cout和cin用的是同一FILE对象，该对象可读可写，所以关闭了标准输入或标准输出其一都不能正常执行。关闭其一后，cout不能工作，但程序不会终止，而cin不仅不能工作，还会导致程序终止。</p>
+<p>init是所有linux进程的父进程，除去一些内核守护进程以外。所以我们的用户进程，追本溯源，其都是从init fork后exec而来的</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-er-zhang-xian-cheng-kong-zhi/">
+                <h3 class="post-title">
+                  APUE笔记-第十二章-线程控制
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge warning">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

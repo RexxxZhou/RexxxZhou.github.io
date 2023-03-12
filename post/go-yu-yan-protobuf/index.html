@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言Protobuf | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言Protobuf</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="protobuf">Protobuf</h2>
+<h3 id="proto3">proto3</h3>
+<p>编写<code>.proto</code>文件来构造我们需要的信息体结构</p>
+<h4 id="定义一个信息类型">定义一个信息类型</h4>
+<pre><code class="language-protobuf">syntax=&quot;proto3&quot;
+
+message SearchRequest{
+	string query=1;
+	int32 page_number=2;
+	int32 result_per_page=3;
+}
+</code></pre>
+<p>首先第一行必须指定proto文件用的是哪个版本的语言，syntax=&quot;proto3&quot;表明本文件使用proto3.</p>
+<p>一个信息类型由message关键字开头声明，括号内是类型、字段名的组合，每个字段都有一个唯一的数字标识，是字段名后的那个数字。这个数字区分每个字段编码后的二进制形式，这个数字表示该字段的类型和该数字在编码时对应的字节数，1-15代表字段类型和数字由一个字节编码，16-2047则需要两个字节编码。</p>
+<p>因此，为了节省编码空间，经常需要使用到的字段，应指定为1-15，同时在设计时要考虑预留1-15中的数字给未来可能常用到的字段。</p>
+<p>最小的字段编号为1，最大为 536,870,911 （2的29次方减1）。19000-19999是pb预留的数字，这部分数字是不能使用的；同时，由于这个数字对于字段而言是唯一的，因此不能重复使用；对于用reserved指定的保留数字，也不能再使用。</p>
+<p>message的字段有两种类型：</p>
+<p>1.字段类型前没有任何关键词的，这是proto3默认的规则，这种字段其实叫做singular字段，类似与proto2中的optional，message中可以有，也可以没有该字段的信息。</p>
+<pre><code class="language-protobuf">message m1{
+	int testNum=1;
+}
+</code></pre>
+<p>2.字段类型前指定为repeated，这个字段可以被重复任意次数，且值的顺序会被保存</p>
+<pre><code class="language-protobuf">message m3{
+	repeated int testNum=1;
+}
+</code></pre>
+<p>在编码时，repeated字段采用<code>packed</code>方式进行编码。</p>
+<p>同一个<code>.proto</code>文件中，可以定义多个message；protobuf语言的注释方式和C++一样。</p>
+<h4 id="保留字段-reserved-field">保留字段 reserved field</h4>
+<p>在开发过程中可能会涉及到对proto文件中message各个fields的修改，可能是更新、删除某个field及其表示，这样可能会导致调用的服务失败。其中一个防止这种问题的方式是，确保你要删除的field的标识（或是名字）是reserved，<strong>具体protobuf的编译器会决定未来这个field表示能否被使用</strong></p>
+<p>当我们想要通过删除message中某个字段，或者直接注释掉来修改/更新这个message时，应当将这些字段对应的字段编号和/或字段名通过reserved关键字进行保留，使得别人用到这些字段时，protobuf编译器可提前发现问题。</p>
+<pre><code class="language-protobuf">message Foo{
+	reserved 2,5,9 to 11;
+	reserved &quot;foo&quot;,&quot;bar&quot;;
+}
+</code></pre>
+<p>字段编号和字段名的保留声明需要分开，不能一句reserved语言同时含有字段名和字段编号。</p>
+<p>reserved的字段编号和字段名都不允许再出现在message定义中：</p>
+<pre><code class="language-protobuf">message re{
+	int32 a=1;
+	reserved 1;
+}
+</code></pre>
+<p>**上述代码是错误的，**reserved了1之后，就不能再用1了。</p>
+<h4 id="proto文件生成什么">.proto文件生成什么？</h4>
+<p><code>.proto</code>文件在protobuf编译器编译后，会根据不同的语言生成不同语言所需的依赖文件：</p>
+<p>C++，则会生成<code>.h</code>和<code>.cpp</code>文件，用户include头文件来使用pb定义的信息</p>
+<p>GO，则生成<code>.go</code>文件，是一个package，用户直接import这个包来使用pb定义的信息</p>
+<p>不同语言生成的代码API不同，需要根据语言查询相关文档。</p>
+<h4 id="pb中scalar字段类型和具体语言对应的数据类型">pb中scalar字段类型和具体语言对应的数据类型</h4>
+<p>scalar type(标量类型) 表示只有一个值；复合类型则表示包含多个值，例如结构体。</p>
+<p>下面的表格去除没学到的其他语言，想要这些语言的信息可在官网查询。</p>
+<p>https://developers.google.com/protocol-buffers/docs/proto3#scalar</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">.proto Type</th>
+<th style="text-align:left">Notes</th>
+<th style="text-align:left">C++ Type</th>
+<th style="text-align:left">Python Type[3]</th>
+<th style="text-align:left">Go Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">double</td>
+<td style="text-align:left"></td>
+<td style="text-align:left">double</td>
+<td style="text-align:left">float</td>
+<td style="text-align:left">float64</td>
+</tr>
+<tr>
+<td style="text-align:left">float</td>
+<td style="text-align:left"></td>
+<td style="text-align:left">float</td>
+<td style="text-align:left">float</td>
+<td style="text-align:left">float32</td>
+</tr>
+<tr>
+<td style="text-align:left">int32</td>
+<td style="text-align:left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+<td style="text-align:left">int32</td>
+<td style="text-align:left">int</td>
+<td style="text-align:left">int32</td>
+</tr>
+<tr>
+<td style="text-align:left">int64</td>
+<td style="text-align:left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+<td style="text-align:left">int64</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">int64</td>
+</tr>
+<tr>
+<td style="text-align:left">uint32</td>
+<td style="text-align:left">Uses variable-length encoding.</td>
+<td style="text-align:left">uint32</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">uint32</td>
+</tr>
+<tr>
+<td style="text-align:left">uint64</td>
+<td style="text-align:left">Uses variable-length encoding.</td>
+<td style="text-align:left">uint64</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">uint64</td>
+</tr>
+<tr>
+<td style="text-align:left">sint32</td>
+<td style="text-align:left">Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+<td style="text-align:left">int32</td>
+<td style="text-align:left">int</td>
+<td style="text-align:left">int32</td>
+</tr>
+<tr>
+<td style="text-align:left">sint64</td>
+<td style="text-align:left">Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+<td style="text-align:left">int64</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">int64</td>
+</tr>
+<tr>
+<td style="text-align:left">fixed32</td>
+<td style="text-align:left">Always four bytes. More efficient than uint32 if values are often greater than 228.</td>
+<td style="text-align:left">uint32</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">uint32</td>
+</tr>
+<tr>
+<td style="text-align:left">fixed64</td>
+<td style="text-align:left">Always eight bytes. More efficient than uint64 if values are often greater than 256.</td>
+<td style="text-align:left">uint64</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">uint64</td>
+</tr>
+<tr>
+<td style="text-align:left">sfixed32</td>
+<td style="text-align:left">Always four bytes.</td>
+<td style="text-align:left">int32</td>
+<td style="text-align:left">int</td>
+<td style="text-align:left">int32</td>
+</tr>
+<tr>
+<td style="text-align:left">sfixed64</td>
+<td style="text-align:left">Always eight bytes.</td>
+<td style="text-align:left">int64</td>
+<td style="text-align:left">int/long[4]</td>
+<td style="text-align:left">int64</td>
+</tr>
+<tr>
+<td style="text-align:left">bool</td>
+<td style="text-align:left"></td>
+<td style="text-align:left">bool</td>
+<td style="text-align:left">bool</td>
+<td style="text-align:left">bool</td>
+</tr>
+<tr>
+<td style="text-align:left">string</td>
+<td style="text-align:left">A string must always contain UTF-8 encoded or 7-bit ASCII text, and cannot be longer than 232.</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left">str/unicode[5]</td>
+<td style="text-align:left">string</td>
+</tr>
+<tr>
+<td style="text-align:left">bytes</td>
+<td style="text-align:left">May contain any arbitrary sequence of bytes no longer than 232.</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left">str</td>
+<td style="text-align:left">[]byte</td>
+</tr>
+</tbody>
+</table>
+<h4 id="字段默认值">字段默认值</h4>
+<p>如果message中的字段没有赋值，则这些字段的值会被赋为和字段类型相对应的默认值：</p>
+<ul>
+<li>
+<p>For strings, the default value is the empty string.</p>
+<p>字符串字段默认值为空串</p>
+</li>
+<li>
+<p>For bytes, the default value is empty bytes.</p>
+<p>字节型字段默认值为空</p>
+</li>
+<li>
+<p>For bools, the default value is false.</p>
+<p>布尔型默认为false</p>
+</li>
+<li>
+<p>For numeric types, the default value is zero.</p>
+<p>数字型默认为0</p>
+</li>
+<li>
+<p>For <a href="https://developers.google.com/protocol-buffers/docs/proto3#enum">enums</a>, the default value is the <strong>first defined enum value</strong>, which must be 0.</p>
+<p>枚举型，默认值为定义时的第一个枚举值，必须为0</p>
+</li>
+<li>
+<p>The default value for repeated fields is empty (generally an empty list in the appropriate language).</p>
+<p>repeated字段默认值为空，一般来说是个空列表，这个需要根据目标导出语言决定。</p>
+</li>
+<li>
+<p>For message fields, the field is not set. Its exact value is language-dependent. See the <a href="https://developers.google.com/protocol-buffers/docs/reference/overview">generated code guide</a> for details.</p>
+<p>对于嵌套的message字段，该字段的默认值没有设置，具体值和要编译的语言相关（C++,GO）</p>
+<p>如果scalar type的字段被设置为默认值，则不会进行编码。（  Also note that if a scalar message field <strong>is</strong> set to its default, the value will not be serialized on the wire. ）</p>
+</li>
+</ul>
+<h4 id="枚举类型">枚举类型</h4>
+<p>枚举类型通常用于指定某个字段的值为我们定义的枚举类型中的值：</p>
+<pre><code class="language-protobuf">message SearchRequest{
+	string query=1;
+	int32 page_number=2;
+	int32 result_per_page=3;
+	enum Corpus{
+        UNIVERSAL = 0;
+        WEB = 1;
+        IMAGES = 2;
+        LOCAL = 3;
+        NEWS = 4;
+        PRODUCTS = 5;
+        VIDEO = 6;
+	}
+	Corpus corpus=4;
+}
+</code></pre>
+<p>上述的message中，corpus字段是一个Corpus枚举类型，这个枚举类型在message内部定义，外部别的message是不可见的。</p>
+<p>如果外部确实想用这个枚举类型，则在别的message定义中，使用<code>MessageType.EnumType</code>:</p>
+<pre><code class="language-protobuf">message MyMessage2{
+    enum NotAllowAlias{
+        UNKNOWN=0;
+        STARTED=1;
+
+    }
+}
+
+message MyMessage3{
+    MyMessage2.NotAllowAlias nested=1;
+}
+</code></pre>
+<p>枚举类型的第一个值必须是0，一是为了满足默认值的设置，二是为了兼容proto2。</p>
+<p>枚举类型中每个名称的值默认是不同的，如果想要不同名称有相同的值，需要在定义中设置allow_alias为true：</p>
+<pre><code class="language-protobuf">message myMessage1{
+	enum AllowAliases{
+		option allow_alias=true //允许重复的枚举值
+		UNKNOWN=0;
+		STARTED=1;
+		RUNNING=1; //注意就是这用了重复的枚举值
+	}
+}
+
+message myMessage2{
+	enum NoAllowAliases{
+		UNKNOWN=0;
+		STARTED=1;
+		RUNNING=1;//由于没有设置allow_alias为true，这个定义是错误的，编译器会报警。
+	}
+}
+</code></pre>
+<p>枚举值必须在32位有符号整型范围内，但由于负数编码效率低，推荐使用正数的枚举值。</p>
+<p>对于C++和GO而言，如果反序列化后，发现值不在定义的枚举值内，仍然会将得到的值存在底层的整型数据中。</p>
+<p>同理，删除枚举类型中某些枚举值和枚举名，应采用reserved保证安全性：</p>
+<pre><code class="language-protobuf">enum myEnum{
+	reserved 2,5,7,9 to max
+	reserved &quot;FOO&quot;,&quot;BAR&quot;
+}
+
+</code></pre>
+<p>规则与前面提到的reserved一致。</p>
+<h4 id="使用别的message作为字段">使用别的message作为字段</h4>
+<pre><code class="language-protobuf">message Event{
+	string name=1;
+	Time eventTime=2;
+}
+
+message Time{
+	string hour=1;
+	string minute=2;
+	string second=3;
+}
+
+</code></pre>
+<h5 id="导入定义">导入定义</h5>
+<p>在protobuf中，如果想要用到别的<code>.proto</code>文件中定义的message，可以使用：<br>
+<code>import &quot;path/needed.proto&quot;</code>，<strong>import语句必须在proto文件的顶端</strong></p>
+<p>默认情况下，我们只能使用直接import的proto文件中的定义，编译器不会寻找多层依赖，只会使用到一层依赖。但有时候可能多个proto文件import了proto文件A，而文件A可能发生了路径的变化，这时候如果每个proto文件都去修改import语句，则工作量较大。因此，通过使用<code>import public</code>来实现间接import，但也只有这一层间接：</p>
+<pre><code>//new.proto
+//all definitions are moved here
+
+</code></pre>
+<p>所有的定义从old.proto复制到了new.proto</p>
+<pre><code>//old.proto
+import public &quot;path/new.proto&quot;
+import &quot;other.proto&quot;
+
+</code></pre>
+<p>old.proto就是其他proto文件原本所import的文件，只不过定义都移到new.proto中了</p>
+<pre><code>//client.proto
+import &quot;path/old.proto&quot;
+
+</code></pre>
+<p>client.proto就是我们import别人的proto</p>
+<p>通过old.proto中的import public，实现client.proto引用new.proto中的定义，但要注意的是，因为只能使用直接import的定义，所以<strong>client.proto无法使用other.proto中的定义</strong>。</p>
+<p>具体来说，如果A文件原本import了B文件，当B文件目录发生变化时，我们可以cp B.proto newpath/C.proto，然后将原位置的B文件的最顶端插入import public &quot;newpath/C.proto&quot;，就能实现依赖的变化，而无需改变所有处于A文件相同地位的文件中的import语句。</p>
+<p>通过命令行 <code>-I</code>/<code>--proto_path</code> 指定protobuf编译器搜索路径，protobuf编译器会在这些目录下去寻找import的Proto文件。如果没有指定，则默认是在执行编译器时所在的目录下和默认搜索路径下搜索。</p>
+<p>proto2和proto3的文件可以互相import，但是proto2的枚举类型无法在proto3中直接使用。</p>
+<p>如果protoA导入了protoB，在编译protoA时，编译器并不会根据依赖去编译protoB，而在使用protoA.pb.go文件时，前提是protoB.pb.go已存在，因为编译出来的protoA.pb.go文件在头部import了protoB对应的包。</p>
+<h4 id="嵌套的message">嵌套的message</h4>
+<pre><code class="language-protobuf">message Nes{
+    message bird{
+        int32 a=1;
+        int32 b=2;
+    }
+}
+
+message Kid{
+    Nes.bird a=1;
+}
+
+</code></pre>
+<p>通过类似作用域的访问方式来使用别的message内部嵌套的message类型，类似Outer.Middle.Inner。</p>
+<h3 id="更新message类型-结合例子补充">更新message类型 结合例子补充</h3>
+<p>如果现有的message定义不满足我们未来的需求，需要进行修改时，只要满足下面的条件，就不需要去修改使用旧版本proto编写的代码。</p>
+<ul>
+<li>
+<p>Don't change the field numbers for any existing fields.</p>
+<p>不要更改任何已有字段的编号</p>
+</li>
+<li>
+<p>If you add new fields, any messages serialized by code using your &quot;old&quot; message format can still be parsed by your new generated code. You should keep in mind the <a href="https://developers.google.com/protocol-buffers/docs/proto3#default">default values</a> for these elements so that new code can properly interact with messages generated by old code. Similarly, messages created by your new code can be parsed by your old code: old binaries simply ignore the new field when parsing. See the <a href="https://developers.google.com/protocol-buffers/docs/proto3#unknowns">Unknown Fields</a> section for details.</p>
+<p>添加新的字段后，使用旧的proto的代码也可以正常使用，只是这些新的字段会被当成Unknown Field，不影响使用。</p>
+</li>
+<li>
+<p>Fields can be removed, as long as the field number is not used again in your updated message type. You may want to rename the field instead, perhaps adding the prefix &quot;OBSOLETE_&quot;, or make the field number <a href="https://developers.google.com/protocol-buffers/docs/proto3#reserved">reserved</a>, so that future users of your <code>.proto</code> can't accidentally reuse the number.</p>
+<p>字段可以删除，可以使用reserved来保证以后用不到该字段编号；只要保证更新的message定义中不再使用该字段的编号。</p>
+<p>由于reserved字段编号后，message定义中不再有该字段编号的字段，所以猜测pb解码时是先获取字段的编号，再按照字段的类型去解码的，猜想如果指定是reserved，则解码时不对这些字段反序列化。<strong>（因为确实难找到案例，需要后续跟进）</strong></p>
+</li>
+<li>
+<p><code>int32</code>, <code>uint32</code>, <code>int64</code>, <code>uint64</code>, and <code>bool</code> are all compatible – this means you can change a field from one of these types to another without breaking forwards- or backwards-compatibility. If a number is parsed from the wire which doesn't fit in the corresponding type, you will get the same effect as if you had cast the number to that type in C++ (e.g. if a 64-bit number is read as an int32, it will be truncated to 32 bits).</p>
+</li>
+<li>
+<p><code>sint32</code> and <code>sint64</code> are compatible with each other but are <em>not</em> compatible with the other integer types.</p>
+</li>
+<li>
+<p><code>string</code> and <code>bytes</code> are compatible as long as the bytes are valid UTF-8.</p>
+</li>
+<li>
+<p>Embedded messages are compatible with <code>bytes</code> if the bytes contain an encoded version of the message.</p>
+</li>
+<li>
+<p><code>fixed32</code> is compatible with <code>sfixed32</code>, and <code>fixed64</code> with <code>sfixed64</code>.</p>
+</li>
+<li>
+<p>For <code>string</code>, <code>bytes</code>, and message fields, <code>optional</code> is compatible with <code>repeated</code>. Given serialized data of a repeated field as input, clients that expect this field to be <code>optional</code> will take the last input value if it's a primitive type field or merge all input elements if it's a message type field. Note that this is <strong>not</strong> generally safe for numeric types, including bools and enums. Repeated fields of numeric types can be serialized in the <a href="https://developers.google.com/protocol-buffers/docs/encoding#packed">packed</a> format, which will not be parsed correctly when an <code>optional</code> field is expected.</p>
+</li>
+<li>
+<p><code>enum</code> is compatible with <code>int32</code>, <code>uint32</code>, <code>int64</code>, and <code>uint64</code> in terms of wire format (note that values will be truncated if they don't fit). However be aware that client code may treat them differently when the message is deserialized: for example, unrecognized proto3 <code>enum</code> types will be preserved in the message, but how this is represented when the message is deserialized is language-dependent. Int fields always just preserve their value.</p>
+</li>
+<li>
+<p>Changing a single value into a member of a <strong>new</strong> <code>oneof</code> is safe and binary compatible. Moving multiple fields into a new <code>oneof</code> may be safe if you are sure that no code sets more than one at a time. Moving any fields into an existing <code>oneof</code> is not safe.</p>
+</li>
+</ul>
+<h5 id="unknown-field">Unknown Field</h5>
+<p>未知字段指在反序列化时无法识别的字段，这通常见于对端发来了一个按照新版本message编码的数据包，而本地使用的是旧版本的message来反序列化解析，这些新的字段会在本地反序列化后当成UnknownField。</p>
+<h3 id="any-特性比较特殊后面结合例子补充">Any 特性比较特殊，后面结合例子补充</h3>
+<p>https://developers.google.com/protocol-buffers/docs/proto3#any</p>
+<p>The <code>Any</code> message type lets you use messages as embedded types without having their .proto definition. An <code>Any</code> contains an arbitrary serialized message as <code>bytes</code>, along with a URL that acts as a globally unique identifier for and resolves to that message's type. To use the <code>Any</code> type, you need to <a href="https://developers.google.com/protocol-buffers/docs/proto3#other">import</a> <code>google/protobuf/any.proto</code>.</p>
+<p>Any类型可以使用户在没有某个message定义的情况下，用作另一个message的字段；Any字段的值包含任意序列化的message，格式为bytes，因为message和bytes是互相兼容的，所以Any可以是任何一种message类型的值。 Any包含任意<strong>序列化</strong>的消息(字节)，以及一个URL，<strong>该URL</strong>充当该消息的全局唯一标识符并解析为该消息的类型。</p>
+<p>The default type <strong>URL</strong> for a given message type is <code>type.googleapis.com/_packagename_._messagename_</code>.</p>
+<p><strong>要使用Any类型的字段，必须import &quot;google/protobuf/any.proto&quot;</strong></p>
+<pre><code class="language-protobuf">import &quot;google/protobuf/any.proto&quot;;
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2; //here
+}
+
+</code></pre>
+<p>Different language implementations will support runtime library helpers to pack and unpack Any values in a typesafe manner – for example, in Java, the Any type will have special <code>pack()</code> and <code>unpack()</code> accessors, while in C++ there are <code>PackFrom()</code> and <code>UnpackTo()</code> methods:</p>
+<p>不同语言编译出的代码文件有不同的API来支持从Any字段转换成具体的message类型，以Java为例：</p>
+<pre><code class="language-JAVA">// Storing an arbitrary message type in Any.
+NetworkErrorDetails details = ...;
+ErrorStatus status;
+status.add_details()-&gt;PackFrom(details);
+
+// Reading an arbitrary message from Any.
+ErrorStatus status = ...;
+for (const Any&amp; detail : status.details()) {
+  if (detail.Is&lt;NetworkErrorDetails&gt;()) {
+    NetworkErrorDetails network_error;
+    detail.UnpackTo(&amp;network_error);
+    ... processing network_error ...
+  }
+}
+
+</code></pre>
+<p>**困惑点：**没有message的定义，Any是如何提供api来判断Any字段的值是哪个message类型呢？（也即detail.Is<NetworkErrorDetails>()是怎么执行的。。）</p>
+<p>**A:**目前看到的例子，大致理解为，使用proto的用户，知道某个message的定义，例如通过include（C++）或import（go）protoc编译后的代码文件，知道了message A的定义，然后通过编译后提供的api来测试Any字段是否是这个message A类型，再通过类似UnpackTo的API来将Any字段的值（底层是bytes类型）反序列化成具体的message。</p>
+<p>C++的例子：https://blog.csdn.net/u011573853/article/details/73060934</p>
+<h3 id="oneof">oneof</h3>
+<p>oneof字段类型由多个字段组成，在序列化和反序列化后只有其中的一个字段是有值的，类似于C++中的union类。如果想要在某一时刻只有一个字段被设置值了，则需要使用oneof：</p>
+<pre><code class="language-protobuf">message ONEOF{
+	oneof choice{
+		string name=1;
+		int32 id=2;
+	}
+}
+
+</code></pre>
+<p>要注意语法上，oneof的的花括号最后不加分号，而内部的字段具有字段编号。<strong>oneof中的字段可以是除了map和repeated外的所有类型</strong>。可以通过编译出来的具体语言的api来判断oneof字段到底设置了哪个字段的值，oneof字段也有setter和getter的api。</p>
+<h4 id="oneof字段的特点">oneof字段的特点</h4>
+<p>1.后面设置的oneof的值会覆盖前面设置的值，多次setter则oneof字段的值是最后一次设置的值</p>
+<pre><code>ONEOF msg;
+msg.set_name(&quot;halo&quot;);
+CHECK(msg.has_name())
+msg.set_id(2) //这个会清除掉之前设置的name
+CHECK(!msg.has_name())
+
+</code></pre>
+<p>2.If the parser encounters multiple members of the same oneof on the wire, only the last member seen is used in the parsed message.</p>
+<p>如果解析器遇到了同一个oneof字段的多个成员，则会取最后一个成员用于解析message</p>
+<p>3.Reflection反射API可以用于oneof</p>
+<p>4.如果对oneof中的字段设置了默认值，例如对其中的int32设置了0，该值会被序列化，并能通过api判断设置了int32的字段</p>
+<p>5.如果在C++中使用含有oneof的message，需要注意内存冲突，因为本质上是同一块内存，如果前面设置了字段A后面用字段B的方式去访问就会crash：</p>
+<pre><code class="language-c++">ONEOF msg;
+int* id=msg.mutable_id();
+msg.set_name(&quot;hello&quot;);
+*id=10; //crash  因为msg的oneof字段已经是string型，这时候对那片空间赋整型值是错误的
+
+</code></pre>
+<p>6.同样，在C++中，如果对同一个含有oneof字段的message类型的两个实例采用Swap()，则要注意的是oneof字段互换，因此存在msgA的oneof是个int，msgB的oneof是个string，swap后，oneof的类型也跟着换，后续操作需要特别注意别出现类型错误。</p>
+<pre><code class="language-c++">ONEOF msgA,msgB;
+msgA.set_name(&quot;hello&quot;);
+msgB.set_id(5);
+msgA.Swap(&amp;msgB);
+CHECK(msgA.have_id());
+CHECK(msgB.have_name());
+
+</code></pre>
+<h5 id="兼容性问题">兼容性问题</h5>
+<p>oneof字段也可以删除和添加来更新message，但如果使用api检车oneof字段是否被设置，返回了NONE/NOT_SET，这意味着要么oneof没有被设置，要么使用了不同版本的oneof，对于用户而言，用户无法感知，因为没办法知道一个Unknown Field是不是oneof中的字段。</p>
+<h4 id="tag-reuse-issues">Tag Reuse Issues</h4>
+<ul>
+<li><strong>Move fields into or out of a oneof</strong>: You may lose some of your information (some fields will be cleared) after the message is serialized and parsed. However, you can safely move a single field into a <strong>new</strong> oneof and may be able to move multiple fields if it is known that only one is ever set.</li>
+<li><strong>Delete a oneof field and add it back</strong>: This may clear your currently set oneof field after the message is serialized and parsed.</li>
+<li><strong>Split or merge oneof</strong>: This has similar issues to moving regular fields.</li>
+</ul>
+<h3 id="map字段">map字段</h3>
+<p>map字段的定义方式：</p>
+<pre><code class="language-protobuf">message havemap{
+	map&lt;key_type,value_type&gt; mymap=1;
+}
+
+</code></pre>
+<p>其中<strong>key_type的类型可以是除了浮点数和bytes类型外的任何标量类型（scalar type</strong>）；要注意枚举类型不是有效的key_type；<strong>value_type可以是除了map类型以外的所有类型</strong>。</p>
+<p>特性：</p>
+<p>1.map字段不能是repeated的。</p>
+<p>2.序列化后的map中元素的顺序是不确定的，不要有任何的预想。（猜测，底层应当是个哈希表实现）</p>
+<p>3.当从<code>.proto</code>文件中生成文本格式的map时，map是按照key的值排序的。</p>
+<p>4.当从二进制数据解析或message进行合并(merge)的时候，如果出现了重复的key，则使用最后的那个key-value对。而如果是生成文本格式的map，出现重复的key则报错。</p>
+<p>5.如果提供了map的key，但没有指定value，该字段序列化的行为是语言决定的，若是C++,JAVA,Kotlin,Python，则会赋予默认值来序列化。</p>
+<h5 id="兼容性">兼容性</h5>
+<pre><code class="language-protobuf">message MapFieldEntry {
+  key_type key = 1;
+  value_type value = 2;
+}
+
+repeated MapFieldEntry map_field = N;
+
+</code></pre>
+<p>任何方式的pb实现，都要能够产生和接受按照上述定义的map，以实现兼容。</p>
+<h3 id="package">package</h3>
+<p>package关键字是用来指定<code>.proto</code>文件属于哪个包，这是用来避免message重名的情况，通过包名的作用域访问，来避免该现象。</p>
+<pre><code class="language-go">syntax=&quot;proto3&quot;;
+package foo.bar
+message Open{
+	string open=1;
+}
+
+</code></pre>
+<p>在别的<code>.proto</code>文件中，通过作用域访问方式来使用这些类型：</p>
+<pre><code class="language-protobuf">message AnotherMSG{
+	foo.bar.Open open=1;
+}
+
+</code></pre>
+<ul>
+<li>In <strong>C++</strong> the generated classes are wrapped inside a C++ namespace. For example, <code>Open</code> would be in the namespace <code>foo::bar</code>.</li>
+<li>In <strong>Go</strong>, the package is used as the Go package name, unless you explicitly provide an <code>option go_package</code> in your <code>.proto</code> file.</li>
+</ul>
+<p>以go为例，想要使用package的话，<code>.proto</code>文件应该这样写：</p>
+<pre><code class="language-protobuf">//packagename.proto
+syntax = &quot;proto3&quot;;
+
+package pblearn.havename;
+option go_package=&quot;pblearn/havename/&quot;;
+message Hello {
+    string say=1;
+}
+
+</code></pre>
+<p>要注意作用域的名字是pblearn.havename，而编译出来的go文件的包名为havename（这是go_package指定的），必须要有go_package这一行，否则不能编译。</p>
+<pre><code class="language-protobuf">//client.proto
+syntax=&quot;proto3&quot;;
+option go_package=&quot;/home/rex/helloworld/pkname&quot;;
+import &quot;packagename.proto&quot;;
+message MessageName {
+    pblearn.havename.Hello he=1;
+}
+
+</code></pre>
+<h3 id="定义服务define-service-入职后看公司代码">定义服务define service 入职后看公司代码</h3>
+<p>如果想要在一个rpc系统中使用pb定义的message类型，可以通过在<code>.proto</code>定义RPC service接口实现，pb会编译出对应语言的接口代码。</p>
+<pre><code class="language-protobuf">service SearchService{
+	rpc Search(SearchRequest) returns(SearchResponse);
+}
+
+</code></pre>
+<p>能够直接使用这种service是gRPC（谷歌的rpc），也可以自己开发的rpc来适配这种通信方式，也有许多第三方的rpc支持该特性。</p>
+<p>If you don't want to use gRPC, it's also possible to use protocol buffers with your own RPC implementation. You can find out more about this in the <a href="https://developers.google.com/protocol-buffers/docs/proto#services">Proto2 Language Guide</a>.</p>
+<h3 id="json-mapping-pb与json互转">JSON mapping pb与json互转</h3>
+<p>protobuf提供了完整的从pb序列化为json格式的能力，并给出了pb中的类型与json的类型的一一对应关系。需要注意的是，如果pb的message中含有字段A，而json的数据没有该字段的数据或者值为<code>null</code>，那么从json数据转为pb数据时，这些字段会使用默认值。相应的，如果message中的字段是默认值，为了减小数据包大小，默认值的字段不会编码为json格式，编码后的json输出不包含这些字段的信息。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">proto3</th>
+<th style="text-align:left">JSON</th>
+<th style="text-align:left">JSON example</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">message</td>
+<td style="text-align:left">object</td>
+<td style="text-align:left"><code>{&quot;fooBar&quot;: v, &quot;g&quot;: null, …}</code></td>
+<td style="text-align:left">Generates JSON objects. Message field names are mapped to lowerCamelCase and become JSON object keys. If the <code>json_name</code> field option is specified, the specified value will be used as the key instead. Parsers accept both the lowerCamelCase name (or the one specified by the <code>json_name</code> option) and the original proto field name. <code>null</code> is an accepted value for all field types and treated as the default value of the corresponding field type.</td>
+</tr>
+<tr>
+<td style="text-align:left">enum</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;FOO_BAR&quot;</code></td>
+<td style="text-align:left">The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values.</td>
+</tr>
+<tr>
+<td style="text-align:left">map&lt;K,V&gt;</td>
+<td style="text-align:left">object</td>
+<td style="text-align:left"><code>{&quot;k&quot;: v, …}</code></td>
+<td style="text-align:left">All keys are converted to strings.</td>
+</tr>
+<tr>
+<td style="text-align:left">repeated V</td>
+<td style="text-align:left">array</td>
+<td style="text-align:left"><code>[v, …]</code></td>
+<td style="text-align:left"><code>null</code> is accepted as the empty list <code>[]</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left">bool</td>
+<td style="text-align:left">true, false</td>
+<td style="text-align:left"><code>true, false</code></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">string</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;Hello World!&quot;</code></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">bytes</td>
+<td style="text-align:left"><strong>base64 string</strong></td>
+<td style="text-align:left"><code>&quot;YWJjMTIzIT8kKiYoKSctPUB+&quot;</code></td>
+<td style="text-align:left">JSON value will be the data encoded as a string using standard base64 encoding with paddings. Either standard or URL-safe base64 encoding with/without paddings are accepted.</td>
+</tr>
+<tr>
+<td style="text-align:left">int32, fixed32, uint32</td>
+<td style="text-align:left">number</td>
+<td style="text-align:left"><code>1, -10, 0</code></td>
+<td style="text-align:left">JSON value will be a decimal number. Either numbers or strings are accepted.</td>
+</tr>
+<tr>
+<td style="text-align:left">int64, fixed64, uint64</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;1&quot;, &quot;-10&quot;</code></td>
+<td style="text-align:left">JSON value will be a decimal string. Either numbers or strings are accepted.</td>
+</tr>
+<tr>
+<td style="text-align:left">float, double</td>
+<td style="text-align:left">number</td>
+<td style="text-align:left"><code>1.1, -10.0, 0, &quot;NaN&quot;, &quot;Infinity&quot;</code></td>
+<td style="text-align:left">JSON value will be a number or one of the special string values &quot;NaN&quot;, &quot;Infinity&quot;, and &quot;-Infinity&quot;. Either numbers or strings are accepted. Exponent notation is also accepted. -0 is considered equivalent to 0.</td>
+</tr>
+<tr>
+<td style="text-align:left">Any</td>
+<td style="text-align:left"><code>object</code></td>
+<td style="text-align:left"><code>{&quot;@type&quot;: &quot;url&quot;, &quot;f&quot;: v, … }</code></td>
+<td style="text-align:left">If the Any contains a value that has a special JSON mapping, it will be converted as follows: <code>{&quot;@type&quot;: xxx, &quot;value&quot;: yyy}</code>. Otherwise, the value will be converted into a JSON object, and the <code>&quot;@type&quot;</code> field will be inserted to indicate the actual data type.</td>
+</tr>
+<tr>
+<td style="text-align:left">Timestamp</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;1972-01-01T10:00:20.021Z&quot;</code></td>
+<td style="text-align:left">Uses RFC 3339, where generated output will always be Z-normalized and uses 0, 3, 6 or 9 fractional digits. Offsets other than &quot;Z&quot; are also accepted.</td>
+</tr>
+<tr>
+<td style="text-align:left">Duration</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;1.000340012s&quot;, &quot;1s&quot;</code></td>
+<td style="text-align:left">Generated output always contains 0, 3, 6, or 9 fractional digits, depending on required precision, followed by the suffix &quot;s&quot;. Accepted are any fractional digits (also none) as long as they fit into nano-seconds precision and the suffix &quot;s&quot; is required.</td>
+</tr>
+<tr>
+<td style="text-align:left">Struct</td>
+<td style="text-align:left"><code>object</code></td>
+<td style="text-align:left"><code>{ … }</code></td>
+<td style="text-align:left">Any JSON object. See <code>struct.proto</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left">Wrapper types</td>
+<td style="text-align:left">various types</td>
+<td style="text-align:left"><code>2, &quot;2&quot;, &quot;foo&quot;, true, &quot;true&quot;, null, 0, …</code></td>
+<td style="text-align:left">Wrappers use the same representation in JSON as the wrapped primitive type, except that <code>null</code> is allowed and preserved during data conversion and transfer.</td>
+</tr>
+<tr>
+<td style="text-align:left">FieldMask</td>
+<td style="text-align:left">string</td>
+<td style="text-align:left"><code>&quot;f.fooBar,h&quot;</code></td>
+<td style="text-align:left">See <code>field_mask.proto</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left">ListValue</td>
+<td style="text-align:left">array</td>
+<td style="text-align:left"><code>[foo, bar, …]</code></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">Value</td>
+<td style="text-align:left">value</td>
+<td style="text-align:left"></td>
+<td style="text-align:left">Any JSON value. Check <a href="https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Value">google.protobuf.Value</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align:left">NullValue</td>
+<td style="text-align:left">null</td>
+<td style="text-align:left"></td>
+<td style="text-align:left">JSON null</td>
+</tr>
+<tr>
+<td style="text-align:left">Empty</td>
+<td style="text-align:left">object</td>
+<td style="text-align:left"><code>{}</code></td>
+<td style="text-align:left">An empty JSON object</td>
+</tr>
+</tbody>
+</table>
+<h4 id="json选项">json选项</h4>
+<p>pb导出json格式时，可以指定以下的选项：</p>
+<p>1.忽略取值为默认值的字段信息，如果字段的值是默认值，则该字段被忽略，不会编码输出。</p>
+<p>2.忽略未知字段，pb json解析器可以忽略未知字段</p>
+<p>3.使用指定的json字段名，而不是lowerCamelCase名字；默认情况下，pb json解析器使用pb字段名的lowerCamelCase形式的名字，可以通过选项来指定某个字段输出到json后的字段名，pb json解析器能够解析这两种方式的名字。</p>
+<p>4.枚举类型转换成json时，既可以用枚举值的名字作为输出，也可以用枚举值作为输出，这可以通过选项进行调整。</p>
+<p>以上四种都可以通过选项进行调整，改变pb json解析器的行为。</p>
+<h3 id="options-pb选项">options pb选项</h3>
+<p>pb的所有选项都定义在 <code>google/protobuf/descriptor.proto </code>文件中。</p>
+<p>Some options are file-level options, meaning they should be written at the top-level scope, not inside any message, enum, or service definition. Some options are message-level options, meaning they should be written inside message definitions. Some options are field-level options, meaning they should be written inside field definitions. Options can also be written on enum types, enum values, oneof fields, service types, and service methods; however, no useful options currently exist for any of these.</p>
+<p>选项有文件水平的选项、message水平的选项、字段水平的选项等等。</p>
+<p>常用的一些选项：</p>
+<ul>
+<li>
+<p><code>optimize_for</code> (file option): Can be set to <code>SPEED</code>, <code>CODE_SIZE</code>, or <code>LITE_RUNTIME</code>. This affects the C++ and Java <strong>code generators</strong> (and possibly third-party generators) in the following ways:</p>
+<ul>
+<li><code>SPEED</code> (default): The protocol buffer compiler will generate code for serializing, parsing, and performing other common operations on your message types. This code is highly optimized.</li>
+<li><code>CODE_SIZE</code>: The protocol buffer compiler will generate minimal classes and will rely on shared, reflection-based code to implement serialialization, parsing, and various other operations. <strong>The generated code will thus be much smaller than with <code>SPEED</code>, but operations will be slower</strong>. Classes will still implement exactly the same public API as they do in <code>SPEED</code> mode. This mode is most useful in apps that contain a very large number <code>.proto</code> files and do not need all of them to be blindingly fast.</li>
+<li><code>LITE_RUNTIME</code>: The protocol buffer compiler will generate classes that depend only on the &quot;lite&quot; runtime library (<code>libprotobuf-lite</code> instead of <code>libprotobuf</code>). The lite runtime is much smaller than the full library (around an order of magnitude smaller) but omits certain features like descriptors and reflection. <strong>This is particularly useful for apps running on constrained platforms like mobile phones.</strong> The compiler will still generate fast implementations of all methods as it does in <code>SPEED</code> mode. Generated classes will only implement the <code>MessageLite</code> interface in each language, which provides only a subset of the methods of the full <code>Message</code> interface.</li>
+</ul>
+<pre><code class="language-proto">option optimize_for = CODE_SIZE;
+
+</code></pre>
+</li>
+<li>
+<p><code>cc_enable_arenas</code> (file option): Enables <a href="https://developers.google.com/protocol-buffers/docs/reference/arenas">arena allocation</a> for C++ generated code.</p>
+</li>
+<li>
+<p><code>deprecated</code> (field option): <strong>If set to <code>true</code>, indicates that the field is deprecated and should not be used by new code.</strong> In most languages this has no actual effect. In Java, this becomes a <code>@Deprecated</code> annotation. In the future, other language-specific code generators may generate deprecation annotations on the field's accessors, which will in turn cause a warning to be emitted when compiling code which attempts to use the field. <strong>If the field is not used by anyone and you want to prevent new users from using it, consider replacing the field declaration with a <a href="https://developers.google.com/protocol-buffers/docs/proto3#reserved">reserved</a> statement.</strong></p>
+<pre><code class="language-proto">int32 old_field = 6 [deprecated = true];
+
+</code></pre>
+<p>deprecated和reserved功能相似，推荐使用reserved而不是deprecated选项。</p>
+</li>
+</ul>
+<hr>
+<h3 id="编写proto文件后编译go代码">编写.proto文件后编译go代码</h3>
+<p>编写<code>.proto</code>文件时，需要在syntax行后指定一个选项：<br>
+option go_package=&quot;path/&quot;  <strong>注意一定要有最后一个/</strong></p>
+<p>不然无法编译，该选项的意义为，指定生成go代码文件的目录，如果没有改目录，编译器会自动创建。</p>
+<p>编译出来的go代码文件名、package名的关系：<br>
+1.假设proto文件名为protofile.proto，则编译出来的go代码文件名为protofile.pb.go</p>
+<p>2.如果go_package的值为option go_package=&quot;dirname/pkname&quot;</p>
+<p>则会创建一个dirname/pkname的目录，该目录下放置编译的go代码文件，且go代码的package名为pkname</p>
+<p>protoc编译生成go代码文件的命令行指令（最简单的版本）：</p>
+<p>protoc --go_out=path file1.proto file2.proto</p>
+<p><strong>go_out指定的是go代码文件输出的前缀路径，而后缀路径由option go_package指定</strong>；举例，若go_out指定为/home/rex，go_package指定为helloworld/nihao，则go文件最终的完整目录为/home/rex/helloworld/nihao</p>
+<hr>
+<h4 id="关于更新message的实践">关于更新message的实践</h4>
+<p>经测试发现，protobuf中message最重要的信息是字段编号，只要字段类型相互兼容（例如enum类型和int类型是兼容的），以及服务器和客户端各自使用的<code>.proto</code>文件中字段编号是相同的，那么就可以正常编解码。具体的字段名只会影响生成的<code>.pb.go</code>文件中相关的API的名字而已，与编解码无关。</p>
+<pre><code class="language-protobuf">//client使用的proto文件
+message Test{
+	int32 i1=1;
+	enum NUMBER{
+		DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+	}
+	NUMBER num=2;
+}
+
+</code></pre>
+<pre><code class="language-protobuf">//server使用的proto文件
+message Test{
+	int32 ii1=1;
+	enum NUMBER{
+		DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+	}
+	// NUMBER num=2;
+}
+
+</code></pre>
+<p>即使两边使用的message的字段名不同，一样可以解码，只是Server端调用的是<code>msg.GetIi1()</code>，并不影响编解码。</p>
+<p>如果将server的proto文件中第一个字段改成：</p>
+<pre><code class="language-protobuf">int32 ii1=2;
+
+</code></pre>
+<p>会发现也可以<code>GetIi1()</code>，这其实是将client传来的num字段解码成ii1字段了，因为在client中该字段的编号为2，这整明了<strong>protobuf就是根据字段编号和字段类型兼容性来编解码的</strong>。</p>
+<p>此外，<strong>只要是解码端不认识的字段，都会自动变为未知字段（UnknownField）</strong>，解码端可以正常解码，并且会将这些不认识的字段数据存到未知字段中，不会丢弃。因此，Server的proto文件中直接注掉num字段也能正常进行交互。其实写不写<code>reserved</code>效果是一样的，只要字段在message定义中不存在，解码时都会自动放到未知字段中；而<code>reserved</code>更<strong>像是一种提醒</strong>，告诉使用者这个字段名或者字段编号在传来的数据中可能是存在的，且如果存在的话解码后都放进了未知字段中。</p>
+<p>如果解码端的message定义比对端传来的message多出别的字段，这部分字段解码后会被赋为默认值。</p>
+<p>再者，因为pb编解码是根据字段编号来处理二进制数据的，对于两种message，假设分别名为Test和NewTest，只要这两个定义中用到了兼容的字段类型和对应字段编号相同，那么也可以解码：</p>
+<pre><code class="language-protobuf">//假设server的proto文件为
+message NewTest{
+	int32 ii1=1;
+	enum NUMBER{
+		DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+	}
+	// NUMBER num=2;
+}
+
+</code></pre>
+<p>server中涉及解码的go代码为：</p>
+<pre><code class="language-go">var buf [512]byte
+n,_:=conn.Read(buf[0:])
+var res pbtest.NewTest
+proto.Unmarshal(buf[0:n],&amp;res)
+fmt.Println((&amp;res).GetIi1())
+
+</code></pre>
+<p>这样的两者通信是没有问题的，虽然pb提供了这种兼容性，但最好两端使用同样的proto文件，不然以后出bug了都不知都怎么回事。</p>
+<hr>
+<h4 id="嵌套message案例">嵌套message案例</h4>
+<pre><code class="language-protobuf">//proto文件
+message Test{
+    int32 i1=1;
+    enum NUMBER{
+        DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+    }
+    NUMBER num=2;
+    message inner {
+        string FirstName=1;
+        string LastName=2;
+    }
+    inner inner_msg=3;
+}
+
+</code></pre>
+<p>client端代码：</p>
+<pre><code class="language-go">func main() {
+	conn, err := net.Dial(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	msg := pbtest.Test{}
+	msg.I1 = 2
+	msg.Num = 3
+	msg.InnerMsg = &amp;pbtest.TestInner{FirstName: &quot;feng&quot;, LastName: &quot;zhou&quot;}
+	
+	res := proto.MessageName(&amp;msg)
+	fmt.Println(res)
+	mar_opt := proto.MarshalOptions{AllowPartial: true}
+	data, _ := mar_opt.Marshal(&amp;msg)
+	conn.Write(data)
+}
+
+</code></pre>
+<p>server端代码：</p>
+<pre><code class="language-go">func main() {
+	listener, err := net.Listen(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	for {
+		conn, _ := listener.Accept()
+		defer conn.Close()
+		var buf [512]byte
+		n, _ := conn.Read(buf[0:])
+		var res pbtest.Test
+		proto.Unmarshal(buf[0:n], &amp;res)
+		fmt.Println(res)
+		fmt.Println((&amp;res).GetInnerMsg().GetFirstName(), 		
+					(&amp;res).GetInnerMsg().GetLastName())
+	}
+
+</code></pre>
+<hr>
+<h4 id="oneof字段案例">oneof字段案例</h4>
+<pre><code class="language-protobuf">//proto文件
+message Test{
+    int32 i1=1;
+    enum NUMBER{
+        DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+    }
+    NUMBER num=2;
+    message inner {
+        string FirstName=1;
+        string LastName=2;
+    }
+    inner inner_msg=3;
+    oneof File{
+        string FileName=4;
+        string Date=5;
+    }
+}
+
+</code></pre>
+<p>client端代码：</p>
+<pre><code class="language-go">func main() {
+	conn, err := net.Dial(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	msg := pbtest.Test{}
+	fmt.Println(msg)
+	msg.I1 = 2
+	fmt.Println(msg)
+	msg.Num = 3
+	msg.InnerMsg = &amp;pbtest.TestInner{FirstName: &quot;feng&quot;, LastName: &quot;zhou&quot;}
+	msg.File = &amp;pbtest.Test_FileName{&quot;nmd&quot;} //因为是以指针方式实现的File接口，这里必须有取址
+	res := proto.MessageName(&amp;msg)
+	fmt.Println(res)
+	mar_opt := proto.MarshalOptions{AllowPartial: true}
+	data, _ := mar_opt.Marshal(&amp;msg)
+	conn.Write(data)
+}
+
+</code></pre>
+<p>server端代码：</p>
+<pre><code class="language-go">func main() {
+	listener, err := net.Listen(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	for {
+		conn, _ := listener.Accept()
+		defer conn.Close()
+		var buf [512]byte
+		n, _ := conn.Read(buf[0:])
+		var res pbtest.Test
+		proto.Unmarshal(buf[0:n], &amp;res)
+		fmt.Println(res)
+		fmt.Println((&amp;res).GetInnerMsg().GetFirstName(), 
+                    (&amp;res).GetInnerMsg().GetLastName())
+		fmt.Println((&amp;res).GetFileName()) //注意这里直接是GetFileName
+	}
+}
+
+</code></pre>
+<p>编译出来的Test结构体为：</p>
+<pre><code class="language-go">type Test struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	I1       int32       `protobuf:&quot;varint,1,opt,name=i1,proto3&quot; json:&quot;i1,omitempty&quot;`
+	Num      Test_NUMBER `protobuf:&quot;varint,2,opt,name=num,proto3,enum=Test_NUMBER&quot; json:&quot;num,omitempty&quot;`
+	InnerMsg *TestInner  `protobuf:&quot;bytes,3,opt,name=inner_msg,json=innerMsg,proto3&quot; json:&quot;inner_msg,omitempty&quot;`
+	// Types that are assignable to File:
+	//	*Test_FileName
+	//	*Test_Date
+	File isTest_File `protobuf_oneof:&quot;File&quot;`
+}
+
+
+</code></pre>
+<p>需要注意的是，上面的proto文件编译后，得到类型Test，Test_FileName，Test_Date（这里只讨论这几个类型，其他生成的类型这里不提及）和一个名为File的接口类型，Test_FileName，Test_Date以指针的方式实现了File接口。</p>
+<p>因此在创建message内容时，直接对File字段赋Test_FileName，Test_Date对象的指针即可。</p>
+<p>在反序列化后，使用getter函数获取oneof中字段的值时，直接GetFileName，而不是GetFile().GetFileName()，这是因为oneof花括号包括的字段都是message的字段，所以直接Get这些字段名就行。GetFile返回的是Test结构体中的File字段，只是返回一个接口对象而言。说的可能比较含糊，看代码吧。。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-liu-zhang-wang-luo-ipc-tao-jie-zi/">
+                <h3 class="post-title">
+                  APUE笔记-第十六章-网络IPC 套接字
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

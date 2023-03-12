@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言数组与切片 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言数组与切片</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h3 id="go语言的数组">Go语言的数组</h3>
+<p>声明数组的方法：</p>
+<pre><code class="language-go">var variable_name [SIZE] variable_type
+//e.x var myarray [5] int
+//数组初始化
+var array1 = [5] int{1,2,3} //指定数组长度并顺序初始化，没有初始化的为零值
+array2:=[]int{1,2,3} //让编译器判断数组的长度(这是一个切片)
+
+var array3=[...]int{1,2,3} //让编译器判断数组的长度(这是一个数组)
+// array4:=[...]int{1:6,9:10} 根据给定的索引最大值确定数组的长度，因此该数组的长度为10
+array4:=[5]int{1:2,3:5,4:10}//可以指定初始化某个位置的数组元素
+array5:=array4 //可以直接通过旧数组来声明或赋值给新数组，新数组是旧数组的拷贝
+</code></pre>
+<h4 id="多维数组">多维数组</h4>
+<p>声明方法：</p>
+<pre><code class="language-go">var variable_name [SIZE1][SIZE2]...[SIZEN] variable_type
+//example
+//var multi_array [2][3] int
+</code></pre>
+<pre><code class="language-go">multi_array := [][]int{}
+row1 := []int{1, 2, 3}
+row2 := []int{4, 5, 6}
+multi_array = append(multi_array, row1)//append给数组填充内容，效果跟C++容器的insert相似，但需要接收返回值，否则没有实现添加
+multi_array = append(multi_array, row2)
+fmt.Println(multi_array[0])
+fmt.Println(multi_array[1])
+//输出[1 2 3] [4 5 6]
+</code></pre>
+<pre><code class="language-go">//创建各维度元素数量不一样的数组
+package main
+
+import &quot;fmt&quot;
+
+func main() {
+    // 创建空的二维数组
+    animals := [][]string{}
+
+    // 创建三一维数组，各数组长度不同
+    row1 := []string{&quot;fish&quot;, &quot;shark&quot;, &quot;eel&quot;}
+    row2 := []string{&quot;bird&quot;}
+    row3 := []string{&quot;lizard&quot;, &quot;salamander&quot;}
+
+    // 使用 append() 函数将一维数组添加到二维数组中
+    animals = append(animals, row1)
+    animals = append(animals, row2)
+    animals = append(animals, row3)
+
+    // 循环输出
+    for i := range animals {
+        fmt.Printf(&quot;Row: %v\n&quot;, i)
+        fmt.Println(animals[i])
+    }
+}
+</code></pre>
+<p>初始化二维数组</p>
+<pre><code class="language-go">a:=[2][3]int{
+{1,2,3},
+{4,5,6}} //最后一行的右侧括号不能单独成行，所以要这样写
+或者
+a:=[2][3]int{
+{1,2,3},
+{4,5,6},
+} //这样就可以单独成行
+</code></pre>
+<h4 id="向函数传递数组参数">向函数传递数组参数</h4>
+<pre><code class="language-go">func myfunc1 (array [] type) [return type]{ /* code */} //1
+func myfunc2 (array [size] type) [return type]{ /* code */} //2
+</code></pre>
+<p>情况1：要注意指定了大小的数组（<strong>普通意义上的数组</strong>）只能传给指定了大小的形参的函数(上述的函数1)</p>
+<p>情况2：没有指定长度的数组（在go中其实是<strong>切片</strong>类型）才能传给上述的函数2</p>
+<p>声明数组：</p>
+<pre><code>nums := [3]int{1,2,3,}
+</code></pre>
+<p>声明切片：</p>
+<pre><code class="language-go">nums := []int{1,2,3}
+</code></pre>
+<p>没有声明长度的其实是切片，可以理解为数组，但本质上类型不一样，例如下方的函数传参处理方式就不一样。</p>
+<p>- Go 语言的数组是值，其长度是其类型的一部分，作为函数参数时，是 <strong>值传递</strong>，函数中的修改对调用者不可见</p>
+<p>- Go 语言中对数组的处理，一般采用 <strong>切片</strong> 的方式，切片包含对底层数组内容的引用，切片作为函数参数时，类似于 <strong>指针传递</strong>，函数中的修改对调用者可见</p>
+<p>对于情况1，<strong>传给函数的数组是值传递</strong>，和C++不同，C++传的是本质上是个指针，所以在go语言中，函数内处理的是数组的副本，不影响原数组</p>
+<pre><code class="language-go">func change(array []int) {
+	array[0] = 100
+}
+func change_(array [5]int) {
+	array[0] = 1000
+}
+
+array1 := [5]int{1, 2, 3}
+fmt.Println(array1[0])
+change_(array1)
+fmt.Println(array1) 
+//输出1 1
+
+</code></pre>
+<p>对于情况2，<strong>传给函数的数组是引用传递</strong></p>
+<pre><code class="language-go">func change(array []int) {
+	array[0] = 100
+}
+func change_(array [5]int) {
+	array[0] = 1000
+}
+
+array1 := []int{1, 2, 3}
+fmt.Println(array1[0])
+change(array1)
+fmt.Println(array1) 
+//输出1 100
+
+</code></pre>
+<hr>
+<h3 id="go语言的切片类型">Go语言的切片类型</h3>
+<p><strong>切片的下标访问方式，索引不能超过其长度len</strong></p>
+<pre><code class="language-go">arr2 := make([]int, 2, 10) //长度2 容量10的切片
+fmt.Println(arr2[1]) //correct
+fmt.Println(arr2[5]) //incorrect
+
+</code></pre>
+<p>一个奇怪但有趣的例子：</p>
+<pre><code class="language-go">func main() {
+	s := []int{2, 3, 5, 7, 11, 13}
+	printSlice(s)
+
+	// 截取切片使其长度为 0
+	s = s[:0]
+	printSlice(s)
+
+	// 拓展其长度
+	s = s[:4]
+	printSlice(s)
+
+	// 舍弃前两个值
+	s = s[2:]
+	printSlice(s)
+}
+
+func printSlice(s []int) {
+	fmt.Printf(&quot;len=%d cap=%d %v\n&quot;, len(s), cap(s), s)
+}
+//output
+len=6 cap=6 [2 3 5 7 11 13]
+len=0 cap=6 []
+len=4 cap=6 [2 3 5 7]
+len=2 cap=4 [5 7]
+
+</code></pre>
+<p>直接下标访问例如arr[i]这样，i小于等于len(arr)-1。而如果通过上下界的方式来，就允许出现上面代码中扩展长度的用法（即使该语句中右侧的arr是个len=0的切片），要多加注意区分。<strong>个人觉得代码上尽量别这么写，自己都搞不明白，以后看代码更头疼。</strong>：</p>
+<pre><code class="language-go">arr2 := make([]int, 0, 5)
+fmt.Println(&quot;len of arr2&quot;, len(arr2), &quot;cap of arr2&quot;, cap(arr2))
+arr2 = arr2[:5]
+fmt.Println(arr2)
+//output
+len of arr2 0 cap of arr2 5
+[0 0 0 0 0]
+
+</code></pre>
+<p><strong>切片的切片</strong>其实就是个二维切片，即切片的每个元素都是一个切片，和二维数组一样，每个元素都是一个切片。</p>
+<pre><code class="language-go">arr5 := make([]([]int), 10)
+arr5:=[][]int
+//都是一个效果
+
+</code></pre>
+<p><strong>二维切片中的每一个切片的长度和容量都可以不一样。</strong></p>
+<pre><code class="language-go">TwoDimArr := make([][]int, 5)
+for i := 0; i &lt; 5; i++ {
+TwoDimArr[i] = make([]int, 5, i+5)
+}
+
+</code></pre>
+<p>每个元素可以直接通过下标赋值替换：</p>
+<pre><code class="language-go">func main() {
+	slice := Pic(5, 6)
+	fmt.Println(slice)
+	slice[0] = []uint8{1, 2, 3, 4, 5}
+	fmt.Println(slice)
+}
+//output
+[[0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4]]
+[[1 2 3 4 5] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4] [0 1 2 3 4]]
+
+</code></pre>
+<p>切片其实和C++的vector很相似，是可以动态变化大小的，只不过在go语言里，语法上和go的数组操作很像。数组和切片的区别在于，<strong>数组的长度是固定，声明后不变，而切片的长度是可变的</strong>。</p>
+<p>切片的长度是用户能够访问的索引上限，容量是切片当前可拥有的最大长度。</p>
+<p>声明切片的方式：</p>
+<pre><code class="language-go">var slice []type
+slice:=[]type{1,2,3}
+slice:=make([]type,len)
+slice:=make([]type,len,cap) //len是切片的初始长度，cap是切片的容量，也即不用扩容前能容纳的最大元素数量
+
+</code></pre>
+<p><strong>切片的初始化</strong>（和python的列表下标使用方法很像）</p>
+<p>通过对数组使用下标运算符来初始化，得到的是切片不是数组类型，而不加[]的话，则得到的是数组类型</p>
+<pre><code class="language-go">array1:=[5]int{1,2,3,4,5}
+array2:=array1//array2是数组类型
+array3:=array1[:]//array3是切片类型
+
+</code></pre>
+<p>切片可以通过数组来初始化，也可以通过内置函数 make() 初始化。</p>
+<p>初始化时 len=cap，在追加元素时如果容量 cap 不足时将按 len 的 <strong>2 倍</strong>扩容。</p>
+<p><strong>s :=[] int {1,2,3 }</strong> 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3。其 cap=len=3。</p>
+<p><strong>s := arr[:]</strong> 初始化切片 s，是<strong>数组 arr 的引用</strong>。</p>
+<p><strong>s := arr[startIndex:endIndex]</strong> 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片。</p>
+<p><strong>s := arr[startIndex:]</strong> 缺省 endIndex 时将表示一直到 arr 的最后一个元素。</p>
+<p><strong>s := arr[:endIndex]</strong> 缺省 startIndex 时将表示从 arr 的第一个元素开始。</p>
+<p><strong>s1 := s[startIndex:endIndex]</strong> 通过切片 s 初始化切片 s1</p>
+<p><strong>s :=make([]int,len,cap)</strong> 通过内置函数 make() 初始化切片 s,[]int 标识为其元素类型为 int 的切片。</p>
+<p><strong>len函数是获取切片当前的元素个数，而cap函数获取的是切片的容量</strong></p>
+<p>一个未经初始化的切片 var slice [] type是一个<strong>空切片</strong>，<strong>默认为nil</strong>，slice==nil</p>
+<h4 id="切片截取">切片截取：</h4>
+<p>可以<strong>通过设置下限及上限</strong>来设置截取切片 <em>[lower-bound:upper-bound]</em></p>
+<p>依旧是<strong>左闭右开</strong>，跟上面切片初始化的用法相似arr[idx1:idx2]</p>
+<h4 id="append和copy函数">append和copy函数</h4>
+<p>因为切片是动态的，使用append可以往里增加元素，而使用copy可以复制切片A的内容到切片B上。</p>
+<p>append的用法：</p>
+<p><code>append</code>函数可以为一个切片一个元素，至于如何增加、返回的是原切片还是一个新切片、长度和容量如何改变这些细节，<code>append</code>函数都会帮我们自动处理。</p>
+<pre><code class="language-go">slice:=[]int{1,2,3,4,5}
+slice=append(slice,7,8,9)//可以一次加一个元素 也可以增加多个 如果容量不够，底层会自动扩容增
+//注意调用append之后一定要接收返回值，否则没有实现切片的元素增加
+
+</code></pre>
+<p><strong>通过...可以在用同一纬度的切片来append：</strong></p>
+<pre><code class="language-go">slice1 := []int{1, 2, 3}
+slice2 := make([]int, 10)
+slice2 = append(slice2, slice1...) //就是这一行，实现将同维度的切片append到另一个切片上
+fmt.Println(slice2)
+//output
+[0 0 0 0 0 0 0 0 0 0 1 2 3]
+
+</code></pre>
+<p><strong>append函数的简单实现</strong></p>
+<pre><code>func Append(slice, data []byte) []byte {
+    l := len(slice)
+    if l + len(data) &gt; cap(slice) {  // reallocate
+        // Allocate double what's needed, for future growth.
+        newSlice := make([]byte, (l+len(data))*2)
+        // The copy function is predeclared and works for any slice type.
+        copy(newSlice, slice)
+        slice = newSlice
+    }
+    slice = slice[0:l+len(data)]
+    copy(slice[l:], data)
+    return slice
+}
+
+</code></pre>
+<p><strong>copy函数用法</strong></p>
+<p>Copy returns the number of elements copied, which will be the minimum of len(src) and len(dst). 如果dst和src的其中一个长度为0，则没有复制任何元素。copy后，dst和src是不一样的内存，不存在共享。</p>
+<pre><code class="language-go">copy(destination,source)
+dst_slice:=make([]int,len,cap)
+src_slice:=[]int{1,2,3,4,5}
+copy(dst_slice,src_slice)
+
+</code></pre>
+<p>切片的数据结构包含三个基本元素，1.指向数组的指针，2.切片的长度len，3.切片的容量cap</p>
+<p>多个切片是可以同时指向同一个数组的，修改其中一个切片会影响其他的切片：</p>
+<pre><code class="language-go">src_slice := []int{7, 7, 7, 7, 7}
+dst_slice := src_slice
+dst_slice[2] = 9
+fmt.Println(src_slice, dst_slice)
+//输出 [7 7 9 7 7] [7 7 9 7 7]
+
+</code></pre>
+<p>除了通过make，或者自己给定元素的方式来初始化外，其他<strong>通过别的数组、切片来初始化切片</strong>，都会使得<strong>新的切片</strong>与别的切片或数组<strong>共享同一片内存</strong>，数据是共用的（初始化时，新的切片底层的数据结构其实直接就是等号右侧切片的副本，复制了它的地址、长度和大小信息）。</p>
+<pre><code class="language-go">arr:=[5]int{1,2,3,4,5}
+slice:=arr[:3]
+arr[2]=20
+fmt.Println(slice,arr)
+//输出 [1 2 20] [1 2 20 4 5]
+
+</code></pre>
+<p>但如果某个切片一旦需要扩容，复制旧的元素到新的空间后，则是新的内存空间，不再影响之前的数组内存。</p>
+<pre><code class="language-go">arr:=[5]int{1,2,3,4,5}
+slice:=arr[:3]
+slice=append(slice,7,8,9,10,11,12)
+arr[2]=20
+fmt.Println(slice,arr)
+//输出 [1 2 3 7 8 9 10 11 12] [1 2 3 4 5]
+
+</code></pre>
+<p>切片名其实就是一个地址，是底层指向的数组元素的首地址，对切片名不需要用&amp;取地址，而对数组名则需要&amp;：</p>
+<pre><code class="language-go">arr:=[5]int{1,2,3,4,5}
+slice:=arr[:3]
+arr[2]=20
+fmt.Printf(&quot;arr address:%p slice address: %p\n&quot;,&amp;arr,slice)
+//输出arr address: 0xc0000240c0 slice address: 0xc0000240c0
+//可以看到地址是相同的，表明确实是引用同一内存空间
+
+</code></pre>
+<h4 id="一种声明切片和数组的方法">一种声明切片和数组的方法</h4>
+<pre><code class="language-go">a:=[...]string{3:&quot;hello&quot;,9:&quot;world&quot;}
+b:=[]strign{3:&quot;hello&quot;,9:&quot;world&quot;}
+//指定数组或切片下标对应的元素值
+
+</code></pre>
+<h4 id="new和make的区别">new()和make()的区别</h4>
+<p>看起来二者没有什么区别，都在<strong>堆上分配</strong>内存，但是它们的行为不同，适用于不同的类型。</p>
+<ul>
+<li>new(T) 为每个新的类型T分配一片内存，初始化为 0 并且返回类型为*T的<strong>内存地址</strong>:这种方法 返回一个指向类型为 T，值为 0 的地址的指针，它适用于值类型如数组和结构体；它相当于 &amp;T{}。</li>
+<li>make(T) 返回一个<strong>类型</strong>为 T 的初始值，它<strong>只适用于3种内建的引用类型</strong>:切片、map 和 channel</li>
+</ul>
+<h4 id="从字符串生成切片">从字符串生成切片</h4>
+<p>字符串本质上是个字节数组，根据字符的不同，对应的字节数不一样，例如ascii码对应一个字节，utf8一个字符可能对应3个或4个字节（ UTF-8 的是一种变长编码规则，从 1 到 4 个字节不等。 ）</p>
+<pre><code class="language-go">var r []byte
+//比较适合ascii字符串，用汉字的话输出会乱码
+var s string = &quot;I love you&quot;
+
+r = append(r, s...) //...有解包的含义
+
+for _, v := range r {
+fmt.Printf(&quot;%c &quot;, v)
+}
+
+</code></pre>
+<p>go语言中的<strong>字符串是不可变对象</strong>，不能通过str[idx]='h'这样的形式来修改，编译不过。</p>
+<h5 id="byte切片和string类型互转">byte切片和string类型互转</h5>
+<p>byte其实就是uint8，一个字节</p>
+<p>string可以和byte的切片转换</p>
+<p>1,string 转为[]byte</p>
+<p>var str string = &quot;test&quot;</p>
+<p>var data []byte = <strong>[]byte(str)</strong></p>
+<p>2,byte转为string</p>
+<p>var data [10]byte</p>
+<p>byte[0] = 'T'</p>
+<p>byte[1] = 'E'</p>
+<p>var str string = <strong>string(data[:])</strong></p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">
+                <h3 class="post-title">
+                  Go语言类型
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

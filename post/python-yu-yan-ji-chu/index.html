@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Python语言基础 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Python语言基础</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+                  python
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>Python基础</p>
+<p>1.字符串</p>
+<p>str='c:\now' 出现转义符号 （回车） 但实际上想表达路径时可以用以下方法解决</p>
+<p>str=r'c:\now' 添加r变为原始字符串 也可是str='c:\now' 在每个反斜杠前再加反斜杠解决</p>
+<p>字符串最后不能以反斜杠结尾即str='c:\now' 若要这样 则可通过str='c:\now'+'\'解决</p>
+<p>长字符串：当输入多行字符时用到 用三重双引号或单引号编写</p>
+<p>b='''我</p>
+<p>爱</p>
+<p>你'''</p>
+<p>字符串可以用单引号也可以用双引号括起来 这样能保证当你想输出具有单引号的字符串时可以用双引号括着 反之亦然 而若所想输出的字符串同时有单双引号 则可以对与括着的引号类型相同的引号之前加转义斜杠：</p>
+<p>print(&quot;She's good and she said &quot;I love you&quot;&quot;)</p>
+<ol start="2">
+<li></li>
+</ol>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/yf6PmIsg1LNHX9R.png" alt="" loading="lazy"></figure>
+<p>3.while循环</p>
+<p>while 条件：</p>
+<p>在上一句语句后全部缩进的语句算为条件为真时运行的语句</p>
+<ol start="4">
+<li>布尔运算 and</li>
+</ol>
+<p>5.随机数模块 random</p>
+<p>import random</p>
+<p>a=random.randint(1,10)  给a赋予1到10之间的一个随机整数</p>
+<p>6.变量名</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/QD1bTkFeEO7dGAq.png" alt="" loading="lazy"></figure>
+<p>7.删除字符串首尾的空白</p>
+<p>空白包括空格，制表符，换行符。</p>
+<figure data-type="image" tabindex="3"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/19F052EE424C46BD85A4DCDD0333827F.png" alt="" loading="lazy"></figure>
+<p>rstrip() 去掉末尾空白</p>
+<p>lstrip()去掉首部空白</p>
+<p>strip()去掉首尾空白</p>
+<p>8.str() 强制转换成字符串类型</p>
+<p>9.列表 用[ ]编写 各元素用逗号隔开 就是矩阵 但元素可以是不同类型的</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/dioECK6QJ13R8eW.png" alt="" loading="lazy"></figure>
+<p>若是知道列表中某个元素的类型 就可以使用一般该类型的操作进行操作</p>
+<p>索引从0开始编号 即0对应第一个元素</p>
+<p>Python为访问最后一个列表元素提供了一种特殊语法。通过将索引指定为-1 ，可让Python返回最后一个列表元素。负数是从后往前数 用倒数第几个理解</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/C6hD1wql54xdoLB.png" alt="" loading="lazy"></figure>
+<p>列表.append() 小括号里输入要在列表末尾增加的元素</p>
+<p>列表.insert(0,'love')  在列表中索引为0的元素前插入字符串love</p>
+<p>10.删除列表元素</p>
+<p>del bicycle[0] 删除第一个元素 输入索引指定山鹑</p>
+<p>a=bicycle.pop()删除并返回最后一个元素，赋值给a</p>
+<p>b=bicycle.pop(index) 删除并返回指定索引的元素，赋值给b</p>
+<p>根据值删除元素，不知索引但知元素是啥是可用</p>
+<p>bicycle.remove('trek') 指定删除trek，不返回值</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/73ZAryma58fzOxg.png" alt="" loading="lazy"></figure>
+<p>print函数每次输出都是自动重开一行进行输出的</p>
+<p>print()可以输出True，False</p>
+<p>11.列表为空时，用索引访问都会出错 因为列表没东西就不应该有任何索引指向某个元素</p>
+<p>12.for循环</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/3fclgYQO17NBqCP.png" alt="" loading="lazy"></figure>
+<p>利用列表的元素个数控制for循环的次数 格式：for tempname in list:</p>
+<p>每一次循环都会将list的元素顺序赋给tempname 缩进的语句均为循环体</p>
+<ol start="13">
+<li></li>
+</ol>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/yPNhu2c4kHiwIS7.png" alt="" loading="lazy"></figure>
+<p>for value in range(1,11) 类似于matlab的 for i=1:3</p>
+<p>range(1,11)默认步长为1的从第一个指定的数增加到第二个指定的参数，但不包括即不含11</p>
+<p>range(start,end,step) 但range函数返回的没有结果 想要生成列表必须用list()函数</p>
+<p>若直接range(30) 默认从1到30共三十个数</p>
+<p>图中运行结果为：</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/DYQAPERgp8NWO9z.png" alt="" loading="lazy"></figure>
+<p>14.列表解析</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/pyo9h2JHjQlYng4.png" alt="" loading="lazy"></figure>
+<p>13中的square可用squares=[value**2 for value in range(1,11)]获得</p>
+<p>15.列表切片 用于处理特定部分的列表元素 通过输入索引 与matlab的选取矩阵某些元素很相似</p>
+<p>语句： square[0:3] 处理第一二三个元素 第四个元素不处理 与range()相似</p>
+<p>若从头开始到指定位置：square[:3]</p>
+<p>若从指定位置到结尾：square[1:]</p>
+<p>也可以用负数索引</p>
+<p>还可同时省去索引即[:]创建一个含所有元素的切片</p>
+<p>切片就是一个列表</p>
+<p>16.复制列表</p>
+<p>要用到切片:</p>
+<p>a=b[:] #将b全部复制到a中 且得到新得列表a 这时对两者得操作时分离得</p>
+<p>若:</p>
+<p>a=b #也即将b赋值给a 那么a是b的引用 是别名，两者实际上对应统一对象 改变其中任何一个都会影响另外一个的值</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/ZNob6pgmcluTMEf.png" alt="" loading="lazy"></figure>
+<p>所以复制列表只能用切片</p>
+<p>17.元组</p>
+<p>元组是不可修改的列表 在第一次定义后便不能对元组元素进行修改 但可以对元组变量进行重新赋值：</p>
+<p>dimension=(200,50) dimension[0]=250 error</p>
+<p>dimension=(200,50) dimension=(250,50) correct 相当于不可以针对某个具体的元素修改 但可以整体对同一变量名赋值定义元组</p>
+<p>与列表的区别在于元组定义时用圆括号而不是方括号</p>
+<p>但在访问元素时还是使用方括号即：</p>
+<p>dimension=(200,50)</p>
+<p>print(dimension[0])</p>
+<p>----200</p>
+<p>18.a='string'</p>
+<p>a.lower()</p>
+<p>a.upper()</p>
+<p>a.title() 都不会改变变量的值 只是返回一个值而已</p>
+<p>19.判断某个元素是否在列表中 布尔逻辑：</p>
+<p>a=[1,2,3]</p>
+<p>1 in a ----True</p>
+<p>4 in a ----False</p>
+<p>判断是否不在则用关键字： not in</p>
+<p>20.if-elif-else语句</p>
+<p>条件判断语句接在if elif else后</p>
+<p>程序会自动判断并知道elif和else对应的区间范围 别太纠结</p>
+<p>21.若列表为空，条件判断上为False 只要不空则为True</p>
+<p>22.input('输入提示语') 返回的结果是你输入的内容， 若是字符他会理解成字符串类型 若是数字就是数字类型 若是输入数字但想表达其为字符串类型则要强制转换 例子：str(input('请输入一个数'))</p>
+<p>23.字典 用大括号括着  键都是字符串 相当于真实字典中某个东西的名字 然后值就对应解释这个名字的内容 较为好理解</p>
+<p>alien={'color':'green','points':5} 可以在最后一个键-值对后加逗号 方便下次添加新的</p>
+<p>可以理解成一样东西（字典变量）由很多个属性构成，属性名：属性值 也就是所谓的键-值对</p>
+<p>访问字典中的某个值用: alien['color']</p>
+<p>相当于直接找键，就会得到对应的值 添加键-值对： alien['location']=50 相当于赋值</p>
+<p>修改字典中的值跟添加一样 只不过方括号里的是已存在的键（属性名）</p>
+<p>删除键-值对 del alien['color']</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/HuMTfLS4UJcmXZr.png" alt="" loading="lazy"></figure>
+<p>字典的多行书写格式</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/G1ZWKutds6DCfcU.png" alt="" loading="lazy"></figure>
+<p>print的多行书写格式</p>
+<p>print()可以一次输出多个对象 用逗号隔开 不同类型对象都可以</p>
+<p>24.遍历字典</p>
+<p>for key,value in alien.items():</p>
+<p>print(key,value)</p>
+<p>方法items()用以返回含有每个键值对的列表</p>
+<p>若只遍历字典中的键:</p>
+<p>for name in alien.keys() or for name in alien</p>
+<p>两者效果一样 可以显式或省略keys() 只返回键 也即属性名</p>
+<p>方法keys()用于返回含有每个键的列表</p>
+<p>注意，即便遍历字典时，键—值对的返回顺序也与存储顺序不同。Python不关心键—值对的存储顺序，而只跟踪键和值之间的关联关系。</p>
+<p>若要指定顺序遍历 可用sorted()</p>
+<p>for name in sorted(alien.keys())</p>
+<p>print(name)</p>
+<p>只遍历值则用方法values()， 返回含有所有值的一个列表，若值有重复的，遍历的也会有重复</p>
+<p>若重复的只出现一次可用set()函数：</p>
+<p>for value in set(alien.values())</p>
+<p>print(value)</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/OxFKpnRUA5Q28CZ.png" alt="" loading="lazy"></figure>
+<p>len()可用于返回列表（多少个元素）、字典（多少对键值）大小</p>
+<p>25.for a in b</p>
+<p>b是列表</p>
+<p>不仅可以通过a来访问b中的元素 而且每一次循环a都是b中元素的引用 改a的值就相当于改b中元素的值</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/C2vWaROHTxEQuYz.png" alt="" loading="lazy"></figure>
+<p>列表字典</p>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/H8FrWOAhRtJpsU3.png" alt="" loading="lazy"></figure>
+<p>不论什么嵌套，只要记住列表和字典自身的方法函数就行 相应的返回的类型会发生改变而已 该怎么调用传参还是怎么用</p>
+<p>字典与列表其实差不多 都是储存数据的 只不过字典的每一个数据都是有名有号的（也即键） 访问也是通过名字（键）访问的 而列表的数据无名无姓 通过索引来访问</p>
+<p>26.input()函数 用户输入的任何内容直接当成字符串 要转义为其他类型数据时需要强制转换</p>
+<p>27.求余运算符%  返回两数相除的余数</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/GUztJaweikFb5To.png" alt="" loading="lazy"></figure>
+<p>28.while循环</p>
+<p>可以通过标志True or False来控制循环 例如:</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/gkoZTEKUIVd9B1F.png" alt="" loading="lazy"></figure>
+<p>也可直接用break 不再执行break以下的命令并中断循环</p>
+<p>continue是指不在执行continue以下的命令 不中断循环 ，直接返回到条件判断 再次进行循环 相当于从来再来</p>
+<p>python也有+=的语法 i=i+1 等价于 i+=1</p>
+<p>29.函数关键字实参</p>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/l62trc3TuFWVs4h.png" alt="" loading="lazy"></figure>
+<p>也即用户已知定义函数时的形参名，在调用，将实参传给形参时，指定将实参赋给某个形参，这样就不用管实参的顺序。</p>
+<p>30.函数形参默认值，函数在定义时可对形参直接进行赋值，起默认值作用，若调用时没有传递相应的实参，则自动使用默认值。</p>
+<p>设置默认值的形参应当放在最后，夹在前面就是去了默认值的意义，所以编写程序时需要注意最后的默认形参时是哪些参数</p>
+<p>31.函数返回值</p>
+<p>可用return(要返回的值)</p>
+<p>或者 return 要返回的值 效果一样</p>
+<p>32.空字符 a=''</p>
+<p>字符串可用于条件判断， 类似列表或字典一样， 空则为0，不空则为1</p>
+<p>33.同一个程序文件中，多个函数的形参可以同名，这并无影响，但可能会影响阅读困难</p>
+<p>在传递实参时，不一定需要先对实参进行定义再传：</p>
+<p>firstname='rex'</p>
+<p>getname('firstname)</p>
+<p>可以直接在括号里输入数值:</p>
+<p>getname('rex')</p>
+<p>34.当需要用户输入时，回车代表空字符</p>
+<p>35.禁止函数修改列表：传递实参时传递列表的切片，也即副本，除非确定不要修改列表，才用这方法，不然会生成副本造成内存消耗。</p>
+<p>36.任意数量形参：def functionname(*parameter)</p>
+<p>一个星号让parameter成为一个空元组（元素不变的列表）</p>
+<p>相当于对应于该实参的所有传递参数共同组成一个元组</p>
+<figure data-type="image" tabindex="20"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/B4AE94FCE6334365A9981F5CD3126E46.png" alt="" loading="lazy"></figure>
+<p>37.函数采用不同的实参：</p>
+<p>若用到任意数量的实参，则需将该类实参放在函数声明的最后，python先匹配位置实参和关键字实参，再匹配任意数量实参</p>
+<p>38.任意数量的关键字实参</p>
+<p>def functionname(**parameter)  两个星号表示parameter是一个空字典</p>
+<p>相当于对应的关键字实参的所有传递参数共同组成一个字典 关键字的名字成为字典中的键 关键字的值则对应字典中的值 形成键值对</p>
+<p>39.任何.py的文件都可以作为模块 所以在命名时尽量使用英文命名，方便下次导入</p>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/NFPwfHMidRE6q8g.png" alt="" loading="lazy"></figure>
+<p>可写一个单独的.py文件（e.x. pizza.py），将函数（e.x. order函数）写进去，可包含多个函数，这个py文件就叫模块</p>
+<p>在调用时：</p>
+<p>import pizza</p>
+<p>pizza.order()</p>
+<p>import语句是把pizza 这个文件打开并把代码复制到正在编写的文件中，但我们是看不到的</p>
+<p>若只想导入模块中的特定函数则语句为：</p>
+<p>from module_name import function_name</p>
+<p>from module_name import function_0, function_1, function_2</p>
+<p>此时直接调用函数就行 不需要pizza.order()</p>
+<p>而是直接 order()s</p>
+<p>40.给导入的函数起别名 as</p>
+<p>from pizza import order as od</p>
+<p>给导入的模块起别名</p>
+<p>import pizza as p</p>
+<p>防止程序中的名字与函数名重了导致出错</p>
+<p>41.导入模块中的所有函数</p>
+<p>from pizza import *</p>
+<p>星号代表导入该模块的所有函数， 后面调用直接输入函数名操作而不用句号操作，若模块有大量函数，尽量避免使用该方法，可能造成函数名冲突</p>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/ibpI7jlCqmJMXB8.png" alt="" loading="lazy"></figure>
+<p>函数在声明行下面最好用''' '''对函数的操作内容进行说明 也可以用#接注释</p>
+<p>关键字实参等号两边不能空格</p>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/zjvUy416asFWor8.png" alt="" loading="lazy"></figure>
+<p>42.函数读取传递参数的顺序：</p>
+<p>位置实参，关键字实参</p>
+<p>若调换顺序或混合则会出错</p>
+<p>同时，任意数量的实参和关键字实参只能和位置实参或关键字实参中的一种一起使用，</p>
+<p>顺序：位置实参+任意数量的实参， 或者 关键字实参+任意数量关键字实参， 或者 位置实参+任意数量的关键字实参</p>
+<p>否则，python无法正确匹配实参。 简单的记忆方式是关键字实参必须在参数表后面，而且其后面不能再接位置实参，也即普通实参。</p>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/uRMPNdIsbaV2njQ.png" alt="" loading="lazy"></figure>
+<p>该调用时错误的，虽说按道理来说多余的参数都放入forth中，但python还是将4，5，6，7理解成了位置实参，所以出错。</p>
+<p>其实关键是位置实参不能放在关键字实参后面，否则不管采用哪几种实参都会出错。</p>
+<figure data-type="image" tabindex="25"><img src="https://s2.loli.net/2022/08/28/FO75fyvR2YxBsI4.png" alt="" loading="lazy"></figure>
+<p>该调用是正确的，forth是字典。</p>
+<p>43.类声明</p>
+<p>class 类名():</p>
+<p>def <strong>init</strong>(self,para1,para2)    '''初始化'''</p>
+<p>self是类自身的引用，用来处理数据，操作等等。与self对应位置的实参不需要传递 e.x. def function(self) 调用时:classname.function()即可</p>
+<p>__init__函数是初始化函数 必备</p>
+<figure data-type="image" tabindex="26"><img src="https://s2.loli.net/2022/08/28/BAF2qZP4TRiCw5e.png" alt="" loading="lazy"></figure>
+<p>类中变量的声明都是用self.variable=value</p>
+<p>类中的函数叫做方法  类中的变量访问，函数调用都可以用句号表示法操作：</p>
+<figure data-type="image" tabindex="27"><img src="https://s2.loli.net/2022/08/28/aVk95b1wIzmCRAB.png" alt="" loading="lazy"></figure>
+<p>类中的所有变量都需要初始化，赋予一个默认值，若这么做之后，相应的变量就不需要写进形参中！！！</p>
+<p>44.类继承</p>
+<figure data-type="image" tabindex="28"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/15300FC3799B4253A6BB117D3C3CFE30.png" alt="" loading="lazy"></figure>
+<p>被继承的叫父类，也叫超类，新创建的叫子类</p>
+<p>注意初始化的方法：</p>
+<p>class ElectricCar(Car):</p>
+<pre><code>def __init__(self,brand,name,year):
+
+    super().__init__(brand,name,year)
+</code></pre>
+<p>super()指父类，句号表达式相当于访问父类的属性或方法</p>
+<p>继承后子类就拥有了父类内包括的所有方法和属性</p>
+<p>注意继承的子类声明括号里要输入父类名</p>
+<p>子类中可以重写父类的方法，只需要再定义一次父类中的同名函数就行，在子类的方法调用时，python只会读取子类的方法，忽略父类中同名方法。</p>
+<p>45.用已有类作为属性</p>
+<p>已有类 class car()</p>
+<p>新建类 class electriccar():</p>
+<p>def <strong>init</strong>(self,name,brand)</p>
+<p>self.newcar=car(name,brand)</p>
+<p>当访问已有类中的方法或者属性时：</p>
+<p>mycar=electriccar('audi','r8','2019')</p>
+<p>mycar.newcar.getodometer()</p>
+<p>句号表达式可以用于多层逻辑访问</p>
+<p>46.导入类</p>
+<p>跟导入函数一样，将类的定义写在一个py文件中，可以包含多个类，也可以只有一个类，导入语法：</p>
+<p>import car</p>
+<p>from car import * (不推荐，可能造成重名错误)</p>
+<p>from car import Car</p>
+<p>from car import Car,ElectricCar</p>
+<p>car是文件名，Car,ElectricCar是类名</p>
+<p>相当于把类的定义复制到新文件中，不需要再定义一次，直接使用创建实例即可。</p>
+<p>在模块中导入模块：可能某个模块中的类与其他模块中的类关联，就可以使用这个。</p>
+<p>47.from ordereddict import OrderedDict</p>
+<p>dict=OrderedDict()</p>
+<p>dict是一个空字典</p>
+<p>若采用import module来导入类或者模型， 在使用时需要用句号表达式进行调用，其他的from开头的导入则不用。</p>
+<p>47.打开文件：</p>
+<p>with open('文件名.后缀') as file</p>
+<p>open 打开文件并返回一个文件对象file(相当于实例化的类)，读取的是当前py所在文件夹内的文件，可以采用相对路径和绝对路径打开文件</p>
+<p>相对路径</p>
+<figure data-type="image" tabindex="29"><img src="https://s2.loli.net/2022/08/28/SnzquTEBc4lrPK9.png" alt="" loading="lazy"></figure>
+<p>绝对路径</p>
+<figure data-type="image" tabindex="30"><img src="https://s2.loli.net/2022/08/28/skMLlxhbW7dDGTH.png" alt="" loading="lazy"></figure>
+<p>由于一般绝对路径较长，可以用变量表示</p>
+<p>file.read()</p>
+<p>读取文件内容</p>
+<p>逐行读取</p>
+<p>lines=file.readlines()  #lines是一个列表 元素为文本中每一行的内容</p>
+<p>for line in file:</p>
+<p>print(line)</p>
+<p>对于文件的readlines()和read()操作是先后顺序的， 只执行第一次出现的读取操作。</p>
+<p>with关键字以下缩进的指令都是在文件打开的背景下执行的，退出缩进后会自动关闭文件，后面再编写跟所打开的文件相关的操作则会出错。</p>
+<p>读取文本时，python都读取为字符串，若要用作数值的话需要类型强制转换：int() float()</p>
+<p>若要确认某一个字符串包不包含另一字符串，直接使用if语句</p>
+<p>if string1 in string2</p>
+<p>会直接在string2中寻找string1的内容</p>
+<p>48.写入文件</p>
+<figure data-type="image" tabindex="31"><img src="https://s2.loli.net/2022/08/28/sqh6y1ibQS4ICUR.png" alt="" loading="lazy"></figure>
+<p>with open(filename,'w') 写 ： 该模式下写会覆盖原本文本内容 不会添加换行符 需要自行添加 同时若不存在指定的文件则会自动创建</p>
+<p>'r' 读</p>
+<p>'r+' 读+写</p>
+<p>'a' 附加模式 写入的内容不会覆盖原文本，而是附在后面</p>
+<p>with open('pi.txt','a') as filename:</p>
+<p>filename.write('new thing')</p>
+<p>忽略则默认只读</p>
+<p>python写入只能写字符串，数值需要先转换成字符串再写入 str()</p>
+<p>49.异常</p>
+<p>python中可以对异常对象进行处理，当发生错误时可以更好的告诉用户发生了具体什么错误，同时可以让程序继续往下运行，因为可以跳过错误继续往下：</p>
+<p>用到try-except代码块：</p>
+<p>try:</p>
+<p>print(5/0)</p>
+<p>except ZeroDivisionError:</p>
+<p>print('you cant do this')</p>
+<figure data-type="image" tabindex="32"><img src="https://s2.loli.net/2022/08/28/URlEGBvrz6yp37k.png" alt="" loading="lazy"></figure>
+<p>50.分析文本</p>
+<p>用到方法split()可以将字符串按照空格，换行符作为分隔，将文本或字符串分成一个个单词，并存储到一个列表中。应用例子可用于计算文本字数</p>
+<figure data-type="image" tabindex="33"><img src="https://s2.loli.net/2022/08/28/TC27PXyEVU96dRM.png" alt="" loading="lazy"></figure>
+<p>51.except：</p>
+<p>pass</p>
+<p>则当出错时python啥都不做</p>
+<figure data-type="image" tabindex="34"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/E9EBED08FA644046BFE585ADF5B4B146.png" alt="" loading="lazy"></figure>
+<p>pass语句还充当了占位符，它提醒你在程序的某个地方什么都没有做，并且以后也许要在这里做些什么。</p>
+<p>方法count()可以返回字符串中指定单词的个数</p>
+<p>line='Row, row row!'</p>
+<p>line.count('row')----------------2</p>
+<p>line.lower().count('row')------------------3</p>
+<p>将字符串写入文本时 若程序中用的是单引号， 在文本中显示的是双引号</p>
+<p>52.存储文件：</p>
+<p>用到json模块</p>
+<p>import json</p>
+<p>json.dump(data,'filename') 将data写入filename</p>
+<p>json.load('filename') 从filename加载内容</p>
+<p>53.测试函数</p>
+<p>测试模块 unittest 需要创建一个继承unittest.TestCase（相当于用类来测试），在类中定义方法也即函数 编写时必须以test开头 在程序运行时 所有test开头的方法才会被自动运行 （只要有断言函数存在）</p>
+<p>test开头的函数必须要把self作为参数，因为断言函数是类自身的方法！</p>
+<p>断言函数（也即判断函数，判断自己编写的函数得到的结果是否是自己预料的） self.assertEqual(variable,data)</p>
+<p>评价variable和data是否相等 测试的关键</p>
+<figure data-type="image" tabindex="35"><img src="https://s2.loli.net/2022/08/28/8kNCLyq7Y5WgrBH.png" alt="" loading="lazy"></figure>
+<p>54.不同函数，类的定义可以重复使用相同的名字，不会出现错误，但最好不要这样，以免自己阅读出现困难。</p>
+<p>55.unittest中的一些断言函数</p>
+<figure data-type="image" tabindex="36"><img src="https://s2.loli.net/2022/08/28/gP9XOHxE2JlVT4I.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="37"><img src="https://s2.loli.net/2022/08/28/wvYxLqBrUTNtA7P.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="38"><img src="https://s2.loli.net/2022/08/28/2Eh8GYqlzjLZ6FT.png" alt="" loading="lazy"></figure>
+<p>55.测试类</p>
+<p>测试类与测试函数一样，都是通过创建一个继承unittest.TestCase的类来进行测试， 只不过在定义该类时，必须注意函数的参数是否需要引入self，一般来说，每一种测试方法（也即类中的函数），都需要在该函数体内创建一个被测试的类的实例，若测试方法多，则会出现多次创建类的现象。可以利用setUp()方法进行统一创建类及其属性赋值。</p>
+<p>具体定义为：(假设被测试的类名为anonymous) 其实相当于在测试类中创建一个被测试类的实例，这样后面用self前缀加句号表达式就能访问该实例 并进行相应的测试！</p>
+<p>class testclass():</p>
+<p>def setUp(self):</p>
+<p>self.myclass=anonymous(question)</p>
+<p>self.myclass.response='damn bro'</p>
+<p>def testfunction(self):</p>
+<p>self.myclass.</p>
+<figure data-type="image" tabindex="39"><img src="https://s2.loli.net/2022/08/28/kZmJA8TgD3OSQ41.png" alt="" loading="lazy"></figure>
+<p>后续在测试函数中要使用实例时，必须要加self前缀。</p>
+<p>56.类中的所有函数如果形参是self，在调用时都不需要传该参数直接空着就行</p>
+<p>57.类初始化函数中的形参在该函数体编写时可以直接使用函数名 而在其他类中函数里，调用就需要加self.前缀</p>
+<p>58.if sth1 and sth2 &lt; sth3</p>
+<p>若sth1和sth2同时小于sth3则逻辑判断为真</p>
+<figure data-type="image" tabindex="40"><img src="https://s2.loli.net/2022/08/28/BAqMCV8ziRdGIrf.png" alt="" loading="lazy"></figure>
+<p>59.添加路径</p>
+<figure data-type="image" tabindex="41"><img src="https://s2.loli.net/2022/08/28/BGNjrQpUnVZzdqb.png" alt="" loading="lazy"></figure>
+<ol start="60">
+<li>调用父类方法或属性</li>
+</ol>
+<p>super().<strong>init</strong>(参数)</p>
+<p>上述就是用来初始化父类的方法。</p>
+<p>super().function(parameters)</p>
+<p>super().属性名</p>
+<p>也可直接通过父类名操作（显式调用）</p>
+<p>若父类为A，则</p>
+<p>A.<strong>init</strong>(parameters)也可以进行初始化操作</p>
+<p>不推荐使用显示调用，因为如果父类名被修改时需要修改子类的代码，同时，在多继承时可能会导致父类的方法或函数被调用多次。</p>
+<p>super()与super(class,self)效果一样 其中class是指当前定义的子类名</p>
+<p>supe()根据MRO（method resolution order）的顺序进行调用，能够避免父类的多次重复调用，减少内存消耗。</p>
+<figure data-type="image" tabindex="42"><img src="https://s2.loli.net/2022/08/28/RmHSGZjgiLOy31U.png" alt="" loading="lazy"></figure>
+<ol start="61">
+<li>pygame.sprite模块</li>
+</ol>
+<figure data-type="image" tabindex="43"><img src="https://s2.loli.net/2022/08/28/qd45RVFUoJifZr6.png" alt="" loading="lazy"></figure>
+<p>from pygame.sprite import Group</p>
+<p>Group就是编组，是一个类</p>
+<p>可以用列表理解，但是方法函数名与列表的不一样</p>
+<p>在编组中添加元素的方法为：</p>
+<p>bullets=Group()</p>
+<p>bullets.add(元素)</p>
+<p>bullets.sprites()</p>
+<p>返回bullets中的所有精灵，是一个列表，（精灵应该就是bullets中的所有元素，在这里应该是所有实例）</p>
+<p>bullets.copy()也是返回一个含有所有精灵的列表</p>
+<p>对编组调用函数时， 将会对编组内的所有精灵进行调用</p>
+<figure data-type="image" tabindex="44"><img src="https://s2.loli.net/2022/08/28/1Qu5mdHUZY8Rxvq.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="45"><img src="https://s2.loli.net/2022/08/28/SmbODlusP7qidXF.png" alt="" loading="lazy"></figure>
+<p>pygame.Rect(0,0,width,height)</p>
+<p>0,0两个数字代表的是矩形左上角的坐标 然后根据宽度和长度作出矩形</p>
+<p>因为不是根据图像得到的矩形</p>
+<p>62.关于类的形参的注意事项</p>
+<p><strong>init</strong>(self,形参)函数中的形参如果在函数体内有如下语句：</p>
+<p>self.形参=形参（或其他的量）</p>
+<p>则说明该形参其实是类中的属性， 而若没有这样声明，传过来的形参只在这个初始化函数中有用，在其他类中函数不能调用该参数，别搞混淆了。</p>
+<p>63.逗号赋值</p>
+<p>a=1,2,3</p>
+<p>得到的a是一个元组（1，2，3）</p>
+<p>而若a=1,</p>
+<p>则得到一个tuple类型</p>
+<p>64.range()</p>
+<p>range(9) 得到的是0,1,2,3,4,5,6,7,8 共九个元素 但数字没到9</p>
+<p>int()函数去掉小数部分，相当于向下取整</p>
+<p>aliens.draw(screen)  aliens是一个编组 draw()方法对编组中的所有元素都调用draw()函数 根据每个元素的rect属性在screen上绘制该元素</p>
+<p>对于编组作为形参的函数，函数会对编组中的所有元素进行调用</p>
+<ol start="64">
+<li>rect.x rect.y是指矩形左上角的坐标值</li>
+</ol>
+<p>65.消灭外星人</p>
+<p>collision=pygame.sprite.groupcollide(group1,group2,True,True)</p>
+<p>该函数能够检测两个编组内的元素的rect是否发生了重叠，若发生了重叠，则会删除元素（第一个True对应group1的元素，即会删除该编组的元素，以此类推，不想删除就改成False），并返回布尔值</p>
+<p>collision是一个字典，以group1的元素与group2的元素重叠为例，键为group1的元素，值为group2的元素，也即某个group1的元素与多少个group1的元素发生了重叠，值是列表</p>
+<p>66.检测飞船与外星人碰撞</p>
+<p>pygame.sprite.spritecollideany(a,b)</p>
+<p>a是一个精灵，b是一个编组，检查a是否与b中的精灵碰撞，返回编组中发生碰撞的精灵和逻辑真</p>
+<p>（一个函数能返回两种量，python根据需求解释返回的是哪种量？？？）</p>
+<p>是否像matlab中某些函数：[a,b,c,d]=function(parameters) 若给出了左边表达式就会顺序赋值，若没有给出就会默认返回函数设置好的某个量？像自己用的那个circlefit函数</p>
+<p>没有碰撞则返回None（逻辑假）</p>
+<figure data-type="image" tabindex="46"><img src="https://s2.loli.net/2022/08/28/HfTxuncMBDp6lS7.png" alt="" loading="lazy"></figure>
+<p>67.类中的属性不一定要在__init__函数里才能定义，在其他的函数里直接用句号表达式一样可以定义</p>
+<figure data-type="image" tabindex="47"><img src="https://s2.loli.net/2022/08/28/EUqmyRcit4xFJZQ.png" alt="" loading="lazy"></figure>
+<ol start="68">
+<li></li>
+</ol>
+<p>screen=pygame.display.set_mode((ai_settings.screen_width,ai_settings.screen_height))</p>
+<p>screen类的方法fill()、blit()是指在该屏幕中填充某个区域或在某个区域画出某个图像</p>
+<p>69.pygame.mouse.get_pos() 返回一个包含鼠标位置的元组</p>
+<p>mouse_x,mouse_y=pygame.mouse.get_pos()</p>
+<p>注意：逗号表达式，返回的元组元素顺序赋给逗号表达式的顺序</p>
+<p>类似matlab中某些函数：[a,b,c,d]=function(parameters)</p>
+<ol start="70">
+<li>if not 条件</li>
+</ol>
+<p>相当于 if sth!=什么</p>
+<p>71.类中调用函数时，可以是调用自身的函数也就是方法（通过句号表达式操作），也可以调用导入的或者在同一个文件中的函数！但类中的局部变量只能够通过self.变量名赋予，不能使用类外定义的变量</p>
+<p>72.round(figure,位数)round函数让数字精确到小数点第几位，如果是负数那就小数点前</p>
+<figure data-type="image" tabindex="48"><img src="https://s2.loli.net/2022/08/28/TQDu2kBfiEXJmIo.png" alt="" loading="lazy"></figure>
+<p>73.类中的如果不用self.句号表达式表示的变量都是局部变量，可以用 但只能在相应的函数体内使用</p>
+<p>python的函数、类声明的参数、for循环的变量名都可以重复用统一个名字 不会发生冲突 即便</p>
+<figure data-type="image" tabindex="49"><img src="https://s2.loli.net/2022/08/28/MA7vzNYwXTSPZf1.png" alt="" loading="lazy"></figure>
+<p>python根据语义的环境解释该对应哪个，虽然可以用不会出错，但是为了保证程序可读性，还是别这么做</p>
+<p>74.设置图标坐标字体大小</p>
+<figure data-type="image" tabindex="50"><img src="https://s2.loli.net/2022/08/28/d5UjGbF9s7CWxAt.png" alt="" loading="lazy"></figure>
+<p>'both'指x,y均设置</p>
+<p>'x' 'y' 则是分别设置</p>
+<p>tick_params() 的which='both' or 'minor' or 'major' 分别指设置主副刻度线，副刻度线，主刻度线</p>
+<figure data-type="image" tabindex="51"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/E4ECD93C6DD34D7CB5CB6AC9D9D6B3A4.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="52"><img src="https://s2.loli.net/2022/08/28/wuXTBNA9omSJFCR.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="53"><img src="https://s2.loli.net/2022/08/28/CfzAomEDYk397y8.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="54"><img src="https://s2.loli.net/2022/08/28/CHzObPDKnuyxRY2.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="55"><img src="https://s2.loli.net/2022/08/28/mS9H386zQqUKuWe.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="56"><img src="https://s2.loli.net/2022/08/28/4DXAdOxjPhYK9vE.png" alt="" loading="lazy"></figure>
+<p>label指刻度标签</p>
+<p>75.scatter(x,y,s=100)绘制一个（x，y）大小为100的点</p>
+<p>若要绘制一些列点，则x，y均为长度相同的列表，其实与plot一样，只不过是点图罢了</p>
+<figure data-type="image" tabindex="57"><img src="https://s2.loli.net/2022/08/28/4dRcowja6qhnFHl.png" alt="" loading="lazy"></figure>
+<p>axis()以列表为实参，分别控制x，y两轴的范围</p>
+<p>scatter函数的实参都是关键字实参，不用管顺序。</p>
+<p>python中关于rgb颜色的赋值都是用元组赋值的，scatter的点颜色可以用rgb赋值，但是必须是0-1的值</p>
+<figure data-type="image" tabindex="58"><img src="https://s2.loli.net/2022/08/28/t3exY94lKXEzAZw.png" alt="" loading="lazy"></figure>
+<p>实参可以是c也可以是color，效果一样，用元组作为参数就是rgb颜色</p>
+<p>76.颜色映射，像有限元后处理一样根据值的大小显示颜色</p>
+<figure data-type="image" tabindex="59"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/D260ADEA9ADB425EAA2D3A33ECA49C55.png" alt="" loading="lazy"></figure>
+<p>赋值给c的列表相当于确定x从左到右的坐标的颜色深度值，值越大则颜色越深，如果按照赋的是单调递增的列表，那么可以用来表示点出现的先后顺序</p>
+<p>77.保存图表</p>
+<p>plot.savefig('name.jpg',bbox_inches='tight') 指定保存什么名字和类型，第二个参数代表是否裁剪空白区域，省去则默认不裁剪，但实际效果是指定之后有xy标签，而省去却反而没有</p>
+<ol start="78">
+<li></li>
+</ol>
+<figure data-type="image" tabindex="60"><img src="https://s2.loli.net/2022/08/28/eSYa1FXzcHwQDvE.png" alt="" loading="lazy"></figure>
+<p>在同一个画幅中重复绘制命令，按照命令顺序将会在画幅上更新内容，可以理解成建立了新的图层更新在画幅当中，所以存在覆盖的现象。</p>
+<p>79.隐藏坐标轴</p>
+<p>plt.axes().get_xaxis().set_visible(False)</p>
+<p>plt.axes().get_yaxis().set_visible(False)</p>
+<p>80.计算数字列表中某个数字出现了多少次</p>
+<p>onelist.count(value) 返回出现的次数</p>
+<p>81.pip是用来安装python包的</p>
+<p>pep8是规范python编写的</p>
+<p>82.csv文件读取</p>
+<p>import csv</p>
+<p>reader=csv.reader(filename) 返回一个文件的阅读器</p>
+<p>header_row=next(reader)</p>
+<p>每调用一次next就会换行，返回该行并以文件中的逗号作为分隔转换成列表，文件将会定位该输出行，以后使用时就会从该行开始算</p>
+<p>enumerate()函数能够将一个列表返回其索引和值 索引在前，值在后 （类似键值对）</p>
+<p>for row in reader:</p>
+<p>row是reader每行数据的一个列表</p>
+<p>依次遍历reader 但要注意该遍历也是从文件当前的位置开始的</p>
+<p>fig.autofmt_xdate() 将x轴坐标斜着显示 fig是一个figure对象</p>
+<p>83.datetime 模块</p>
+<figure data-type="image" tabindex="61"><img src="https://s2.loli.net/2022/08/28/VxL6qgGAYoaCw2H.png" alt="" loading="lazy"></figure>
+<p>plot() 中实参alpha代表透明度 0为完全透明，1为默认不透明</p>
+<p>fill_between(x,y1,y2) 将y1,y2之间填充 实参facecolor指定填充颜色</p>
+<p>84.try-except-else</p>
+<p>程序会运行try里的语句，若出现错误，则会跳到运行except里的语句，由于程序是顺序执行的，所以在try里出现错误的语句之前的语句都会正常执行。</p>
+<p>三者的逻辑是：</p>
+<p>try-if error-except</p>
+<p>try-no error-else</p>
+<p>85.plot.ylim([10,50])</p>
+<p>设置y轴坐标范围</p>
+<p>86.小数字符串不能直接用int转换成整型， 需要先用float转为浮点型后再用int转为整型</p>
+<p>int(float('12.05121'))</p>
+<p>int向下取整</p>
+<ol start="87">
+<li></li>
+</ol>
+<figure data-type="image" tabindex="62"><img src="https://s2.loli.net/2022/08/28/QkwUnRxPTFJYabe.png" alt="" loading="lazy"></figure>
+<p>若if语句没有符合判断条件的，返回的是None</p>
+<ol start="88">
+<li>import不仅可以导入函数，类，模块，还能导入具体的某个变量</li>
+</ol>
+<p>因为import是命令是复制所有代码到当前文件，访问模块的某个量时可以直接输入量的名字，也可以通过module.variable句号表达式操作，后者可读性更高，前者只会增加程序的奇怪程度。</p>
+<p>89.python中add()方法用于给集合添加元素，如果添加的元素在集合中已存在，则不执行任何操作。使用add()将一系列值添加到图表中，即向它传递要给添加的值得指定标签，还有一个列表，其中包含将出现在图表中的值。</p>
+<p>89.pygal.Bar(show_legend=False)</p>
+<figure data-type="image" tabindex="63"><img src="https://s2.loli.net/2022/08/28/kdspxoWn35NG7Am.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="64"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/554E99EDB330434DA05770F44E0516FB.png" alt="" loading="lazy"></figure>
+<p>pygal.Bar(show_legend=True)</p>
+<figure data-type="image" tabindex="65"><img src="https://s2.loli.net/2022/08/28/l3ASYDfy7jLPVeM.png" alt="" loading="lazy"></figure>
+<p>默认为True</p>
+<p>90.pygal.Config()</p>
+<p>生成Config的实例，用实例来控制图表的配置</p>
+<p>my_config=pygal.Config()</p>
+<p>my_config.truncate_labels=15</p>
+<p>标签只显示15个字符，鼠标移到该标签能够显示全称</p>
+<p>my_config.show_y_guides=False</p>
+<p>表示隐藏图中的水平虚线</p>
+<ol start="91">
+<li></li>
+</ol>
+<figure data-type="image" tabindex="66"><img src="https://s2.loli.net/2022/08/28/LJzZejYHyaNP2xs.png" alt="" loading="lazy"></figure>
+<p>api响应的字典可以给柱状图备注工具提示，也可以点击柱子进入网页，但是相应的字典键名是特定的。</p>
+<p>92.json格式可是简单的理解为列表或字典</p>
+<p>request对象的json()就是将json文件转换成列表或字典</p>
+<p>93.字典对象方法get()</p>
+<p>dict.get()第一个实参用以指定需要获得的键对应的值，第二个实参指定若不存在该键返回什么值</p>
+<p>example:</p>
+<p>dict.get('title',0)指定返回title对应的值，若没有该键则返回0</p>
+<p>94.submission_dicts是一个字典列表</p>
+<p>sorted(submission_dicts,key=itemgetter('comments'),reverse=True)</p>
+<p>itemgetter('comments')代表把列表中的每个字典的键comments对应的值提取出来，作为排序的依据，sorted默认从小到大排序，所以reverse=True代表从大到小反向排序。</p>
+<p>sorted函数对列表、字典等进行排序但不会改变原有顺序，若要改变需要赋值给另一变量。</p>
+<p>95.django</p>
+<p>需要先建立一个虚拟环境，虚拟环境是计算机中的一个位置，每次创建都需要安装自己的包，与别的python包独立。</p>
+<p>创建虚拟环境后，需要激活环境，就安装django，然后django-admin.py startproject project_name</p>
+<p>then</p>
+<p>python manage.py migrate修改数据库</p>
+<p>如果python manage.py migrate出现问题看下面的链接。</p>
+<p>https://www.cnblogs.com/lewic/p/10416772.html</p>
+<p>要进入到含manage.py的文件夹才能使用manage文件 不然都是说找不到该文件</p>
+<p>96.类中可以不在__init__函数中引入属性，这样引入需要用self.variable来声明</p>
+<p>可以直接在类中声明</p>
+<figure data-type="image" tabindex="67"><img src="https://s2.loli.net/2022/08/28/IdnVZPM87yxORYT.png" alt="" loading="lazy"></figure>
+<p>这样就不用句号表达式</p>
+<ol start="97">
+<li></li>
+</ol>
+<p>在django2.0后，定义外键和一对一关系的时候需要加on_delete选项，此参数为了避免两个表里的数据不一致问题，不然会报错：</p>
+<p>TypeError: <strong>init</strong>() missing 1 required positional argument: 'on_delete'</p>
+<p>举例说明：</p>
+<p>user=models.OneToOneField(User)</p>
+<p>owner=models.ForeignKey(UserProfile)</p>
+<p>需要改成：</p>
+<p>user=models.OneToOneField(User,on_delete=models.CASCADE) --在老版本这个参数（models.CASCADE）是默认值</p>
+<p>owner=models.ForeignKey(UserProfile,on_delete=models.CASCADE) --在老版本这个参数（models.CASCADE）是默认值</p>
+<p>参数说明：</p>
+<p>on_delete有CASCADE、PROTECT、SET_NULL、SET_DEFAULT、SET()五个可选择的值</p>
+<p>CASCADE：此值设置，是级联删除。</p>
+<p>PROTECT：此值设置，是会报完整性错误。</p>
+<p>SET_NULL：此值设置，会把外键设置为null，前提是允许为null。</p>
+<p>SET_DEFAULT：此值设置，会把设置为外键的默认值。</p>
+<p>SET()：此值设置，会调用外面的值，可以是一个函数。</p>
+<p>一般情况下使用CASCADE就可以了。</p>
+<ol start="98">
+<li>django的本质可能就是生成一个表，然后外键可以理解成表头，所以如果由于更新数据库出错导致表格中有数据丢失或不存在，则会导致出错，可以采取删除sql数据库文件再重新makemigrations----migrate一次就好</li>
+</ol>
+<p>99.若django运行时出现什么no such column/table则执行migrate命令 这是因为更新了文件或说句而没修改数据库导致的。</p>
+<p>100.django到底怎么分辨出我点击了哪个网页和怎么响应 的？？？？(看PDF的注释)</p>
+<p>101.django三部分：url模式--views视图---html模块</p>
+<p>访问特定的url模式则会调用views.py函数进而调用html模块</p>
+<p>102.出现incomplete format 错误时看看是不是程序中的符号写错了。。。</p>
+<p>103.是不是class Meta的model属性赋予类的时候不需要括号？</p>
+<figure data-type="image" tabindex="68"><img src="https://s2.loli.net/2022/08/28/E4VtOYDmglpbq3H.png" alt="" loading="lazy"></figure>
+<p>Entry是个类</p>
+<p>104.注意以下类型区分</p>
+<p>a=(1) a是int类型  a=('q') a是字符串类型 a=(1,) a是tuple元组</p>
+<p>a=[1] a是列表类型</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/ri-chang-kai-fa-yun-wei-zhi-shi-ji-lu-4/">
+                <h3 class="post-title">
+                  日常开发运维知识记录-4
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

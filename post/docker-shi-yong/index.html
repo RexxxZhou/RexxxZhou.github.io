@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Docker使用 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Docker使用</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h1 id="getting-started">Getting Started</h1>
+<h2 id="推送自己的image">推送自己的image</h2>
+<p>和github类似，首先有一个hub来作为仓库，存储我们的image，以docker官方的hub为例，在https://hub.docker.com/上注册账号，并创建好repo。</p>
+<p>登录账号</p>
+<pre><code class="language-javascript">docker login -u YOUR_USER_NAME
+</code></pre>
+<p>在本地构建好镜像后，执行：</p>
+<pre><code class="language-javascript">docker push YOUR_USER_NAME/repo_name
+</code></pre>
+<p>初次执行时，会执行失败，这是因为当前没有叫做YOUR_USER_NAME/repo_name的镜像(就可以docker image ls查看所有镜像)，需要执行</p>
+<pre><code class="language-javascript">docker tag getting-started YOUR_USER_NAME/repo_name
+</code></pre>
+<p>docker tag 用于给镜像打标签，语法如下：</p>
+<p>https://www.kancloud.cn/noahs/linux/1557706</p>
+<pre><code class="language-javascript">docker tag [OPTIONS] IMAGE[:TAG] [REGISTRYHOST/][USERNAME/]NAME[:TAG]
+</code></pre>
+<p>类似于本地版本控制，可以为镜像打不同的tag，这样可以执行不同版本的镜像。同时可以关联到不同的仓库下，打完tag后，可以直接使用这个新tag来执行push和pull。</p>
+<p>如果执行tag的时候没有给出tagname（冒号后的tag），那么docker会默认指定为latest</p>
+<h2 id="容器volume">容器volume</h2>
+<p>volume是指容器用来挂载的空间，如果不挂载到宿主机的某个目录下，容器挂掉后，数据是没有持久化存储的，而且容器之间数据是不共享的，如果两个容器挂载了同一个目录，那么容器间就可以共享文件，和执行共同的文件操作。</p>
+<h3 id="命名volume">命名volume</h3>
+<p>命名volume是指用名字指代的volume，类似于命名管道一样，不需要知道他具体挂载到了哪里，只要使用同一个名字的多个容器，都可以进行共享。</p>
+<p>首先创建命名volume：</p>
+<pre><code class="language-javascript">docker volume create todo-db
+</code></pre>
+<p>在启动容器时，需要指定volume挂载到宿主机哪个目录</p>
+<pre><code class="language-javascript">docker run -dp 2000:3000 -v todo-db:/etc/todos getting-started
+</code></pre>
+<p>-v参数后跟的是 本地挂载路径:容器中的路径</p>
+<p>由于是命名volume所以不知道确切的本地路径，而在容器中的/etc/todos进行文件操作，能够在宿主机和挂载了todo-db的其他容器中可见</p>
+<p>查看命名volume的信息</p>
+<pre><code class="language-javascript">docker volume inspect todo-db
+# output
+[
+    {
+        &quot;CreatedAt&quot;: &quot;2021-11-29T12:55:36Z&quot;,
+        &quot;Driver&quot;: &quot;local&quot;,
+        &quot;Labels&quot;: {},
+        &quot;Mountpoint&quot;: &quot;/var/lib/docker/volumes/todo-db/_data&quot;,
+        &quot;Name&quot;: &quot;todo-db&quot;,
+        &quot;Options&quot;: {},
+        &quot;Scope&quot;: &quot;local&quot;
+    }
+]
+</code></pre>
+<p>因为是命名volume，我们没有显示的指定挂载的路径，所以docker会帮我们决定一个路径，这个路径通常只能root用户访问。</p>
+<p>我们可以不用docker volume create，直接在docker run的时候使用一个新的命名volume名字，docker会自动识别，会自动帮我们创建一个新的命名volume。</p>
+<h3 id="绑定挂载">绑定挂载</h3>
+<p>这个其实就是我们指定本机的一个路径，然后和容器中的一个路径映射，也就是上面的命名volume改成一个本机路径而已</p>
+<pre><code class="language-javascript">docker run -d -v &quot;$(pwd)/helloworld:/container/dir&quot; image:tag
+</code></pre>
+<p>命名volume和绑定挂载的区别：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/z9afOFgXcyrRZVt.png" alt="" loading="lazy"></figure>
+<p>需要注意的是，如果挂载的本机路径没有容器需要的东西，例如getting_started这个镜像需要/app/package.json才能正常启动，如果此时-v /my_dir:/app，如果my_dir下没有package.json，那么会启动失败，因为容器找不到该文件：</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/1p6KnRWyfZdLi5C.png" alt="" loading="lazy"></figure>
+<h2 id="docker-run命令行参数">docker run命令行参数</h2>
+<p>-it：表示interactive 以交互的方式运行容器</p>
+<p>-d：detach，表示后台运行容器</p>
+<p>-p：端口映射，宿主机端口：容器端口，例如2000:3000，访问宿主机的2000端口，就会访问到容器，容器里的服务绑定的端口为3000</p>
+<p>-w：指定容器的工作路径，-w /app，同时也是命令（通常是sh）的工作路径</p>
+<p>-e：指定容器执行所需的环境变量，-e MYSQL_ROOT_PASSWORD=secret</p>
+<h2 id="查看容器日志">查看容器日志</h2>
+<p>docker logs container_id</p>
+<p>docker logs -f container_id 能够实时查看日志，类似tail -f</p>
+<p>或者</p>
+<p>1、获取日志文件路径</p>
+<pre><code class="language-javascript">docker inspect --format '{{.LogPath}}' container_id
+</code></pre>
+<p>2、打开日志文件</p>
+<h2 id="进入容器内部">进入容器内部</h2>
+<p>首先要容器已经启动了</p>
+<p>然后</p>
+<pre><code class="language-javascript">docker exec -it container_id /bin/bash
+</code></pre>
+<p>不一定所有的容器都可以执行/bin/bash这，要和具体的镜像来看。</p>
+<p>例如，mysql的镜像不包含这个sh可执行程序，不能这么交互，在mysql镜像中/bin/bash这个命令要相应替换成mysql -hxx -uxxx- pxxx</p>
+<h2 id="获取镜像">获取镜像</h2>
+<pre><code class="language-javascript">docker pull [选项] [Docker Registry 地址[:端口号]/]仓库名[:标签]
+</code></pre>
+<p>Docker Registry 地址是指docker镜像所存放的仓库地址，默认是docker.io</p>
+<p>不给出则使用默认值，也可以自己指定要拉取的地址</p>
+<p>仓库名一般对应就是你的项目（也就是你的镜像名），然后标签表示镜像的版本。</p>
+<h2 id="查看镜像信息">查看镜像信息</h2>
+<pre><code class="language-javascript">docker image ls -a
+docker inspect image_name:tag
+</code></pre>
+<p>返回的是一大串json信息，描述了这个镜像</p>
+<h2 id="容器通信">容器通信</h2>
+<p>每个容器都是独立而且隔离的，是不知道别的容器的，想要容器之间通信，那么就需要使用network，只有在同一个网络的容器才能通信。</p>
+<p>容器网络有三种类型，bridge、host、null，默认创建的都是bridege类型</p>
+<pre><code class="language-javascript">docker network create todo-app
+</code></pre>
+<p>上面的代码指定了一个网络，名为todo-app，后续启动容器时可以使用--network指定通信的网络：</p>
+<pre><code class="language-javascript">docker run -d \
+     --network todo-app --network-alias mysql \
+     -v todo-mysql-data:/var/lib/mysql \
+     -e MYSQL_ROOT_PASSWORD=secret \
+     -e MYSQL_DATABASE=todos \
+     mysql:5.7
+</code></pre>
+<p>--network-alias指定了这个容器在网络中的别名，类似于hostname，docker可以自动解析这个别名得到容器的地址和端口（相当于docker做了一个dns解析）。</p>
+<p>在上面的启动代码中可以看到，容器不一定要向外暴露端口，也即主机不一定要访问通过ip+端口来访问容器的服务，可以容器在自己内部玩，而内部的端口也要注意不能冲突，具体内部使用的是什么端口，这是由镜像决定的，例如mysql内部用的是3306。</p>
+<h2 id="docker-compose">docker-compose</h2>
+<p>docker-compose是一个容器编排的工具，通过编写docker-compose.yml文件，按照语法和关键词设置好每一个镜像的启动方式，其实每一个容器的配置对应的都是使用docker run的命令参数。</p>
+<p>这里给出一个简单的例子：</p>
+<pre><code class="language-javascript">version: &quot;3.7&quot;
+services:
+  app:
+    image: node:12-alpine
+    command: sh -c &quot;yarn install &amp;&amp; yarn run dev&quot;
+    ports:
+      - 2000:3000
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DB: todos
+  
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: todos
+volumes:
+  todo-mysql-data:
+</code></pre>
+<p>其中，version指的是当前使用的docker-compose的版本，和cmake如出一辙，起始先写好版本。services中的每一项（第二级）对应的是每一个容器的名字，这个名字就是network-alias，docker会自动为services中每一个容器创建一个network，无需我们操作指定。</p>
+<p>在使用命名volume时，docker-compose不像docker run那样会自动帮我们创建volume，我们需要指定，所以要在第一级volumes对象中，指定volume的名字，如果没有特殊的配置，可以在冒号后省略，可配置的参数可参考：https://docs.docker.com/compose/compose-file/compose-file-v3/#volume-configuration-reference</p>
+<p>环境变量在environment项中给出。</p>
+<p>在使用docker-compose.yml文件启动编排的服务时，需要确保相关的相似配置的容器没有启动，否则会冲突，例如端口重复绑定。</p>
+<p>在docker-compose.yml文件所有的目录下，执行docker-compose up -d，以运行容器，其中-d也是detach后台启动的意思。</p>
+<p>如果想要查看容器的日志，可以使用：</p>
+<p>docker-compose logs -f</p>
+<p>docker-compose logs -f service_name</p>
+<p>如果服务之间有启动的先后关系，例如先要启动了mysql，然后再启动具体服务，那么需要自己来保证，因为docker没有内置的方法来确定哪个容器已经完全起好了。</p>
+<p>启动之后，docker-compose会默认以yml文件所在的目录名作为项目名，所以容器实例的名字格式为：</p>
+<p>projectname_containername_replica</p>
+<p>项目名_容器名_实例号</p>
+<p>想要全部一次性下线服务的话，使用docker-compose down</p>
+<p>要注意，这个命令不会去删除volume，如果要删除的话，我们需要使用标志位：</p>
+<p>docker-compose down --volumes</p>
+<h2 id="一些docker实践的方法">一些docker实践的方法</h2>
+<p>安全性检查</p>
+<p>使用docker scan image_name，可以检查镜像的安全性，不过检查前要登陆docker hub，使用Snyk来检查，需要连接。</p>
+<p>查看镜像的层级</p>
+<p>docker image history image_name</p>
+<p>可以查看镜像每一层的大小：</p>
+<figure data-type="image" tabindex="3"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCEf4765ac88a71109c9ac6e825fc84c160.png" alt="" loading="lazy"></figure>
+<p>输出结果中，最底层的在最下面，最顶层的在在上面。</p>
+<p>镜像层缓存</p>
+<p>docker镜像是一层层的结构，如果底层的已经有了，就会缓存起来，不需要再次拉取。</p>
+<p>假设层级为A（最高）、B、C、D（最底）。</p>
+<p>某一层级发生变化后，其上的所有层都需要重新构建，例如B变更，则A也要重新构建。可以理解成下面的是上面层的地基，地基变了，上层自然跟着变。</p>
+<p>我们写的Dockerfile，其中每一行命令都对应了一层layer，所以我们编写的时候就需要考虑顺序问题；在Dockerfile中，从上往下阅读，越先执行的就是越底层的layer。</p>
+<pre><code class="language-javascript"># 1
+FROM node:12-alpine
+WORKDIR /app
+COPY . .
+RUN yarn install --production
+CMD [&quot;node&quot;, &quot;src/index.js&quot;]
+
+# 2
+ FROM node:12-alpine
+ WORKDIR /app
+ COPY package.json yarn.lock ./
+ RUN yarn install --production
+ COPY . .
+ CMD [&quot;node&quot;, &quot;src/index.js&quot;]
+</code></pre>
+<p>上面第二个的写法会比第一个好，如果我们修改了任何一个文件，此时copy . .对应的layer变更了，其上的所有layer都要变更，所以yarn要重新执行安装。</p>
+<p>而第二种写法中，只有修改了package.json、yarn.lock文件才会执行yarn的reinstall。</p>
+<p>使用.dockerignore文件，在文件中指定要忽略的目录或者文件名，例如：</p>
+<pre><code class="language-javascript"># .dockerignore
+node_modules
+</code></pre>
+<p>要保证文件名/目录要和.dockerignore文件在同一级下。</p>
+<p>多阶段构建</p>
+<p>https://docs.docker.com/develop/develop-images/multistage-build/</p>
+<p>我们可能会存在使用某个镜像，来编译依赖项和最终的可执行文件，如果编译和最后的服务启动相关的环境都在同一个镜像中，就会很大，因为我们需要提供编译能力的镜像层；要么就是我们手动先用镜像A编译了代码，然后将可执行文件复制到另外一镜像，再进行启动，中间还需要写一个脚本：</p>
+<p>https://yeasy.gitbook.io/docker_practice/image/multistage-builds</p>
+<p>使用多阶段构建可以在一个Dockerfile中实现这个能力：</p>
+<pre><code class="language-javascript">FROM maven AS build
+WORKDIR /app
+COPY . .
+RUN mvn package
+
+FROM tomcat
+COPY --from=build /app/target/file.war /usr/local/tomcat/webapps 
+</code></pre>
+<p>每个From可以指定使用不同的基础镜像，可以看到第二个Copy --from=build，表示从前面构建好的结果，复制到另外一个镜像，其中build就是第一个镜像的别名，如果不使用别名as，那么可以用索引，从0开始--from=0。</p>
+<p>每一个from对应的是一个stage，最终镜像是最后的stage指定的内容，例如上面的在build构建后，镜像是tomcat。我们也可以在构建时，使用--target来指定。</p>
+<pre><code class="language-javascript">docker build --target builder -t alexellis2/href-counter:latest .
+</code></pre>
+<p>builder是From xxx as YYY中的YYY，我们可以指定构建到某个stage。</p>
+<h2 id="查看容器启动命令">查看容器启动命令</h2>
+<pre><code class="language-javascript">docker inspect container-id
+</code></pre>
+<h2 id=""></h2>
+<p>docker run -itd --name test1 --network bridge --ip 172.17.0.10 centos:latest</p>
+<p>/bin/bash</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/git-chang-yong-ming-ling-jie-shao-part2/">
+                <h3 class="post-title">
+                  git常用命令介绍-part2
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

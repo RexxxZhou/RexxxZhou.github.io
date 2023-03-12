@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>日常开发运维知识记录-4 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>日常开发运维知识记录-4</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+                  日常开发知识沉淀
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="innodb_strict_mode">innodb_strict_mode</h2>
+<p>遇到这个参数是因为在建表的时候发生了row size too large的问题，字段类型决定的每行数据长度超过了数据库的限制，而这个限制的检查收到innodb_strict_mode的影响，如果将该参数设置为off，则会关闭长度的检查，能够正确建表，并且插入数据也无问题。</p>
+<p>（行长度过大的原因是因为不同类型的row format和引擎，会导致不同的存储方式，也就导致了行长度有限制，具体可以参考：https://dev.mysql.com/doc/refman/8.0/en/innodb-row-format.html、https://cloud.tencent.com/developer/article/1690711）</p>
+<p>这个参数可以是全局的，也可以是会话级别的，因为关闭这个参数后，会导致一些错误检查都被当成warning返回了，也即不会再返回错误，有一定的使用风险，特别是在DDL（create、alter等操作）时，这样会带来一定的风险，所以建议会话等级关闭：</p>
+<p>set session innodb_strict_mode ='off';</p>
+<h2 id="grpc">grpc</h2>
+<p>https://colobu.com/2017/04/06/dive-into-gRPC-streaming/</p>
+<p>grpc基于 HTTP/2 协议传输，使用Protocol Buffers 作为接口描述语言</p>
+<p>https://doc.oschina.net/grpc?t=58011（grpc协议介绍）</p>
+<p>HTTP2可以支持流式传输，一个连接上可以有多个stream，根据不同的stream_id来区分请求和响应，在使用protobuf，定义服务接口的时候，可以指定请求/响应是否使用stream：</p>
+<figure data-type="image" tabindex="1"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCEb4350321aafe3c00784b7cde09c453f2.png" alt="" loading="lazy"></figure>
+<p>因此有请求流、响应流、双向流的区分。</p>
+<p>grpc是可以在http1.1中使用的，本身http/2就是兼容了http/1.1的一些特性</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/Azvtw5OlxQVBb1e.png" alt="" loading="lazy"></figure>
+<h2 id="apijson">APIJSON</h2>
+<p>https://github.com/Tencent/APIJSON/blob/master/Document.md#2.1</p>
+<p>http://apijson.cn/doc/zh/</p>
+<p>http://apijson.cn/</p>
+<p>apijson是一个ORM库，CRUD的接口不需要通过后段定义，传统方式需要后端定义接口，如何取请求参数，去查询数据库，所以CRUD一般都会对应多个后台接口；</p>
+<p>前端处理这些查询数据库的请求结果，需要依赖后台的接口文档，任何后台的变更都可能导致前端突然失效。</p>
+<p>APIJSON只需要在后台服务引入这个库，这个库会连接到配置的数据库上，然后执行数据库CRUD。只需要后台引入就行，后台不需要开发对外的接口，全由这个库来实现，不过需要url的监听，例如go语言的gin路由控制（类似于tornado，注册一个handler，前端的url可以匹配到这个handler）</p>
+<p>前端根据APIJSON的请求协议，请求上面配好的url接口，就可以实现前端自主的数据库orm。</p>
+<p>所谓APIJSON，其实API对应的是数据库的CRUD接口，JSON表示请求都是通过规定的json请求协议去请求的。</p>
+<p>相当于是给了前端直接查数据库的能力，不依赖后端任何接口</p>
+<p>整体流程是：</p>
+<p>前端--&gt;APIJSON请求包--&gt;后台APIJSON库--&gt;数据库（再反向返回给前端）</p>
+<p>前端按照APIJSON定义的请求协议，来CRUD就行。</p>
+<h2 id="swagger">Swagger</h2>
+<p>https://swagger.io/</p>
+<p>https://blog.csdn.net/zhanggonglalala/article/details/98070986</p>
+<p>有swagger ui、swagger editor、swagger codegen三大部分</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/A7eBY4HZSNvnpdL.png" alt="" loading="lazy"></figure>
+<p>但是目前来看，就是在代码中引入swagger的库，然后在编写的接口里，按照swagger的注解方式，进行注释，然后使用swagger的工具，扫描代码，生成对应的接口文档（是一个json文档）</p>
+<p>然后swagger ui可以读取这个文档，在前端页面展示你的接口文档信息</p>
+<p>可以参考go语言下的案例</p>
+<p>https://www.cnblogs.com/liwenzhou/p/13629767.html</p>
+<p>swagger editor目前看来就是在线编辑上述的文档的。swagger ui同时还能进行接口请求测试，上面生成的接口文档比较通用，可以被一些别的系统导入，生成对应的文档。</p>
+<p>这里需要看下OpenAPI和swagger之间的关系：</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/EWFurU246NG8LCx.png" alt="" loading="lazy"></figure>
+<p>OpenAPI是一个规范，而swagger是实现该规范的一些工具，现在swagger也已经支持之心的OAS3.0（openAPI 3.0）。</p>
+<p>可以上https://editor.swagger.io/的live demo看，左侧的是OpenAPI的规范约定的描述接口的文件，可以是json，也可以是yaml。</p>
+<p>https://liqiang.io/post/openapi-30-vs-swagger-20</p>
+<figure data-type="image" tabindex="5"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE2defe85b9abd657abbe29db70bf1db75.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/xdFCmhn4qBX5TsV.png" alt="" loading="lazy"></figure>
+<h2 id="删除环境变量">删除环境变量</h2>
+<p>echo $ENV_NAME</p>
+<p>unset ENV_NAME （删除）</p>
+<h2 id="protobuf-go_package">protobuf go_package</h2>
+<p>在go下使用protobuf时，经常会在.proto文件中看到下面的代码：</p>
+<pre><code>syntax = &quot;proto3&quot;;
+package trpc.test.helloworld;
+option go_package=&quot;test_/new_helloworld&quot;;
+</code></pre>
+<p>有两个package相关的代码，第一行package的作用类似于作用域，为了避免import别的proto文件时，与自己proto文件中定义的对象重名了，而第二个option go_package则是用于确定这个proto文件编译生成的go文件是在什么包下，别的文件如何去引用编译出来的go文件，详细的解释可以看下面的图（https://stackoverflow.com/questions/66321215/what-is-the-go-package-option-used-for-in-a-protocol-buffer-file?rq=1）</p>
+<p>此时，多个相互之间import的proto文件，在编译生成的每个不同包下的go文件，就知道该如何import别的go文件（import的路径就是go_package指定的路径）</p>
+<figure data-type="image" tabindex="7"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE79e0f53f9b5e5bc30a1468a7e2633a9e.png" alt="" loading="lazy"></figure>
+<p>而且一旦使用go_package，编译出来的go文件的包名也就确定了，就是这个参数的路径中的最后一个字符串，例如上面的将会编译出名为new_helloworld的包。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/59H8ldbpkzmqJXI.png" alt="" loading="lazy"></figure>
+<h2 id="json-schema-validator">json schema validator</h2>
+<p>http://json-schema.org/</p>
+<h2 id="tcpdump抓包">tcpdump抓包</h2>
+<p>tcpdump dst port 9620 -A -i eth1 | egrep -i &quot;POST /|GET /|Host:&quot;</p>
+<p>抓取目标端口9620的包 并且过滤POST GET Host</p>
+<p>tcpdump -i eth1 host domain.com -A -vv -w output.pcap</p>
+<p>-vv -v可以展示协议名 -A以ascii码展示</p>
+<p>-w输出到文件（可以是文本格式）</p>
+<p>tcpdump host 127.0.0.1 and port 9527 -i eth1</p>
+<p>抓取源目ip均为127.0.0.1，端口为9527的包</p>
+<p>tcpdump dst 127.0.0.1 and port 9527 -i eth1</p>
+<p>tcpdump src 127.0.0.1 and port 9527 -i eth1</p>
+<p>如果是从一台机器的请求到自身，内核会自动优化走loopback，所以此时只能抓环回的端口，ip相应改为127.0.0.1</p>
+<h2 id="git-commit规范约束">git commit规范约束</h2>
+<p>https://www.conventionalcommits.org/zh-hans/v1.0.0/</p>
+<p>https://github.com/zuoxiaobai/commitizen-practice-demo</p>
+<p>上面这个链接是实践（git commit规范检查、changelog自动生成、自动打tag）</p>
+<h2 id="替换文件中的字符串">替换文件中的字符串</h2>
+<p>find . -type f -print0 | xargs -0 sed -i 's/foo/bar/g'</p>
+<p>找出所有文件，进行修改，print0是为了将文件名中有空格的正常输出</p>
+<p>sed -i 's/a/b/g' file_name 将文件中的a全部替换成b，并直接修改文件</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/6atI92NGVLzBkcs.png" alt="" loading="lazy"></figure>
+<h2 id="curl-带上cookie">curl 带上cookie</h2>
+<p>curl &quot;http://xxxx.com&quot; -H &quot;MyHeader: 123456&quot; --cookie &quot;user=rex;id=1&quot;</p>
+<h2 id="grep-排除目录和文件">grep 排除目录和文件</h2>
+<p>当使用-r或-R选项执行递归搜索时，您可能希望从搜索结果中排除特定目录。</p>
+<p>-r或-R选项之间的主要区别在于，当使用大写R调用grep时，它将跟随所有符号链接。</p>
+<p>要从搜索中排除目录，请使用--exclude-dir选项。排除目录的路径是相对于搜索目录的。</p>
+<p>grep -Rn --exclude-dir=dont_want_dir &quot;content&quot;</p>
+<p>grep -Rn -exclude=dont_want_file &quot;content&quot;</p>
+<p>--exclude选项的参数支持正则</p>
+<h2 id="c-原生字符串">c++ 原生字符串</h2>
+<p>std::string str = R&quot;(xxxx1\rsx'&quot;)&quot;;</p>
+<p>R开头双引号内需要有小括号，括号内对应的是原生字符串</p>
+<h2 id="查看系统oom日志">查看系统OOM日志</h2>
+<p>grep &quot;Out of memory&quot; /var/log/messages</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/RvS8HsBzu6ixmjO.png" alt="" loading="lazy"></figure>
+<p>egrep -i -r 'killed process' /var/log</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/4De6kYsqFTVy7W5.png" alt="" loading="lazy"></figure>
+<h2 id="查看core-dump文件路径">查看core dump文件路径</h2>
+<p>cat /proc/sys/kernel/core_pattern</p>
+<p>vim /etc/security/limits.conf 查看设置</p>
+<p>全局生效coredump</p>
+<p>vim /etc/profile</p>
+<p>ulimit -c unlimited</p>
+<p>source /etc/profile</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/VZtfRYosqvS47lM.png" alt="" loading="lazy"></figure>
+<h2 id="查看机器配置">查看机器配置</h2>
+<p>grep processor /proc/cpuinfo</p>
+<h2 id="scp-linux文件传输命令">scp linux文件传输命令</h2>
+<p>https://www.runoob.com/linux/linux-comm-scp.html</p>
+<p>http content-length</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/XywivqjGaA2mhDp.png" alt="" loading="lazy"></figure>
+<p>Broken pipe报错</p>
+<p>指对端关闭连接后，还继续往该fd写数据发生的报错，收到TCP RST，然后系统调用报错；</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/eCZ5pDUIfN6toLH.png" alt="" loading="lazy"></figure>
+<h2 id="查看cpu-内存等信息">查看cpu 内存等信息</h2>
+<p>free -gth</p>
+<p>总核数 = 物理CPU个数 X 每颗物理CPU的核数</p>
+<p>总逻辑CPU数 = 物理CPU个数 X 每颗物理CPU的核数 X 超线程数</p>
+<p>查看物理CPU个数</p>
+<p>cat /proc/cpuinfo| grep &quot;physical id&quot;| sort| uniq| wc -l</p>
+<p>查看每个物理CPU中core的个数(即核数)</p>
+<p>cat /proc/cpuinfo| grep &quot;cpu cores&quot;| uniq</p>
+<p>查看逻辑CPU的个数</p>
+<p>cat /proc/cpuinfo| grep &quot;processor&quot;| wc -l</p>
+<p>查看CPU信息（型号）</p>
+<p>cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c</p>
+<p></p>
+<p>查看内存信息# cat /proc/meminfo</p>
+<p>如何查看Linux 内核</p>
+<p>uname -a</p>
+<p>cat /proc/version</p>
+<p></p>
+<p>查看机器型号（机器硬件型号）</p>
+<p>dmidecode | grep &quot;Product Name&quot;</p>
+<p>dmidecode</p>
+<p>如何查看linux 系统版本</p>
+<p>cat /etc/redhat-release</p>
+<p>lsb_release -a</p>
+<p>cat  /etc/issue</p>
+<p></p>
+<p>如何查看linux系统和CPU型号，类型和大小</p>
+<p>cat /proc/cpuinfo</p>
+<p>如何查看linux 系统内存大小的信息，可以查看总内存，剩余内存，可使用内存等信息</p>
+<p>cat /proc/meminfo</p>
+<h2 id="dns解析服务器配置">dns解析服务器配置</h2>
+<p>/etc/resolv.conf文件保存了dns解析服务的信息</p>
+<p>https://man7.org/linux/man-pages/man5/resolv.conf.5.html</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/NmURefbFSy1CIY9.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="16"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE7cf4fd06e724844107dcc64fcbd36ff5.png" alt="" loading="lazy"></figure>
+<h2 id="查看linux的系统时间">查看linux的系统时间</h2>
+<p>date -R 查看时区</p>
+<p>date +&quot;%Y-%m-%d&quot;  年月日</p>
+<p>date +&quot;%H-%M-%S&quot;  时分秒</p>
+<p>date +%s 显示时间戳</p>
+<p>date -d @1655456218 时间戳转为日期</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/k23nMwgoA7XJFhm.png" alt="" loading="lazy"></figure>
+<h2 id="vim查看不可见字符">vim查看不可见字符</h2>
+<p>:set invlist</p>
+<h2 id="jvm调优参数">JVM调优参数</h2>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/8KqCRXwAdmxu2gH.png" alt="" loading="lazy"></figure>
+<h2 id="脚本执行出错就退出">脚本执行出错就退出</h2>
+<pre><code>#! /bin/bash
+set -e
+</code></pre>
+<p>-a 　标示已修改的变量，以供输出至环境变量。</p>
+<p>-b 　使被中止的后台程序立刻回报执行状态。</p>
+<p>-C 　转向所产生的文件无法覆盖已存在的文件。</p>
+<p>-d 　Shell预设会用杂凑表记忆使用过的指令，以加速指令的执行。使用-d参数可取消。</p>
+<p>-e 　若指令传回值不等于0，则立即退出shell。</p>
+<p>-f　 　取消使用通配符。</p>
+<p>-h 　自动记录函数的所在位置。</p>
+<p>-H Shell 　可利用&quot;!&quot;加&lt;指令编号&gt;的方式来执行history中记录的指令。</p>
+<p>-k 　指令所给的参数都会被视为此指令的环境变量。</p>
+<p>-l 　记录for循环的变量名称。</p>
+<p>-m 　使用监视模式。</p>
+<p>-n 　只读取指令，而不实际执行。</p>
+<p>-p 　启动优先顺序模式。</p>
+<p>-P 　启动-P参数后，执行指令时，会以实际的文件或目录来取代符号连接。</p>
+<p>-t 　执行完随后的指令，即退出shell。</p>
+<p>-u 　当执行时使用到未定义过的变量，则显示错误信息。</p>
+<p>-v 　显示shell所读取的输入值。</p>
+<p>-x 　执行指令后，会先显示该指令及所下的参数。</p>
+<p>+&lt;参数&gt; 　取消某个set曾启动的参数。</p>
+<h2 id="批量kill-服务">批量kill 服务</h2>
+<p>ps -ef | grep &quot;your_progame_name&quot; | grep -v grep | awk '{print $2}' | xargs kill -9</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/python-zhuang-shi-qi-jie-shao/">
+                <h3 class="post-title">
+                  Python装饰器介绍
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

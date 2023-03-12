@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十五章-进程间通信 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十五章-进程间通信</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十五章-进程间通信</p>
+<p>进程间通信IPC（Inter Process Communication）</p>
+<figure data-type="image" tabindex="1"><img src="https://note.youdao.com/yws/res/12619/A70D4D7C277E4A2482944F5412377285" alt="" loading="lazy"></figure>
+<p>管道</p>
+<p>管道也叫未命名管道。</p>
+<p>管道是最古老的IPC，所有的UNIX系统都支持，但有以下两点局限性：</p>
+<p>1.历史上，管道都是半双工的（数据每一时刻只能在一个方向上流动），即使现在有些系统提供全双工管道，但为了可移植性，不应使用全双工</p>
+<p>2.管道只能在具有公共祖先的进程间使用，也即只有fork之后的进程与父进程能够使用管道进行通信，而所谓公共祖先，因为文件描述符fork后是继承的，所以多次fork的后代进程都会有管道的文件描述符，所以这些进程都可以进行通信。</p>
+<p>每当在管道中键入命令行，给shell执行，shell会给每条单独的命令创建一个进程，然后前一个进程的标准输出与后一个进程的标准输入连接。</p>
+<p>管道是通过pipe函数创建的：</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int pipe(int fd[2]);成功0，失败-1</p>
+<p>给定一个int的两元素数组，pipe函数会将创建的管道的文件描述符填入数组中，fd[0]是读端,fd[1]是写端。也即对fd[0]执行read，对fd[1]执行write，实现IPC。且fd[1]的输出是fd[0]的输入。</p>
+<figure data-type="image" tabindex="2"><img src="https://note.youdao.com/yws/res/12621/3474B72BC29E4605AC418A4C06C1AA1B" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://note.youdao.com/yws/res/12623/392E5F7BBEE8474CA5FFCCCDDCB2A96A" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://note.youdao.com/yws/res/12625/3C07ED3AC4EF47BCA6A42913FBB2C77E" alt="" loading="lazy"></figure>
+<p>其实管道相当于在内核中创建了一个临时缓冲区，父子进程通过返回的文件描述符对该缓冲区进行读写，就能实现通信。</p>
+<p>虽然pipe后，按道理如果不关闭管道的端，双方都可以往对方写数据，但是由于内核中管道的缓冲区只有一个，那么就存在冲突，如果前一次写的数据没被取走，下次另一个进程再写就会覆盖这些数据，所以如果用管道进行双方向的通信，就要建两个管道。</p>
+<p>如果父进程只需要写端，则可以关闭fd[0]，子进程只要读端，可关闭fd[1]，反之亦然。</p>
+<p>当管道的一端被关闭后，下面的规则起作用：</p>
+<p>1.当读一个已经关闭写端的管道，在管道中的所有数据都被读取之后，read返回0，表示文件结束。</p>
+<p>2.当写一个已经关闭读端的管道，则产生SIGPIPE信号，若忽略或捕捉该信号，则write返回-1，errno为EPIPE。</p>
+<figure data-type="image" tabindex="5"><img src="https://note.youdao.com/yws/res/12628/6024EA217340478F82E026729E50DA69" alt="" loading="lazy"></figure>
+<p>如果写入pipe的字节少于PIPE_BUF，那么写入操作时原子的，即会全部写完或根本不写；而如果超过了PIPE_BUF，写入就不是原子的了，可能发生部分写入。这里由待写入字节大小和是否阻塞的组合，其写入的情况如下：</p>
+<figure data-type="image" tabindex="6"><img src="https://note.youdao.com/yws/res/12630/3A4C7C639F0542F2A3191E659E4D4ACB" alt="" loading="lazy"></figure>
+<p>1.阻塞+小于PIPE_BUF</p>
+<p>若缓冲区够空间，则直接写入，否则阻塞到有空间后再写入</p>
+<p>2.非阻塞+小于PIPE_BUF</p>
+<p>有空间就直接写入，否则不写入，直接返回，errno为EAGAIN</p>
+<p>3.阻塞+大于PIPE_BUF</p>
+<p>数据会被写到缓冲区中，但是会跟别的进程的write阻塞，你写了一部分，别的进程再写一部分，交错执行，直到写完数据</p>
+<p>4.非阻塞+大于PIPE_BUF</p>
+<p>若无空间，写入失败，直接返回，errno为EAGAIN；否则写了一部分数据后就返回，这种情况需要检查其返回值，判断到底写了多少。</p>
+<p>函数popen pclose</p>
+<p>标准I/O库提供了popen和pclose</p>
+<p>popen实现的操作：创建一个管道，fork一个子进程，关闭不需要的管道端，执行一个shell命令。</p>
+<p>pclose：关闭由popen打开的FILE流，等待cmdstring终止（也即等子进程终止），然后返回shell的终止状态。</p>
+<p>#include&lt;stdio.h&gt;</p>
+<p>FILE* popen(char* cmdstring,char* mode);//成功返回打开的流指针，出错返回NULL</p>
+<p>int pclose(FILE* fp);成功返回cmdstring的终止状态，出错-1</p>
+<p>mode有&quot;r&quot;和&quot;w&quot;两种参数，前者表示调用进程从fork的子进程的标准输出中读，后者代表调用进程输出到子进程的标准输入。（都是通过返回的FILE指针来执行的）</p>
+<figure data-type="image" tabindex="7"><img src="https://note.youdao.com/yws/res/12632/88313B8C7FF549B0ABA50D61E19C1F5E" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://note.youdao.com/yws/res/12634/92AE785304B04AD997BD7F4D7D6E7C1F" alt="" loading="lazy"></figure>
+<p>POSIX要求每次的popen都关闭以前调用popen打开的，现在还在子进程中打开的I/O流，所以每次调用popen都会关闭以前popen打开的FILE对象。</p>
+<p>注意pclose中调用了waitpid来等待popen fork的子进程终止，如果在这个调用前程序捕捉了SIGCHLD或程序之前的执行点调用了waitpid，那么在pclose中的waitpid前者errno设为EINTR，后者设为ECHILD，都返回-1。</p>
+<p>注意绝不应让设置用户ID或组ID的程序来调用popen，这样会导致被攻击，被恶意用户使用提升的权限去执行shell命令。</p>
+<figure data-type="image" tabindex="9"><img src="https://note.youdao.com/yws/res/12636/84B45D47A4F54F4583F10E57A8B9281E" alt="" loading="lazy"></figure>
+<p>正确关闭由popen打开的I/O流使用pclose函数，不能使用fclose函数，否则就会造成僵尸进程。 因为只有pclose中调用了waitpid而后者没有，便可能出现僵尸进程。</p>
+<p>协同进程</p>
+<p>协同进程是一个进程既将数据写到某个进程的输入中，又从该进程读取其输出，也即这两个进程之间存在两个方向的管道。</p>
+<p>BASH并没有提供将进程连接成协同进程的方法，协同进程通常在shell的后台运行，其标准输入和标准输出通过管道连接到另一个程序。</p>
+<figure data-type="image" tabindex="10"><img src="https://note.youdao.com/yws/res/12638/FFC487C5868745F2BCEBFCCEE5038B3E" alt="" loading="lazy"></figure>
+<p>一个可能产生死锁的情况，如书中该节所述，如果使用了标准I/O，因为其自身是带缓冲的，假设是全缓冲的，那么如果没有写完缓冲的话并不会刷新，进程A向进程B写了一段数据，但没达到全缓冲的条件，进程B就会阻塞在fgets中，而进程A此时又在等进程B把处理后的数据写给他，实际上进程B已经阻塞了，所以此时进程A也会阻塞在读操作上，两个进程之间构成死锁。解决办法是改变标准I/O的缓冲，setvbuf，但如果不能该源码，那么只能想办法将其连接到一个终端，让标准IO变成默认的行缓冲，这种可能要用到伪终端。</p>
+<p>FIFO</p>
+<p>FIFO有时候被称为命名管道，而前面说的管道是未命名管道，原因在于FIFO是一种文件类型，或者直白的理解FIFO是一个文件，而该文件是有文件名的，所以称为命名管道，而管道是通过pipe函数生成的，只有有关系的两个进程间才知道这个管道，所以叫未命名管道。</p>
+<p>FIFO与管道的最大区别在于，FIFO可以在任意进程间进行通信，而管道只能在有血缘关系的进程间通信，究其本质是因为FIFO是文件，每个进程都可以open这个文件来进行通信。</p>
+<figure data-type="image" tabindex="11"><img src="https://note.youdao.com/yws/res/12640/ED4E794551AD4A9780CB060D43B26EA8" alt="" loading="lazy"></figure>
+<p>#include&lt;sys/stat.h&gt;</p>
+<p>int mkfifo(char* pathname,mode_t mode);</p>
+<p>int mkfifoat(int fd,char* pathname,mode_t mode);成功0，出错-1</p>
+<p>上面两个函数可以创建一个FIFO文件，mode参数代表指定该文件的用户、组、其他的读写执行权限，例如S_IRUSR。mkfifo在当前工作目录下或者指定绝对路径创建文件；mkfifo则相对于fd所有目录创建文件，若给定绝对路径则忽视这个规则，与mkfifo一样，若fd设置了AT_FDCWD标志，且路径为相对路径，其相对的是进程的当前工作目录而不是fd的目录，此时与mkfifo也一样。</p>
+<p>shell中支持命令行 mkfifo fifoname来创建FIFO文件。</p>
+<p>创建FIFO后，需要用open来打开， 规则是：</p>
+<p>1.如果以阻塞的方式，只读或只写打开FIFO文件，那么必须等到有其他的进程已经写或读打开了该文件，才返回，否则一直阻塞。</p>
+<p>2.如果以非阻塞的方式只读或只写打开，如果该文件的另一端没有进程打开，那么直接返回：如果是只读打开，open直接返回，而如果只写打开，那么open返回-1，errno为ENXIO。</p>
+<figure data-type="image" tabindex="12"><img src="https://note.youdao.com/yws/res/12642/0348325EC52A4D54B432C4C120A99BE8" alt="" loading="lazy"></figure>
+<p>这里关注的是只写和只读打开，FIFO可以以读写的方式打开，这样是直接打开的，不会阻塞。其实本质就是要保证从open返回后，都有进程打开了FIFO的读写两端了。</p>
+<p>如果写端关闭，而读端还打开，在其上的read返回0，代表EOF；而如果读端关闭，写端还在执行，那么写操作会产生SIGPIPE信号。</p>
+<p>因为FIFO是文件，多个进程可以同时打开，所以就涉及到原子写的问题，和管道一样，如果写的数据长度小于PIPE_BUF，则实现原子写入，规则可以看上面的笔记。</p>
+<p>当所有进程都关闭了FIFO的描述符后，虽然FIFO文件还在系统中，但数据已经被删除了。</p>
+<figure data-type="image" tabindex="13"><img src="https://note.youdao.com/yws/res/12644/C3E97A808009453DB529EE9DA46A96C0" alt="" loading="lazy"></figure>
+<p>以上的都是POSIX的IPC方式，下面的是XSI的IPC方式</p>
+<p>XSI IPC</p>
+<p>XSI IPC有消息队列、信号量以及共享存储器。</p>
+<p>标识符和键</p>
+<p>每个内核中的IPC结构（消息队列、信号量、共享存储段）都是用一个非负整数标识来引用的，类似于文件描述符。但与文件描述符不同的是，同一类型的IPC结构如果释放了，下次再创建同类型的IPC结构时，其标识符会直接在原来的基础上+1，直到回绕回0再从头开始。</p>
+<p>标识符时IPC的内部对象名，为了使多个进程能够以IPC结构为汇聚点，就必须提供一个外部对象名，这个外部对象名为键，每个IPC对象都与一个键关联，将这个键作为该对象的外部名。</p>
+<p>创建IPC对象时，必须指定键，类型为key_t，在sys/types.h头文件中，内核将该键转换成标识符。</p>
+<p>所以用户进程可以对标识符或键进行操作，来执行对IPC的操作，但一般都是用键来汇聚。</p>
+<figure data-type="image" tabindex="14"><img src="https://note.youdao.com/yws/res/12646/33E63DD2B06A477C9D2B965940B594E9" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="15"><img src="https://note.youdao.com/yws/res/12648/5E652C4A191D4904A12354F4598B3A5B" alt="" loading="lazy"></figure>
+<p>注意任何时候以IPC_PRIVATE参数调用get函数（msgget,semget,shmget）时，都是创建一个新的IPC对象。</p>
+<p>#include&lt;sys/ipc.h&gt;</p>
+<p>int ftok(char* pathname,int id);成功返回键，出错返回(key_t)-1</p>
+<p>可理解为file to key</p>
+<p>ftok函数根据给定的路径的文件，和id来创建一个键，这个文件必须是现有的文件，ftok会使用这个文件的stat结构中的st_dev 和st_ino加上id来组成一个键，所以如果使用同一文件的不同路径名，此时如果id一样，则会产生一样的键。</p>
+<figure data-type="image" tabindex="16"><img src="https://note.youdao.com/yws/res/12650/3176900834DB4D049FE1E0CCFD0DF142" alt="" loading="lazy"></figure>
+<p>为了引用一个IPC_PRIVATE创建的IPC对象，必须直到其标识符。</p>
+<p>权限结构</p>
+<figure data-type="image" tabindex="17"><img src="https://note.youdao.com/yws/res/12652/304CDC3E5737461BBDC86FAE5575F0F7" alt="" loading="lazy"></figure>
+<p>每个实现可能会定义其他得到一些成员，在创建IPC时，会自动给这些字段赋初值，然后可以调用msgctl,semctl,shmctl函数来设置字段的值，类似于fcntl，为了修改这些值，调用进程必须时创建者或超级用户。所有的IPC结构不没有执行权限这一说，只有读和写权限两种。</p>
+<figure data-type="image" tabindex="18"><img src="https://note.youdao.com/yws/res/12654/7363F6E6043D4C0EACB2BA08EBCF3838" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="19"><img src="https://note.youdao.com/yws/res/12656/120FE926AF1A4ADAB50AAA3753170FD2" alt="" loading="lazy"></figure>
+<p>结构限制</p>
+<p>每个IPC结构都有内置的限制，大多数限制可以通过重新配置内核来改变，linux提供了sysctl命令来查看和修改这些限制，也可以运行ipcs -l来查看。</p>
+<p>优点和缺点</p>
+<figure data-type="image" tabindex="20"><img src="https://note.youdao.com/yws/res/12658/4AC04A2652B64C4FA8730CB9D2CA7C77" alt="" loading="lazy"></figure>
+<p>消息队列</p>
+<p>消息队列是消息的链接表，存储在内核中，由消息队列标识符标识。简称为队列和队列ID。</p>
+<p>消息队列不一定要和普通队列一样先进先出，可以根据不同的消息类型来获取不同的消息。</p>
+<figure data-type="image" tabindex="21"><img src="https://note.youdao.com/yws/res/12661/90222D4FD2E64E24880394C2741D16C9" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="22"><img src="https://note.youdao.com/yws/res/12663/76B716FE7867426691053DFB8F550184" alt="" loading="lazy"></figure>
+<p>每个队列都有一个msqid_ds的结构来描述这个队列的信息，描述了队列的当前状态。</p>
+<figure data-type="image" tabindex="23"><img src="https://note.youdao.com/yws/res/12665/33936A3F3DCF4F47B83D93C4CAADE870" alt="" loading="lazy"></figure>
+<p>调用msgget函数可以创建一个队列或者返回一个已存在的队列：</p>
+<p>#include&lt;sys/msg.h&gt;</p>
+<p>int msgget(key_t key,int flag);成功返回新创建的队列ID，或已存在的队列ID，出错-1</p>
+<p>其中flag被用来设置msqid_ds中的成员ipc_perm的mode成员，指对消息队列的权限设置，例如S_IRUSR。</p>
+<p>内核会自动初始化msqid_ds的信息。</p>
+<p>通过msgctl能够对消息队列进行一定的设置：</p>
+<p>#include&lt;sys/msg.h&gt;</p>
+<p>int msgctl(int msqid,int cmd,msqid_ds* buf);成功0，出错-1</p>
+<p>cmd有三种，指定该函数的作用：</p>
+<p>1.IPC_STAT，获取消息队列的当前状态，写入到buf参数中。</p>
+<p>2.IPC_SET，将队列当前状态设置为buf参数指向的结构，只能由超级用户进程或有效进程ID等于ipc_perm.uid和ipc_perm.cuid执行。</p>
+<p>3.IPC_RMID，立即删除消息队列，此时若还有其他进程对该队列进行操作会得到EIDRM错误，只能由超级用户进程或有效进程ID等于ipc_perm.uid和ipc_perm.cuid执行。</p>
+<p>msgsnd函数将消息放入队尾</p>
+<p>#include&lt;sys/msg.h&gt;</p>
+<p>int msgsnd(int msqid,const void* ptr,size_t nbytes,int flag);成功0，出错-1</p>
+<p>ptr是一个指向正的长整型的指针，这个长整型就是用来标识消息类型的，而nbytes表示该消息的大小，flag可以设置为IPC_NOWAIT，类似于非阻塞：</p>
+<figure data-type="image" tabindex="24"><img src="https://note.youdao.com/yws/res/12667/F70897062C4D45339704FFE4061A713E" alt="" loading="lazy"></figure>
+<p>一般ptr指向的结构为：</p>
+<figure data-type="image" tabindex="25"><img src="https://note.youdao.com/yws/res/12669/73BD56CD21BA42EABACBB7EF09EA616E" alt="" loading="lazy"></figure>
+<p>ptr指向该结构体，而该结构体第一个成员是长整型，表示消息类型，第二个成员表示数据，大小就是nybtes表示的大小。</p>
+<p>msgrcv从队列中读取消息，并将该消息从队列中取出。</p>
+<p>#include&lt;sys/msg.h&gt;</p>
+<p>int msgrcv(int msqid,void* ptr,size_t nbytes, long type, int flag);成功0，出错-1</p>
+<figure data-type="image" tabindex="26"><img src="https://note.youdao.com/yws/res/12671/53EE21A8C0B84BC4BC7CFE33320EB695" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="27"><img src="https://note.youdao.com/yws/res/12673/522650703F764AF8BA62F9C75704BDA4" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="28"><img src="https://note.youdao.com/yws/res/12675/BD447E63074E4CDD9DBD4530D83ADA0D" alt="" loading="lazy"></figure>
+<p>msgrcv和msgsnd都会更新队列的结构信息。由于现在消息队列和其他的全双工通信例如全双工管道，UNIX域套接字的效率没差多少，但其本身又有很多缺点，所以现在应用程序应当尽量不使用消息队列。</p>
+<p>信号量</p>
+<p>信号量实际上是一个计数器，用于为多个进程提供对共享数据对象的访问。</p>
+<p>信号量的大小表示该资源还可以由多少个进程占用，一旦为0，则不能再占用该资源。</p>
+<figure data-type="image" tabindex="29"><img src="https://note.youdao.com/yws/res/12677/941FEA406DFC45628E64DE2E66C2C5ED" alt="" loading="lazy"></figure>
+<p>占用了资源信号量-1，释放了资源信号量+1.</p>
+<p>这是普通的二元信号量，而XSI IPC的信号量实际上是一个信号量集，用一个结构管理的信号量集，例如有n个信号量，那么0~n-1就是每个信号量对应的标记。</p>
+<figure data-type="image" tabindex="30"><img src="https://note.youdao.com/yws/res/12679/0B8C6B229C0C40EFB557A1026F663BFA" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="31"><img src="https://note.youdao.com/yws/res/12681/798EA43D63E24ACE9037286BEEDCCC0D" alt="" loading="lazy"></figure>
+<p>#include&lt;sys/sem.h&gt;</p>
+<p>int semget(key_t key,int nsems,int flag);成功返回信号量集的ID，出错-1</p>
+<figure data-type="image" tabindex="32"><img src="https://note.youdao.com/yws/res/12683/4DCFD4255A2F48FBB255B3ADC4B17E41" alt="" loading="lazy"></figure>
+<p>如果是创建，nsems必须指定，若只是获取该信号量集，则指定为0.semget只是创建信号量集，并没有初始化每个信号量，必须用semctl进行初始化后再使用，代码验证过如果不对信号量赋值，创建后的信号量值非常大，且不可预知。</p>
+<p>#include&lt;sys/sem.h&gt;</p>
+<p>int semctl(int semid, int semnum,int cmd,/<em>union semun arg</em>/);</p>
+<figure data-type="image" tabindex="33"><img src="https://note.youdao.com/yws/res/12685/EAEBA98DB4A8402993CE9D8D07972E9D" alt="" loading="lazy"></figure>
+<p>semnum是指定信号量集中的某个信号量，0~n-1.</p>
+<p>cmd有十种：</p>
+<p>1.IPC_STAT</p>
+<p>2.IPC_SET</p>
+<p>1和2分别将信号量状态写入semun.buf中或设置为该值</p>
+<p>3.IPC_RMID 立即删除信号量</p>
+<p>4.GETVAL 获取指定semnum信号量的值</p>
+<p>5.SETVAL 设置指定semnum信号量的值</p>
+<p>6.GETPID 获取semnum成员的sempid值</p>
+<p>7.GETNCNT 获取semncnt</p>
+<p>8.GETZCNT 获取semzcnt</p>
+<p>9.GETALL 把所有信号量的值写入semun.array中</p>
+<p>10.SETALL 把所有信号量的值修改成semun.array的值</p>
+<figure data-type="image" tabindex="34"><img src="https://note.youdao.com/yws/res/12687/C20FCA8C73B84375BAC467F548572FD9" alt="" loading="lazy"></figure>
+<p>#include&lt;sys/sem.h&gt;</p>
+<p>int semop(int semid,struct sembuf semoparray[],size_t nops);成功0 出错-1</p>
+<p>自动执行信号量集上操作数组</p>
+<figure data-type="image" tabindex="35"><img src="https://note.youdao.com/yws/res/12689/9DA7D6279D854CC3A2AC7890FBC24D2B" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="36"><img src="https://note.youdao.com/yws/res/12690/7F64EF36FD6B426DA1BD4C934BFB71AA" alt="" loading="lazy"></figure>
+<p>具体的操作看回书本468页，内容太多不记录了。</p>
+<p>前面提到了如果一个进程占用了信号量，而又终止前没有释放，若其在op中的sem_flag指定了为SEM_UNDO，那么内核会在进程结束后检查该进程的信号量调整值，会对该信号量进行处理。</p>
+<figure data-type="image" tabindex="37"><img src="https://note.youdao.com/yws/res/12693/68D7A68105BD416BA45A6514E2B9FDF8" alt="" loading="lazy"></figure>
+<p>实际上信号量操作花里胡哨，而且又很复杂，又不知道他到底管理是什么共享资源，怎么分配给该信号量的，又效率不高，个人觉得不需要使用。。</p>
+<p>在以上三种具有互斥属性的同步方法中，如果是对某一文件进行修改，使用记录锁会更好，虽然效率不是最高的，但是代码上会比互斥量简单得多，而且内核会对终止的进程释放其记录锁。</p>
+<p>共享存储</p>
+<p>存储映射mmap也是一种进程间通信的方式，并且是即时的。 不同的进程之间可以mmap同一块区域，但是必须做好同步。</p>
+<p>使用共享内存段或mmap的存储映射，由于返回的都是一个空指针，当我们需要读或写某个数据时，要先转换成指定数据类型的指针，然后对该指针进行赋值操作，就会修改共享存储的内容。</p>
+<p>共享存储允许两个或多个进程共享一个给定的存储区，由于不需要在两个进程之间进行数据的复制，这是最快的一种IPC，所以共享存储其实是用户态的IPC，不涉及内核，如果涉及内核，肯定涉及两个进程的复制，例如管道。</p>
+<p>使用共享存储的关键在于同步。可用信号量、互斥量、记录锁来进行同步。</p>
+<p>共享存储有点类似于存储映射mmap，但mmap本质上是映射了一个文件，而共享存储没有相关的文件，共享存储段是内存的匿名段，也即在内存上开辟了一个空间，每个进程可以通过链接，来映射到这片空间上，再进行相应的访问和操作，所以说有点像mmap。</p>
+<figure data-type="image" tabindex="38"><img src="https://note.youdao.com/yws/res/12694/C5A87310E6F442D1B24FDE5A75328E7F" alt="" loading="lazy"></figure>
+<p>其中shn_nattach成员表示当前有多少进程链接了这个共享存储段。</p>
+<figure data-type="image" tabindex="39"><img src="https://note.youdao.com/yws/res/12696/5FAA29052ED44F598D102764BE61C255" alt="" loading="lazy"></figure>
+<p>调用shmget来创建或获取一个共享存储</p>
+<p>#include&lt;sys/shm.h&gt;</p>
+<p>int shmget(key_t key,size_t size, int flag);成功返回共享存储的标识符，出错-1</p>
+<p>flag的含义与前面的XSI IPC一样。</p>
+<p>其中size指定了共享存储段的字节大小。创建时指定一个值，获取时指定为0.</p>
+<p>参数size应是系统页的整数倍，如果并不是，那么在一个系统页中的剩余部分是不可使用的。</p>
+<p>#inclulde&lt;sys/shm.h&gt;</p>
+<p>int shmctl(int shmid,int cmd,struct shmid_ds*buf);成功0，出错-1</p>
+<figure data-type="image" tabindex="40"><img src="https://note.youdao.com/yws/res/12698/C27AA4F6B95C487196B7D1E330374AF8" alt="" loading="lazy"></figure>
+<p>注意这里的IPC_RMID的操作，如果执行IPC_RMID时还有其他进程链接了这个共享存储段，那么实际上这个段不会删除，但一定删除的时共享存储段的标识符，也即无法再找到这个共享存储段了，现在还在用的就正常用。</p>
+<p>#include&lt;sys/shm.h&gt;</p>
+<p>void* shmat(int shmid,const void* addr,int flag);成功返回链接的地址，出错-1</p>
+<p>int shmdt(const void* addr);成功0 出错-1</p>
+<p>进程调用shmat将共享存储段链接到它的地址空间中，</p>
+<figure data-type="image" tabindex="41"><img src="https://note.youdao.com/yws/res/12700/D8FC2EDD7FDC48079ACA75C4D1FEC287" alt="" loading="lazy"></figure>
+<p>一般我们指定addr为0即可，由系统自动分配，可移植性高。返回值就是这个地址的值。有种类似于指针的感觉，这个指针指向了那片共享存储段，就可以通过这个指针去访问了一样。</p>
+<p>flag如果指定为SHM_RDONLY，则以读方式连接此段，否则以读写方式连接。</p>
+<p>执行完shmat后，shm_nattch+1.</p>
+<p>进程调用shmdt与该段分离，shmdt的参数就是shmat的返回值。调用后shm_nattch-1.</p>
+<p>调用shmdt和IPC_RMID的区别是前者调用后标识符还在，后者则无。</p>
+<figure data-type="image" tabindex="42"><img src="https://note.youdao.com/yws/res/12701/F18ADD1C7FC142B5B1FFD5192CF51F43" alt="" loading="lazy"></figure>
+<p>共享存储段的在进程的地址空间布局与存储映射是一样的，也是存在于栈和堆之间，只不过这个映射区映射的是一块匿名的内存，这块内存用shmid来标识罢了。</p>
+<p>共享存储和存储映射其实都是将某块空间映射到进程的地址空间当中，对该映射区的操作就等同于对被映射区域的操作。</p>
+<p>而对于存储映射而言，如果映射的是一个文件，那么可以在不同的没有关系的进程间进行IPC，多个进程可以读或写该区域，而如果存储映射使用了匿名存储映射，那么只能在有关系的进程中使用，因为子进程会继承父进程的地址空间，那么子进程就知道该映射区，否则无关系的进程无法知道该存储区。</p>
+<p>设备/dev/zero是一个特例，虽然这是一个有名的文件，但是不同进程mmap该文件即使指定了MAP_SHARED都看不到对方的修改，只有父子进程才是共享了这块区域，所以只能用于父子进程这类有关系的进程间。</p>
+<figure data-type="image" tabindex="43"><img src="https://note.youdao.com/yws/res/12702/F7E06EA40B2741A9825C3AD806C063BC" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="44"><img src="https://note.youdao.com/yws/res/12703/D0C6C9B04C924B39ADE931674CE821D3" alt="" loading="lazy"></figure>
+<p>所以本身映射/dev/zero就有点像共享存储映射一块内存区域一样了。</p>
+<p>还可以创建匿名存储映射，调用mmap时：</p>
+<p>指定标志为MAP_ANON或MAP_ANONYMOUS，相应的fd指定为-1，那么系统会创建一块匿名的内存空间来用于映射，类似于共享存储。</p>
+<p>POSIX信号量</p>
+<p>使用POSIX信号量时，编译时必须加上-lpthread</p>
+<p>POSIX信号量用来解决XSI信号量中的几个缺陷:</p>
+<p>1.POSIX信号量有更高性能的实现</p>
+<p>2.POSIX信号量接口使用更简单，没有信号量集，是真正意义上的信号量。</p>
+<p>3.POSIX信号量的删除更合理，类似于unlink一个文件，只有当最后一个该信号量的引用被释放了，才会删除，否则已经引用了的还能够继续正常使用。</p>
+<figure data-type="image" tabindex="45"><img src="https://note.youdao.com/yws/res/12704/DC29E7417E554A4DA90908EF2F4A1812" alt="" loading="lazy"></figure>
+<p>POSIX信号量有命名的和未命名的两种，未命名的信号量只存在内存中，只能用于同一进程的不同线程中。而命名的可以通过名字访问，可以在不同进程间使用。</p>
+<p>创建或打开命名POSIX信号量：</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>sem_t* sem_open(const char* name,int oflag,/<em>mode_t mode,unsigned int value</em>/);成功返回信号量的指针，失败返回SEM_FAILED.</p>
+<p>sem_open用于打开一个已有的信号量时，其名字为name，mode和value都不需要指定，oflag的值与open函数的oflag一样。sem_open信号量，不会对该信号量值+1，sem_open相当于只是打开了一个信号量的标识符一样，并没有直接占用资源，所以不会+1.</p>
+<p>如果用于创建一个新的信号量，创建名为name的信号量，oflag指定为O_CREAT|O_EXCL，表示如果已存在就出错返回，否则成功创建该信号量，而mode表示该信号量的权限位，与文件创建屏蔽字共同作用，value表示设置该信号量的值为多少。</p>
+<figure data-type="image" tabindex="46"><img src="https://note.youdao.com/yws/res/12705/DC9634C4FAA44F32AAAE6E37963FD8C3" alt="" loading="lazy"></figure>
+<p>在创建成功后，返回的信号量系统实现一般为以读和写方式打开的。</p>
+<p>在创建信号量时，其名字为了可移植性有一定的约定：</p>
+<p>1.名字以/开头  2.除此以外不允许有其他的斜杠 3.名字长度不能超过限制</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_close(sem_t* sem);成功0 出错-1</p>
+<p>当完成信号量的操作时，调用sem_close来释放信号量的相关资源。</p>
+<p>注意，进程如果终止前没有调用sem_close，系统也会自动关闭任何打开的信号量，但是并不会对信号量的计数进行修改，直接调用sem_close也不会，信号量值不受影响，必须调用相应的函数才能实现信号量的+1和-1.也只是起到关闭信号的标识的作用而已。close之后不能再使用由sem_open返回的sem指针了，也即标识符失效了。</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_unlink(const char* name);成功0 出错-1</p>
+<p>sem_unlink删除信号量的名字，如果信号量没有被引用，则直接销毁信号量，否则等到最后一个引用被释放了销毁。即使没有用sem_open打开信号量，只要知道该信号量的名字也可以直接使用sem_unlink删除。只要调用sem_unlink后，该信号量名字就不能被访问了，不管当前进程是否终止，都不能再使用该名字执行相关的信号量函数了。</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_wait(sem_t* sem);</p>
+<p>int sem_trywait(sem_t* sem);</p>
+<p>int sem_timedwait(sem_t* sem，timespec* tsptr);</p>
+<p>调用上述函数可以对信号量-1，wait表示阻塞，如果信号量当前为0，会一直阻塞到能够-1位置；trywait非阻塞，若能直接对信号量-1，成功返回0，出错返回-1，若发生阻塞则返回-1，erron置为EAGAIN；timedwait指定等待tsptr指定的时间，但如果能够立即-1，即使该时间设置成了一个无效的时间，也直接成功返回，否则超时返回-1，errno为ETIMEDOUT。</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_post(sem_t* sem);成功0 出错-1</p>
+<p>sem_post对信号量值+1.如果有进程或线程阻塞在sem_wait和sem_timedwait中，某个线程如果调用了sem_post，则该信号量会被+1后唤醒阻塞的进程或线程，再对该信号量值-1返回。</p>
+<p>当想在单独的进程中使用信号量时：</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_init(sem_t* sem,int pshared, unsigned int*value);成功0 出错-1</p>
+<p>pshared表示是否在多个线程中使用该信号量，非0代表多个进程使用，values是信号量的值。</p>
+<p>如果想在多个进程中使用该信号量，必须保证sem参数指向的sem_t变量，在多个进程的共享内存范围中。</p>
+<p>对未命名信号量使用完后：</p>
+<p>#include&lt;semaphore.h&gt;</p>
+<p>int sem_destroy(sem_t* sem);成功0 出错-1</p>
+<p>destroy后，不能再使用任何需要传入该指针的信号量函数，除非再调用sem_init重新初始化。</p>
+<figure data-type="image" tabindex="47"><img src="https://note.youdao.com/yws/res/12706/533243609A434359BE0123CBF7AC89D7" alt="" loading="lazy"></figure>
+<p>一个二进制信号量，即其值非0即1，可以起到互斥量原语的作用 。</p>
+<p>信号量用于进程之间进行资源管理的方法是不同进程之间使用同一个信号量，不管是POSIX信号量还是XSI信号量，每次要使用共享资源时，先对信号量进行访问，看信号量当前能否-1，能则直接占用信号量，该信号量随之-1，不能就会被挂起，等待其他进程的释放，而不是说信号量像mutex一样管理着同一作用域的对象。</p>
+<p>例如：</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-shi-si-zhang-gao-ji-io/">
+                <h3 class="post-title">
+                  APUE笔记-第十四章-高级IO
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge warning">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

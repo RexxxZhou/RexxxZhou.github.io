@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言函数 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言函数</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h3 id="go语言函数">Go语言函数</h3>
+<p>go<strong>不支持函数重载</strong></p>
+<p><strong>go的函数没有顺序要求</strong>，不像C++要先声明了函数后面的代码才能用，go中要调用的函数的声明在当前代码块的后面也可以执行。</p>
+<p>函数写法：</p>
+<pre><code class="language-go">func function_name( [parameter list] ) [return_types] {
+   函数体
+}
+</code></pre>
+<p>若函数不返回值，则可以不需要返回类型，类似于void</p>
+<p>函数可以返回多个值，可以有多个返回类型：</p>
+<pre><code class="language-go">func test(a,b int,c,d string) (int, string) {
+	return 1, &quot;yes&quot;
+}// 形参a，b为int，c，d为string，注意这里的类型判断逻辑
+</code></pre>
+<p>**值传递和C++一样，**其实go中存在的都是值传递，只不过如果传的是个指针或者地址，那么表现上就像引用传递一样，能够在函数内部修改外部传进来的变量</p>
+<p><strong>引用传递，传的是变量的地址，因此在引用传递下的函数形参是指针类型。</strong></p>
+<p>slice，map，channel 会有传引用的错觉(比如切片，他背后对应的是一个数组，切片本身是一个数据结构，在这个数据结构中包含了指向了这个数组的指针。所以说，即便是在传值的情况下这个结构被复制到函数里了，在通过指针去操作这个数组的值的时候，其实是操作的是同一块空间，实际上是结构被复制了，但是结构里包含的指针指向的是同一个数组，所以才有这个错觉)</p>
+<p><strong>与C++不同，Go语言的函数返回值可以是局部对象的指针，这是一个很大的区别。：</strong></p>
+<pre><code class="language-go">func ret_pointer() (*int){
+	i:=123
+	return &amp;i
+}
+func main(){
+	ptr:=ret_pointer()
+	fmt.Println(*ptr)
+} //output 123
+</code></pre>
+<p>对于有多个返回值的函数，例如range一个数组，或者返回错误码和错误信息的函数等等，我们可以选择性的接收返回值的个数：<br>
+只接收第一个返回值：</p>
+<pre><code class="language-go">func test_func1() (int,string){ 
+/* */ 
+}
+func main(){
+	ret:=test_func1()
+}
+</code></pre>
+<p>可以通过下划线忽略返回值列表中的某个返回值：</p>
+<pre><code class="language-go">func test_func2() (int,string,float32){ 
+/* */ 
+}
+func main(){
+	ret_int,_,ret_float:=test_func1()
+}
+</code></pre>
+<p>******</p>
+<p><strong>函数返回值如果指定了名字</strong>，Go会在进入函数后，执行函数代码前，初始化这些命名了的返回值为其类型对应的零值，此时，如果函数的return没有跟任何东西，则Go会自动把return时的命名返回值返回给调用者：</p>
+<pre><code class="language-go">func namedFunc() (n int, s string){
+	n=123
+	s=&quot;helloworld&quot;
+	return 
+}
+func main(){
+	i,s:=namedFunc()
+	fmt.Println(i,s)
+}//output 123 helloworld
+</code></pre>
+<p>所以这种使用命名了的返回值的情况下，要么return后不跟东西，Go自动帮你返回你指定名字的返回值，要么你return+命名的返回值，以上面的代码为例，namedFunc函数中的另一种返回方式为：<code>return n,s</code></p>
+<p>******</p>
+<hr>
+<h3 id="闭包">闭包</h3>
+<p>普通函数是静态的，而闭包是动态的，只有在运行时才知道这个闭包到底引用了什么变量，变量的值多少</p>
+<p>函数闭包可以简单的理解成定义在一个函数体内的函数，闭包函数可以<strong>引用</strong>其<strong>外部</strong>函数的<strong>变量</strong>，每调用一次外部函数就生成一个单独的闭包，互不影响</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/165512260-1.png" alt="image" loading="lazy"></figure>
+<p>通过调用外部的函数，得到一个闭包函数，这个闭包函数引用了这个外部函数的对象的一份副本，每个闭包函数各自独立，各自是一个包一样。</p>
+<pre><code class="language-go">func test2() func() int {
+	i := 1
+	return func() int {
+		i++
+		return i
+	}
+}
+func main(){
+	clp1 := test2()
+	fmt.Println(clp1())
+	fmt.Println(clp1())
+	clp2 := test2()
+	fmt.Println(clp2())
+	fmt.Println(clp2())
+}//输出
+2 
+3
+2 
+3
+</code></pre>
+<p>不一定说必须在函数内部定义的函数才可能是闭包（其实就是外部变量对于内部函数而言是可见的，所以可以引用）：</p>
+<pre><code class="language-go">func main() {
+
+	for i:=0; i&lt;5; i++ {
+		go func(){
+			fmt.Println(i) 
+		//i变量值也是引用.创建5个线程执行函数，线程刚好处于i的某个值，输出的值不确定
+		}()
+		
+	}
+	time.Sleep(time.Second * 1)
+}
+</code></pre>
+<hr>
+<h3 id="函数方法">函数方法</h3>
+<p>Go语言没有面向对象。</p>
+<p><strong>可以给所有的自定义名字的类型添加方法，除了接口和指针类型外。</strong></p>
+<p>The rule about pointers vs. values for receivers is that value methods can be invoked on pointers and values, but pointer methods can only be invoked on pointers.</p>
+<p><strong>规则</strong>：以值类型作为接收者的方法既可以通过对象的值也可以通过对象的指针触发，但指针类型作为接收者的时候，就只能通过对象的指针触发。这是因为值接收者在方法里其实操作的是对象的副本，不管是类型的指针还是值，都没影响；而指针接收者要修改对象的值，所以存在一定的区别。</p>
+<p>但是如果值对象可以取址，那么通过它调用指针接收者的方法也是可以的，否则一定要按照这个规则来：</p>
+<pre><code class="language-go">type newStruct struct {
+	a, b int
+}
+func (ns *newStruct) test_pointer() {
+	fmt.Println(&quot;invoked by pointer receiver method&quot;)
+}
+func (ns newStruct) test_no_pointer() {
+	fmt.Println(&quot;invoked by no pointer receiver method&quot;)
+}
+func main(){
+	ns:=newStruct{123,456}  //类型的值
+	ns.test_no_pointer() //调用值接收者的方法，当然没问题
+    ns.test_pointer()    //调用指针接受者的方法，只要对象可以取址，编译器会自动补上&amp;后再调用，也即编译器优化后实际执行的是(&amp;ns).test_pointer()
+	
+	nns:=new(newStruct) //类型的指针
+	nns.test_no_pointer() //调用值接收者的方法，值接收者的方法可以使用类型的指针进行调用
+	nns.test_pointer()   //调用指针接收者的方法，当然没问题
+	
+}
+
+</code></pre>
+<p>函数方法就是通过编写一个函数，与某一类型相关联，然后在后续的函数调用上，如同该类型的成员方法一样：</p>
+<pre><code class="language-go">func (variable_name variable_data_type) function_name() [return_type]{
+   /* 函数体*/
+}
+
+</code></pre>
+<pre><code class="language-go">//example
+type mystruct struct{
+	radius float32
+}
+func (c mystruct) getRadius() float32{
+	return c.radius
+}
+func main(){
+	var Test mystruct
+	Test.radius=123.456
+	fmt.Println(Test.getRadius)//如同mystruct类型的成员方法一样
+}//输出 123.456
+
+</code></pre>
+<p>如果想要修改类型的值，用该类型的指针来编写：</p>
+<pre><code class="language-go">//example
+type mystruct struct{
+	radius float32
+}
+func (c *mystruct) setRadius(newRadius float32){
+	c.radius=newRadius //注意这里，虽然是指针但是还是用了句号运算符
+    //在C++中指针访问成员是用箭头运算符，但这里不一样，多加注意
+}
+func main(){
+	var Test mystruct
+	Test.radius=123.456
+    Test.setRadius(555.666)
+	fmt.Println(Test.radius)//如同mystruct类型的成员方法一样
+}//输出 555.666
+
+</code></pre>
+<p>如果不是使用指针的方法来编写类型的方法，一方面是无法实现修改对象的效果，另一方面是每次都是值传递，操作的都是这个对象的副本，会存在开辟新的内存的情况，个人认为，即使方法不修改对象的值，也最好用指针的方式，减少内存的创建和销毁：</p>
+<pre><code class="language-go">type MyStruct struct {
+	radius float32
+	height float32
+}
+
+func (m *MyStruct) ModifyP() {
+	m.radius = 10
+	m.height = 20
+}
+
+func (m MyStruct) Modify() {
+	m.radius = 10
+	m.height = 20
+}
+
+func PrintMystruct(m *MyStruct) {
+	fmt.Println(&quot;radius: &quot;, m.radius)
+	fmt.Println(&quot;height: &quot;, m.height)
+}
+
+func main() {
+	ms := MyStruct{1.2, 2.4}
+	PrintMystruct(&amp;ms)
+	ms.Modify()
+	PrintMystruct(&amp;ms)
+	ms.ModifyP()
+	PrintMystruct(&amp;ms)
+}
+//output
+radius:  1.2
+height:  2.4
+radius:  1.2
+height:  2.4
+radius:  10
+height:  20
+
+</code></pre>
+<p>对于采用值和指针作为接收者的两种编写方法的方式，最完整的调用方法的方式如下，但指针接收者也可像值接收者那样，不需要取址后再调用方法，我们编写m.test2()，go编译器会自动解释为(&amp;m).test2()。</p>
+<pre><code class="language-go">func (m Mystruct) test1(){
+	/* code */
+}
+func (m *Mystruct) test2(){
+	/* code */
+}
+func main(){
+	m:=Mystruct()
+	m.test1()
+	(&amp;m).test2() //指针接收者的最完整调用方法的方式，也可以像上面那行那样调用，也是没问题的
+}
+
+</code></pre>
+<p>不能给基本变量类型（内置类型）添加函数方法**，只能给自定义的类型添加函数方法。但是可以使用类似typedef一样的效果，给内置变量取别名，然后再对该别名声明方法：</p>
+<pre><code class="language-go">type MyInt int
+func(i MyInt) test() Myint{ //要注意虽然MyInt本质上就是int，但是两种类型的变量不能赋值，所以这里不能用int做返回类型
+	return i*i
+}
+func main(){
+    i:=MyInt(2)
+    fmt.Println(i.test())
+}//output 4
+
+</code></pre>
+<p><strong>只能给同一个包里的定义的类型编写方法</strong>，不能给其他包内的类型写方法，所以这也是为什么不能给内置类型添加方法的原因，因为内置变量的定义在其他包内。</p>
+<hr>
+<h3 id="变量作用域">变量作用域</h3>
+<p><strong>作用域基本规则与C++一样</strong>，可以用大括号来划分作用域。</p>
+<ul>
+<li>
+<p>函数内定义的变量称为局部变量</p>
+</li>
+<li>
+<p>函数外定义的变量称为全局变量</p>
+</li>
+<li>
+<p>函数定义中的变量称为形式参数</p>
+<p>局部变量和全局变量<strong>默认初始化为零值</strong>。</p>
+</li>
+</ul>
+<h4 id="局部变量">局部变量</h4>
+<p>函数内的变量、形参、返回值都是局部变量</p>
+<h4 id="全局变量">全局变量</h4>
+<p>函数体外声明的变量为全局变量。一个包里的对象想要别的包可见的话，需要首字母大写；而如果是同一个包的不同文件，则直接使用对象即可，不区分首字母大小写的问题，但是在运行时需要告诉编译器是包的哪几个文件：</p>
+<p>hello.go引用了test.go的函数和变量，运行代码应为:go run test.go hello.go （两个文件谁前谁后无所谓）</p>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/165552187-1.png" alt="image" loading="lazy"></figure>
+<p>全局变量可以与局部变量同名，但内部的局部变量会屏蔽外部的同名变量</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">
+                <h3 class="post-title">
+                  Go语言的一些内置函数
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

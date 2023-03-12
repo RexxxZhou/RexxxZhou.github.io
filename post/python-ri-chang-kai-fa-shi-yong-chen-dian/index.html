@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>python日常开发使用沉淀 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>python日常开发使用沉淀</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+                  apisix
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>1、filter函数</p>
+<p>filter函数是内置函数，用于过滤可迭代对象，返回新的对象</p>
+<p>filter(function,iterable)</p>
+<pre><code class="language-javascript">def is_odd(n):
+    if n%2 :
+        return True
+    else:
+        return False
+        
+filter(is_odd,[1,2,3,4,5,6,7,8,9])
+</code></pre>
+<p>2、lambda函数</p>
+<p>格式：</p>
+<p>lambda arg1,arg2: expression</p>
+<ul>
+<li>
+<p>lambda 只是一个表达式，函数体比 def 简单很多。</p>
+</li>
+<li>
+<p>lambda的主体是一个表达式，而不是一个代码块。仅仅能在lambda表达式中封装有限的逻辑进去。</p>
+</li>
+<li>
+<p>lambda 函数拥有自己的命名空间，且不能访问自己参数列表之外或全局命名空间里的参数。</p>
+</li>
+<li>
+<p>虽然lambda函数看起来只能写一行，却不等同于C或C++的内联函数，后者的目的是调用小函数时不占用栈内存从而增加运行效率。</p>
+</li>
+</ul>
+<pre><code class="language-javascript">filter(
+        lambda field, data=data_ori_one: data.get(field, &quot;字段不存在&quot;)
+        == &quot;字段不存在&quot;,
+        data_ori_one.keys(),
+    )
+</code></pre>
+<p>上面的例子表示有一个默认参数，和一个入参的lambda函数，将字典的key作为入参，lambda判断data是否能获取出相应的field字段，是的话则filter提取出来。</p>
+<p>3、eval函数</p>
+<p>eval函数通过执行一个字符串表达式，并返回表达式的值</p>
+<pre><code class="language-javascript">eval('1+2')
+// 返回3
+</code></pre>
+<p>4、django</p>
+<pre><code class="language-javascript">python3 manage.py migrate # 根据model创建所有的表结构
+python3 manage.py makemigrations  ModelName # 让django知道某个model发生了变化
+python3 manage.py migrate ModelName # 指定创建表ModelName
+</code></pre>
+<p>https://docs.djangoproject.com/zh-hans/3.2/topics/migrations/</p>
+<p>django的迁移是为了让框架知道你修改了model的变化，例如增删改了字段；</p>
+<p>makemigrations命令是让django生成需要迁移变化的内容（django自己生产的代码文件），执行migrate就是执行这些生成的代码，使得你对model的变更实际生效于数据库</p>
+<p>可以在settings文件中指定多个数据库：</p>
+<pre><code class="language-javascript">DATABASES = {
+    'default': {},
+    'users': {
+        'NAME': 'user_data',
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': 'mysql_user',
+        'PASSWORD': 'superS3cret'
+    },
+    'customers': {
+        'NAME': 'customer_data',
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': 'mysql_cust',
+        'PASSWORD': 'veryPriv@ate'
+    }
+}
+</code></pre>
+<p>django会默认使用default下的数据库，如果需要指定一个数据库的路由</p>
+<p>这样，你必须为所有的模型，包括你所使用的任何 contrib 和第三方 app 设置 DATABASE_ROUTERS，所以不会有任何查询路由到默认数据库。 （from django.com）</p>
+<pre><code class="language-javascript">DATABASE_ROUTERS = ['api.db_router.ConfigRouter']
+</code></pre>
+<p>对这个路由类重写一些函数就可以了。</p>
+<p>django执行原生的sql语句</p>
+<p>分析源码，django.db的connections是一个ConnectionHandler类字典对象，通过下面的方式获取具体一个数据库配置的连接时，第一次获取会创建连接，后续则不再需要，这些链接都被缓存了，通过对connections对象调用close_all函数，可以关闭所有的连接。所以如果你不单独关闭某个具体db连接，那么就会一直存在。</p>
+<pre><code class="language-javascript">from django.db import connections
+db_cursor=connections['db_name'].cursor()
+db_cursor.execute('select * from table1')
+db_cursor.executemany('insert into table1 values(%s,%s,%s)',value_list)
+</code></pre>
+<p>其中db_name是在django项目settimgs.py文件下的DATABASES配置项指定的，这是一个字典，其中第一层的key就是db的连接，下面的没有给出CONN_MAX_AGE参数，则该mysql连接为长连接：</p>
+<pre><code class="language-javascript">DATABASES:{
+    &quot;my_db':{
+        &quot;ENGINE&quot;:&quot;django.db.backends.mysql&quot;,
+        &quot;NAME&quot;:&quot;db_name&quot;,
+        &quot;USER&quot;:&quot;db_user&quot;,
+        &quot;PASSWORD&quot;:&quot;db_password&quot;,
+        &quot;HOST&quot;:&quot;db_address&quot;,
+        &quot;OPTION&quot;:{&quot;init_command&quot;:&quot;set names utf8mb4&quot;}    
+    }&quot;
+}
+</code></pre>
+<p>所以，如果connections['my_db']就会使用这个配置项去连接数据库，然后使用原生的sql语句来执行，虽然上面有init_command设置了字符集，但是使用connections时，并没有真的生效，还是需要cursor.execute('set names utf8mb4')才可以。</p>
+<p>（和字符集有关的一个issue： https://code.djangoproject.com/ticket/1356）</p>
+<p>https://docs.djangoproject.com/zh-hans/3.2/topics/db/sql/#executing-custom-sql-directly</p>
+<p>实际上这是django对mysql提供的cursor的封装，mysql的cursor就提供了这些能力：</p>
+<p>https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-executemany.html</p>
+<p>https://docs.djangoproject.com/zh-hans/3.2/topics/db/multi-db/</p>
+<p>python标准的数据库接口为python db-api，就和cursor是同一套东西，相关教程：</p>
+<p>https://www.runoob.com/python/python-mysql.html</p>
+<p>mysql相关的官方教程：</p>
+<p>https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor.html</p>
+<p>django.db还有一个connection对象，这个是使用default的数据库链接，当只有一个db连接配置时可用，否则使用connections，cursor是长连接：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/zgliMsYZ9VOu7Gh.png" alt="" loading="lazy"></figure>
+<p>更多关于项目settings.py的教程：</p>
+<p>https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-CONN_MAX_AGE</p>
+<p>django异常：</p>
+<p>https://docs.djangoproject.com/en/3.2/ref/exceptions/</p>
+<p>使用django的model，orm插入数据后，获取主键：</p>
+<pre><code class="language-python">record = MyModel(username='rex',age=18)
+record.save()
+record.id # id是自己设置的主键名，同理可以获取别的字段信息
+</code></pre>
+<p>models迁移(migrate)</p>
+<p>https://blog.csdn.net/Victor2code/article/details/105282826</p>
+<p>settings.py文件中的DATABASES配置，有一个OPTION配置：</p>
+<p>https://docs.djangoproject.com/zh-hans/3.2/ref/databases/#connecting-to-the-database</p>
+<p>对于mysql，可用的配置项：</p>
+<p>https://mysqlclient.readthedocs.io/user_guide.html#functions-and-attributes</p>
+<p>动态生成model</p>
+<p>https://www.codenong.com/aae530d2ce1a49692d94/</p>
+<p>5、打印异常</p>
+<p>except Exception as e:</p>
+<p>有四种方式：</p>
+<p>一、str(e)</p>
+<p>返回字符串类型，只给出异常信息，不包括异常信息的类型，如1/0的异常信息</p>
+<p>'integer division or modulo by zero'</p>
+<p>二、repr(e)</p>
+<p>给出较全的异常信息，包括异常信息的类型，如1/0的异常信息</p>
+<p>&quot;ZeroDivisionError('integer division or modulo by zero',)&quot;</p>
+<p>三、e.message()</p>
+<p>等同于str(e)</p>
+<p>四、使用traceback模块</p>
+<p>使用traceback.format_exec()来输出异常错误信息字符串内容</p>
+<p>6、获取时间戳</p>
+<pre><code class="language-python">import time
+import datetime
+now = time.time() # float
+timestamp = int(now) # 秒级
+ms_timestamp = int(time*time()*1000)
+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') # 格式化时间
+
+ts = 1515774430 # 将秒级时间戳转为日期
+dt = time.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;, time.localtime(ts)) 
+
+dt = '2018-01-01 10:40:30' # 将日期转为秒级时间戳（可以只给年月日）
+ts = int(time.mktime(time.strptime(dt, &quot;%Y-%m-%d %H:%M:%S&quot;)))
+</code></pre>
+<p>7、在代码运行时获取模块的成员信息</p>
+<p>使用inspect,sys模块</p>
+<pre><code class="language-javascript">import inspect
+import sys
+current_module = sys.modules[__name__]
+for name,obj in inspect.getmembers(current_module):
+    if inspect.isfunction(obj) and name.startwith('hello'):
+        print(name)
+</code></pre>
+<p>8、celery+django的入门</p>
+<p>https://blog.csdn.net/qq_42415326/article/details/95606077</p>
+<p>https://www.cnblogs.com/cwp-bg/p/10575688.html</p>
+<p>https://blog.csdn.net/PY0312/article/details/105906078#_task_31</p>
+<p>celery是一个异步任务模块，通过broker（任务队列）和backend（结果存储）与主调方进行交互；我们编写普通的函数后，在该函数上添加@app.task装饰器，就可以让该函数成为一个celery任务函数，可用于提交到任务队列，其中demo是celery的应用名，用celery命令行启动时输入的是应用名，app是Celery对象，在代码中使用来生成异步任务：</p>
+<pre><code class="language-javascript"># my_celery.py
+from celery import Celery
+app = Celery('demo')
+app.config_from_object('my_celery_config')
+# my_celery_config是一个PY文件
+</code></pre>
+<pre><code class="language-javascript"># my_celery_config.py
+# encoding: utf-8
+# Author: Timeashore
+
+# celery
+BROKER_URL = 'redis://localhost:6379/0'                 # 使用Redis作为消息代理
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'      # 把任务结果存在了Redis
+
+CELERY_TIMEZONE='Asia/Shanghai'                         # 指定时区，默认是 UTC
+
+CELERY_TASK_SERIALIZER = 'pickle'                       # 任务序列化和反序列化使用pickle方案
+CELERY_RESULT_SERIALIZER = 'json'                       # 读取任务结果一般性能要求不高，所以使用了可读性更好的JSON
+CELERY_TASK_RESULT_EXPIRES = 60 * 60 * 24               # 任务过期时间，不建议直接写86400，应该让这样的magic数字表述更明显
+CELERY_ACCEPT_CONTENT = ['json','pickle']               # 指定接受的内容类型
+</code></pre>
+<p>提交任务和存储都需要经历一次数据拷贝的过程，上面的序列化器表明了数据是在拷贝后是怎样的编码存入到相关的任务队列broker和存储backend的，如果数据很大，序列化的时间会变长，就会导致提交任务和存储的耗时增加，用户体验上感觉还是同步的，对于数据量小的任务来说，异步感觉明显。</p>
+<p>此时，我们可以编写普通函数来实现celery异步任务：</p>
+<pre><code class="language-javascript">from my_celery import app
+@app.task   
+def my_func(a,b,c):
+    print(a,b,c)
+result = my_func.delay(a,b,c)
+result2 = my_func.apply_async((a,b,c))
+
+def add(a,b):
+    return a+b
+result3 = app.send_task(add,args=[1,2])
+# 使用send_task，没有装饰器修饰的普通函数也可以直接成为异步任务递交
+
+if result.ready(): # 通过ready判断异步任务执行状态
+    print(result.get()) # 通过get获取异步任务结果
+
+</code></pre>
+<p>delay、apply_async两个其实就是同一个东西(注意下如何传函数的参数)，只不过delay的更简单，apply_async提供了更多更全面的任务控制参数，例如my_func.apply_async(queue='my_queue')，就可以指定任务往哪个队列投递，可以实现指定worker处理。</p>
+<p>装饰了celery的task之后，没有使用delay、apply_async，如果是普通的调用方式（print_task()），则还是同步操作，不会将任务推送到任务队列中。</p>
+<figure data-type="image" tabindex="2"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE62c7f903b3932236ea4c2243c5c890a2.png" alt="" loading="lazy"></figure>
+<p>任务路由，可能需要搭配celery配置文件的队列路由设置来实现：https://segmentfault.com/q/1010000000612387</p>
+<h1 id="装饰器还有很多参数可传实现不同的行为">装饰器还有很多参数可传，实现不同的行为</h1>
+<p>https://www.celerycn.io/yong-hu-zhi-nan/ren-wu-tasks/xuan-xiang-lie-biao-list-of-options#task.serializer</p>
+<p>name参数可以指定任务的名字，没有给的话，默认是函数名。</p>
+<p>常见的，我们可以为这个任务指定处理的Task类，只需要继承Celery.Task，重写on_success和on_failure函数，我们就可以实现在任务执行成功和失败后的处理逻辑：</p>
+<p>https://www.jianshu.com/p/afec2738bdda</p>
+<pre><code class="language-javascript">class CallbackTask(Task):
+    def on_success(self, retval, task_id, args, kwargs):
+        &quot;&quot;&quot;Success handler.
+
+             Run by the worker if the task executes successfully.
+
+             Arguments:
+                 retval (Any): The return value of the task.
+                 task_id (str): Unique id of the executed task.
+                 args (Tuple): Original arguments for the executed task.
+                 kwargs (Dict): Original keyword arguments for the executed task.
+
+             Returns:
+                 None: The return value of this handler is ignored.
+        &quot;&quot;&quot;
+        with open('test.txt', 'a+') as f:
+            f.write(self.name+str(retval)+'\n')
+
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        &quot;&quot;&quot;Error handler.
+
+             This is run by the worker when the task fails.
+
+             Arguments:
+                 exc (Exception): The exception raised by the task.
+                 task_id (str): Unique id of the failed task.
+                 args (Tuple): Original arguments for the task that failed.
+                 kwargs (Dict): Original keyword arguments for the task that failed.
+                 einfo (~billiard.einfo.ExceptionInfo): Exception information.
+
+             Returns:
+                 None: The return value of this handler is ignored.
+        &quot;&quot;&quot;
+        dd_notice(
+            {'alert_reason': 'celery beat exec failure', 'Exception': exc, 'task_id': task_id, 'task_name': self.name,
+             'args': args, 'kwargs': kwargs, 'einfo': einfo, 'time': datetime.datetime.now().strftime('%Y-%m-%d %H:%M%S')}, task_failure_dd_uri)
+             
+</code></pre>
+<p>额外地，我们可以在my_celery_config.py中加入celery beat的定时任务设置，导入经过：</p>
+<pre><code class="language-javascript">CELERY_IMPORTS = (                                      # 指定导入的任务模块
+    'app.task1',
+    'app.task2'
+    'app.email'
+)
+
+# schedules
+CELERYBEAT_SCHEDULE = {
+    'beat_task_name1': {
+         'task': 'my_func',
+         'schedule': timedelta(seconds=30),          # 每 30 秒一次
+         # 'schedule': timedelta(minutes=1),         # 每 1 分钟一次
+         # 'schedule': timedelta(hours=4),           # 每 4 小时一次
+         'args': (5, 8, 19)                              # 任务函数参数
+    },
+    'beat_task_name2': {
+        'task': 'my_func',
+        'schedule': crontab(hour=9, minute=50),      # 每天早上 9 点 50 分执行一次
+        'args': (3, 7, 19)                               # 任务函数参数
+    }
+}
+</code></pre>
+<p>启动命令：</p>
+<p>venv/bin/celery -A demo worker -l info -P eventlet -c 10 -Q HIVE,PRESTO</p>
+<p>venv/bin/celery -A demo beat 启动定时任务</p>
+<p>启动参数说明：</p>
+<p>Type 'celery <command> --help' for help using a specific command.</p>
+<p>可以直接查询程序的命令说明，下面只列出常用的一些worker选项：</p>
+<p>-A 指定要启动的celery应用是谁，例如上面的demo</p>
+<p>-l 指定日志等级</p>
+<p>-Q 指定该worker监听的任务队列，如果没有设置，则监听默认队列</p>
+<p>-c 指定并发度，有多少个子进程在处理这个任务队列，默认值是cpu的核数</p>
+<p>-P 调度方式，默认是prefork，也即会先fork好子进程后，再开始接受任务进行处理，还有eventlet、gevent、threads、solo等设置</p>
+<p>9、pymysql执行原生mysql操作</p>
+<pre><code class="language-javascript">import pymysql
+db_con = pymysql.connenct(host='localhost',passwd='123456',user='root',
+database='my_db')
+cursor = db_con.cursor()
+cursor.execute('select id,name,age from my_table')
+# execute里就可以执行sql语句
+results = cursor.fetchall()
+for res in results:
+    print(res[0],res[1],res[2]) # 对应查询的列字段顺序
+</code></pre>
+<p>10、python的并行</p>
+<p>https://yshblog.com/blog/124</p>
+<p>这里只给出一些可用的案例，不细究，用到的时候可以再去查</p>
+<p>1、可以使用原生的线程，使用threading标准库即可，创建线程，让线程去执行函数</p>
+<p>https://docs.python.org/zh-cn/3/library/threading.html</p>
+<pre><code class="language-javascript">import threading
+t = threading.Thread(target=func,args=(1,2,3))
+t.start() # 开始执行线程函数
+t.join() # 调用房阻塞等待线程执行结束
+
+</code></pre>
+<p>2、线程池ThreadPoolExecutor</p>
+<p>https://docs.python.org/zh-cn/3/library/concurrent.futures.html</p>
+<pre><code class="language-javascript">from concurrent.futures import ThreadPoolExecutor
+pool_executor = ThreadPoolExecutor(max_workers = 5)
+pool_executor.submit(my_func,1,2,3) # args = 1 2 3
+</code></pre>
+<p>3、gevent 协程库执行</p>
+<p>由于线程或者线程池都是使用额外的内存，所以，传给线程执行的函数参数如果很大，会占用很长的时间进行数据拷贝，耗时长；而gevent是协程，数据都在同一个线程中传递，使用默认的引用传递方式，所以不会出现长耗时的数据拷贝过程，在这方面效率会更好。</p>
+<p>11、浅复制、深复制</p>
+<p>在python中，默认函数传参、赋值都是引用传递，增加引用计数，不会真实拷贝新的一份数据，可以引入copy模块来实现浅复制和深复制，两者在不同的场景下有不同的效果</p>
+<p>对于可变对象，例如列表、字典，深浅复制的效果都一样，都进行了数据拷贝；而对于不可变对象，例如字符串，浅复制不会拷贝数据，深复制才会</p>
+<pre><code class="language-javascript">import copy
+a = [1,2,3,4,5]
+b = a # 此时修改a或者b都是修改同一个对象数据
+c = copy.copy(a) # 由于是可变对象，浅复制也进行了拷贝，所以c和a是两块内存
+d = copy.deepcopy(a) # 深复制，不论是否是可变对象，都会进行内存拷贝，两份数据
+
+str_ = 'helloworld'
+str_1 = copy.copy(str_) # 浅拷贝不可变对象，不进行数据拷贝，同一块内存
+str_2 = copy.deepcopy(str_) # 深拷贝不可变对象，进行拷贝，两块内存
+同时，字典有成员方法copy，和copy.copy(字典)效果zhuang
+</code></pre>
+<p>12、装饰器</p>
+<p>装饰器是一种能够扩展自定义函数功能的特性，主要分为两类，有参数的和无参数的装饰器，从定义上又分类装饰器和函数装饰器，表示装饰器本身是个类或者是个函数，这里不赘述类和函数装饰器，只关注装饰器的特性。</p>
+<p>首先，这篇文章总结的很详细：https://blog.csdn.net/shahuzi/article/details/81254557</p>
+<pre><code class="language-javascript">def decor(func):
+    print('in decor')
+    @functools.wrap(func)
+    def wrapper_(*args,**kwargs):
+        func(*args,**kwargs)
+        return
+    return wrapper_
+@decor
+def add(a,b):
+    print('in add')
+    return a+b
+</code></pre>
+<p>首先我们要明白一个点，就是装饰器是用来装饰它下面紧跟着的函数的，例如decor装饰的是add函数，上面的代码，为add函数增加了打印in decor的能力，此时，真正的add函数是：</p>
+<p>add=decor(add)；</p>
+<p>这个就是无参数的装饰器，因为被装饰得函数一定是必传参数，所以func=add</p>
+<pre><code class="language-javascript">def param_decor(par1,par2):   
+    print('in param_decor') 
+    print(par1,par2)
+    def decor(func):
+        print('in decor')
+        @functools.wrap(func)
+        def wrapper_(*args,**kwargs):
+            func(*args,**kwargs)
+            return
+        return wrapper_
+    return decor
+@param_decor('hello','world')
+def add(a,b):
+    print('in add')
+    return a+b
+</code></pre>
+<p>上面这个就是一个带参数的装饰器案例，现在真正的add函数是：</p>
+<p>add=param_decor('hello','world')(add)，可以这么理解，使用了param_decor('hello','world')，说明先执行了这个代码，代码返回了decor，刚好参数是func，符合装饰器的要求，所以，add函数的能力变成了param_decor('hello','world')(add)。</p>
+<p>有一个重要的特性，就是被装饰的函数，在定义时，其实已经被执行替换了，例如第一个例子，在代码加载的时候，python已经执行了add=decor(add)的逻辑，所以在运行文件，没有执行任何操作时，会在终端打印in decor。</p>
+<p>同理，第二个例子中的param_decor，会先打印in param_decor，然后打印in decor，因为解释器已经执行了add=param_decor('hello','world')(add)，按照这个代码执行逻辑，就是会这样打印输出。</p>
+<p>稍微复杂一点的，就是多个装饰器装饰同一个函数的情况，虽然说是这么说，但是切记代码中，上一行的装饰器是装饰下一行的函数的，所以多个装饰器其实是嵌套装饰下方的函数的。</p>
+<pre><code class="language-javascript">def timing(status='Train'):
+    print('this is timing')
+    def dec(func):
+        print('this is dec in timing')
+        @functools.wraps(func)
+        def wrapper3(*args,**kwargs):
+            start = time.time()
+            func1 = func(*args,**kwargs)
+            print('[%s] time: %.3f s '%(status,time.time()-start))
+            return func1
+        return wrapper3
+    return dec
+
+def dec1(func):
+    print('this is dec1')
+    @functools.wraps(func)
+    def wrapper1(*args,**kwargs):
+        print('this is a wrapper in dec1')
+        return func(*args,**kwargs)
+    return wrapper1
+
+def dec2(func):
+    print('this is dec2')
+    @functools.wraps(func)
+    def wrapper2(*args,**kwargs):
+        print('this is a wrapper in dec2')
+        return func(*args,**kwargs)
+    return wrapper2
+    
+@dec1
+@dec2
+@timing(status='Test')
+def fun():
+    time.sleep(2)
+</code></pre>
+<p>按照装饰的逻辑，为了方便指代，以FuncName_Decorator代表函数FuncName被Decorator装饰后的函数，上面三个装饰器的逻辑为，timing装饰了fun（fun_timing=timing('Test')(fun)），dec2装饰了fun_timing（fun_timing_dec2=dec2(fun_timing)），同理dec1装饰了fun_timing_dec2（fun_timing_dec2_dec1 = dec1(fun_timing_dec2) ）。</p>
+<p>我们只需要一层层理解就知道函数会打印或者执行什么逻辑了。</p>
+<p>首先执行代码文件，不执行函数，会输出：</p>
+<pre><code class="language-javascript">this is timing
+this is dec in timing
+this is dec2
+this is dec1
+顺序与装饰顺序相关，理解装饰顺序，就明白执行逻辑
+</code></pre>
+<p>如果执行fun函数，则会打印输出：</p>
+<pre><code class="language-javascript">this is timing
+this is dec in timing
+this is dec2
+this is dec1
+this is a wrapper in dec1
+this is a wrapper in dec2
+[Test] time: 2.000 s 
+</code></pre>
+<p>因为整体装饰后，此时真正的fun函数为：</p>
+<p>fun=dec1(dec2(timing('Test')(fun)))，根据这个去理解函数打印输出就没有问题</p>
+<p>给多一个case，可以复习的时候再确认下逻辑</p>
+<pre><code class="language-javascript">def decorator_a(func):
+    print 'Get in decorator_a'
+    def inner_a(*args, **kwargs):
+        print 'Get in inner_a'
+        return func(*args, **kwargs)
+    return inner_a
+
+def decorator_b(func):
+    print 'Get in decorator_b'
+    def inner_b(*args, **kwargs):
+        print 'Get in inner_b'
+        return func(*args, **kwargs)
+    return inner_b
+
+@decorator_b
+@decorator_a
+def f(x):
+    print 'Get in f'
+    return x * 2
+
+f(1)
+
+# output
+Get in decorator_a
+Get in decorator_b
+Get in inner_b
+Get in inner_a
+Get in f
+</code></pre>
+<h2 id="总结">总结</h2>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>&quot;复用公式”</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单个无参</td>
+<td>fun=dec(fun)</td>
+</tr>
+<tr>
+<td>单个含参</td>
+<td>fun=dec(args1,args2)(fun)</td>
+</tr>
+<tr>
+<td>多个无参</td>
+<td>fun=dec1(dec2(fun))</td>
+</tr>
+<tr>
+<td>多个含参</td>
+<td>fun=dec1(args1,args2)(dec2((fun)))</td>
+</tr>
+</tbody>
+</table>
+<p>13、gunicorn相关</p>
+<p>gunicorn的设计：</p>
+<p>https://docs.gunicorn.org/en/latest/design.html</p>
+<p>gunicorn是用来启动服务程序的，一般和wsgi的服务器框架搭配使用，启动后，有一个master进程和你指定数量的worker进程，worker进程的任务调度方式可以在gunicorn启动的时候指定，有sync、gevent、evenlet。</p>
+<p>https://blog.csdn.net/qq_31720329/article/details/118314963</p>
+<p>我们可以编写一个py文件作为gunicorn启动的配置文件，具体的gunicorn启动参数可参考下面的链接：</p>
+<p>https://www.itnotebooks.com/?p=531</p>
+<p>master进程启动后，会先bind我们要求的地址，得到相应的文件描述符，在完成一系列准备操作之后，会fork指定数量的worker进程，由于是父子进程的关系，master中的文件描述符在worker中可用，所以每个worker会监听bind得到的fd，随后便通过io多路复用来感知用户连接、请求和处理请求以及回包。</p>
+<p>多个进程监听同一个fd，先select/poll到并且成功accept用户链接的worker，就会继续处理该用户的请求，虽然会一定程度上出现惊群尝试accpet，但是只有一个worker会获取到，其他的worker accept时会返回eagain错误码。</p>
+<p>关于惊群问题，早有方法解决：https://blog.csdn.net/L13763338360/article/details/106519027</p>
+<p>https://blog.csdn.net/Move_now/article/details/78509211（better solution）</p>
+<p>worker启动之后，会同时生成临时文件，文件名称类似</p>
+<p>/var/folders/62/nzw4jhq14yzbd5722996v7s00000gn/T/wgunicorn-3ygziaw_；worker在无限循环中会通过fchmod改变文件的更新时间，master通过stat函数来获取文件的修改时间，进而知道worker的存活情况，以判断是否需要重启worker。</p>
+<p>14、gevent</p>
+<p>https://www.cnblogs.com/xybaby/p/6370799.html</p>
+<p>https://goalong.github.io/2019/02/21/gevent%20hub/</p>
+<p>http://www.gevent.org/intro.html</p>
+<p>gevent是一个基于greenlet的python协程库，每一个协程都是一个greenlet对象，其中有一个greenlet作为调度，是所有业务greenlet的parent，用于处理协程之间的调度。</p>
+<p>协程会在出现阻塞调用时，调度到别的协程上继续执行，在io密集的程序里，gevent的性能很高，但是如果协程是一个cpu密集型的，没有阻塞代码时，则会一直执行完才切到别的协程中继续执行，所以存在阻塞别的协程的可能性。</p>
+<p>进程中，gevent的事件循环是全局唯一的，即使使用了gunicorn启动了gevent的worker，在worker中执行gevent的spawn函数（生成一个协程，后续调度执行），也是没问题的，会加入到全局的事件循环中调度。</p>
+<p>但是和gunicorn搭配使用时，要注意可能自己认为的非阻塞会变成阻塞式的。例如gunicorn使用了sync或者eventlet，而此时如果在业务代码中加入了gevent的spawn函数，则会变成阻塞的，例如：</p>
+<p>evenlet 的事件循环是 loopA, gevent 的事件循环是 loopB, 指定某一个模式的时候, 假设当前整个worker其实是卡在 loopA.poll 里面等待 loopA 的事件, 你这个时候创建一个 loopB 和 对应的事件C, 调用是能调用, 但是调用 loopB 的 C 事件的时候, 假设要10秒钟, 这10秒 loopA.poll 没机会返回, 所有挂在 loopA 上的事件会卡住, 混用两个异步库效果就变成了&quot;阻塞&quot;</p>
+<p>综上，如果gunicorn使用的是gevent，在业务代码中使用gevent的相关api，相安无事</p>
+<p>但是如果是sync或者eventlet，那么甚至gevent.spawn的函数都没有被执行，因为这两种worker下没有遍历gevent的事件循环执行相关协程。</p>
+<pre><code class="language-javascript">&gt;&gt;&gt; def func2():
+...     print(int(time.time()))
+...     print('hello')
+... 
+&gt;&gt;&gt; glet = gevent.spawn(func2)
+&gt;&gt;&gt; int(time.time())
+1638089140
+&gt;&gt;&gt; glet.join()
+1638089146
+hello
+</code></pre>
+<p>可以从上面的console中看到，spawn之后并没有执行，而是等我们调用了glet.join才等待协程执行完，才有结果，这就是因为程序中没有gevent的调度器导致的。如果显示使用，就必须同步等得gevent的协程执行完了才会返回，所以就形成了混用的阻塞效果。</p>
+<p>14、pymysql</p>
+<p>demo：</p>
+<pre><code class="language-javascript">import pymysql
+db_con =db_con = pymysql.connect(
+    user=&quot;yyyy&quot;, passwd=&quot;xxxx&quot;, db=&quot;zzzz&quot;, host=&quot;x.x.x.x&quot;
+)
+cursor = db_con.cursor()
+cursor.execute(&quot;set names latin1&quot;)
+cursor.execute('select * from table1')
+db_con.commit()
+result = cursor.fetchall()
+for row in result:
+    print(row[0]) # 每个元素是表字段对应的类型
+</code></pre>
+<p>15、urlencode</p>
+<pre><code class="language-javascript">from urllib.parse import quote, urlencode
+a = {'hello':'world','test':'你好'}
+urlencode(a)
+# output
+'hello=world&amp;test=%E4%BD%A0%E5%A5%BD'
+# 单独encode字符串
+b = '你好'
+quote(b)
+# output
+'%E4%BD%A0%E5%A5%BD'
+</code></pre>
+<p>urlencode只能处理list或者dict，单独encode字符串使用quote，返回的是字符串。</p>
+<p>16、requests</p>
+<pre><code class="language-javascript">import requests
+import json
+json_data = {'name':'rex'}
+res = requests.post('http://xxxxx',data=json.dumps(json_data)).json()
+</code></pre>
+<p>data一定要先json dumps转成字符串之后才能调用post</p>
+<p>17、supervisor+celery</p>
+<p>supervisord.conf的配置中，可以将程序的std_out和std_err重定向到某个文件中，但在测试中发现，代码里的print一直没有输出到文件中，偶尔会输出一下。</p>
+<p>这是因为python的print函数是带缓冲的，想要立刻刷新输出到指定的文件中，需要：</p>
+<pre><code class="language-javascript">print('xxxx',flush=True)
+</code></pre>
+<p>这样就可以立刻打印到supervisord指定的文件中了，可以更好的调试确定任务推到了哪个celeryworker去执行。</p>
+<p>https://www.codenong.com/cs106735566/</p>
+<p>18、获取对象的名字</p>
+<p>假设对象的名字为a则：</p>
+<p>a.<strong>name</strong></p>
+<p>getattr(a,'<strong>name</strong>')</p>
+<p>这两种都可以获取对象的变量名</p>
+<p>hasattr(obj,'membername')</p>
+<p>判断对象是否有成员属性</p>
+<p>19、celery的Task类</p>
+<p>使用celery装饰器装饰一个异步任务的结构是：</p>
+<pre><code class="language-javascript">@celery_app.task(base=AsyncTaskHandle)
+def my_func():
+    pass
+</code></pre>
+<p>其中task可以传参数指定我们使用的是哪个任务类(这里给的是AsyncTaskHandle)，只需要继承Task类，我们可以重写一些函数，实现不同的任务处理，例如，我们可以重写on_failure和on_success来指定任务在失败或者成功执行后的代码逻辑，其中失败是指异步函数抛异常了，成功是指任务正常返回或者执行结束了。</p>
+<pre><code class="language-javascript">from celery import Task
+class AsyncTaskHandle(Task):
+    def on_success(self, retval, task_id, args, kwargs):
+        &quot;&quot;&quot;Success handler.
+
+             Run by the worker if the task executes successfully.
+
+             Arguments:
+                 retval (Any): The return value of the task.
+                 task_id (str): Unique id of the executed task.
+                 args (Tuple): Original arguments for the executed task.
+                 kwargs (Dict): Original keyword arguments for the executed task.
+
+             Returns:
+                 None: The return value of this handler is ignored.
+
+        pass
+        
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        &quot;&quot;&quot;Error handler.
+
+             This is run by the worker when the task fails.
+
+             Arguments:
+                 exc (Exception): The exception raised by the task.
+                 task_id (str): Unique id of the failed task.
+                 args (Tuple): Original arguments for the task that failed.
+                 kwargs (Dict): Original keyword arguments for the task that failed.
+                 einfo (~billiard.einfo.ExceptionInfo): Exception information.
+
+             Returns:
+                 None: The return value of this handler is ignored.
+        pass
+        
+</code></pre>
+<p>我们在这两个函数中，可以拿到任务的原始传参、返回值（成功的话），异常对象exc等信息。其中args是位置参数，kwargs是关键字参数，想要在on_failure和on_success中获取到用户调用的参数，假设函数(test_func)的参数名是paraA，paraB，paraC，有下面两种写法：</p>
+<pre><code class="language-javascript">test_func.apply_async(args=[paraA,paraB,paraC])
+test_func.apply_async(kwargs={'paraA':paraA,'paraB':paraB,'paraC':paraC})
+</code></pre>
+<p>所谓的kwargs参数的调用方法跟我们普通函数下面的调用是同一个道理：</p>
+<pre><code class="language-javascript">def test_func(paraA,paraB,paraC):
+    pass
+test_func(paraA=1,paraB=2,paraC=3)
+</code></pre>
+<p>会把对应名字的参数值赋给对应的形参，在函数里内paraA自然而然就等于1。</p>
+<p>因此，在on_failure和on_success的参数中，args是一个数组，kwargs是一个字段，通过下标获取args的参数，通过key获取kwargs的参数，例如获取paraB的方法为：</p>
+<pre><code class="language-javascript">def on_failure(self, exc, task_id, args, kwargs, einfo):
+    paraB=args[1]
+    # 或者 paraB=kwargs['paraB']
+</code></pre>
+<p>这就是如何在任务成功或者失败的时候获取原始函数传参的方法。</p>
+<p>当然我们还会遇到，需要函数的内部变量的值的情况，例如函数插入了一个任务到任务表中，我们需要在on_failure或者on_success中知道这个任务id是多少，在善后的时候可以更新这个任务的状态，此时可以使用bind=True来定义任务，使用之后，我们需要函数的第一个传参为self，bind的含义是指，我们可以读/写Task对象的成员，可以使用这些函数：</p>
+<p>bind之后，可以使用的成员都有：</p>
+<p>https://docs.celeryproject.org/en/stable/reference/celery.app.task.html#module-celery.app.task</p>
+<pre><code class="language-javascript">@celery_app.task(bind=True,base=AsyncTaskHandle)
+def test_func(self):
+    self.task_id=123
+</code></pre>
+<p>如上，我们在函数内部使用了self.task_id，这样我们在自定义的AsyncTaskHandle类中可以访问这个对象，从而获得任务id来更新异步任务的状态。</p>
+<p>这里给个例子：</p>
+<pre><code class="language-javascript">def on_success(self, retval, task_id, args, kwargs):
+        # 任务名, 在装饰任务时指定
+        task_name = self.name
+        paraB = kwargs[&quot;paraB&quot;]
+				print(paraB)
+				
+        update_ = True
+        # 判断是否已经创建好了任务
+        if not hasattr(self, &quot;task_id&quot;):
+            self.task_id = &quot;任务ID未能获取&quot;
+            update_task = False
+
+        if update_:
+            TaskInfo.objects.filter(task_id=self.task_id).update(
+                msg=&quot;任务执行成功&quot;, status=1
+            )
+@celery_app.task(bind=True,name='service_task',base='AsyncTaskHandle')
+def test_func(self):
+    pass
+</code></pre>
+<p>总之，celery的Task类，有很多方法可以重写，来组成完整的任务执行逻辑，有pre、post、on_retry等一系列任务流程的方法，重写这些就可以自定义任务行为，有问题查Task的类成员有哪些就大概知道有什么能力了。</p>
+<p>20、判断字典有无某个key</p>
+<p>获取字典key的方法：</p>
+<pre><code class="language-javascript">dict_a = {'hello':'world'}
+keys = dict_a.keys() # 键名的列表
+if 'key_name' in keys:
+    pass
+</code></pre>
+<p>或者直接in来判断</p>
+<pre><code class="language-javascript">if 'hello' in dict_a:
+    pass
+</code></pre>
+<p>for循环遍历字典时：</p>
+<pre><code class="language-javascript">for k in dict_a:
+    pass
+# k 是键名
+</code></pre>
+<p>如果想要便利获取字典的键值：</p>
+<pre><code class="language-javascript">for v in dict_a.values():
+    print(v)
+for k,v in dict_a.items(): # k是键名 v是值
+    print(k,v)
+</code></pre>
+<p>21、获取时间</p>
+<p>获取几天前的时间，case1:</p>
+<pre><code class="language-javascript">import time
+
+import datetime
+ 
+
+# 先获得时间数组格式的日期
+
+threeDayAgo = (datetime.datetime.now() - datetime.timedelta(days = 3))
+
+# 转换为时间戳
+
+timeStamp = int(time.mktime(threeDayAgo.timetuple()))
+
+# 转换为其他字符串格式
+
+otherStyleTime = threeDayAgo.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;)
+
+print(otherStyleTime)
+# 2019-05-18 18:06:08
+</code></pre>
+<p>给定时间戳，计算几天前的时间，case2:</p>
+<pre><code class="language-javascript">import time
+
+import datetime
+ 
+
+#给定时间戳
+
+timeStamp = 1557502800
+
+dateArray = datetime.datetime.utcfromtimestamp(timeStamp)
+
+threeDayAgo = dateArray - datetime.timedelta(days = 3)
+
+print(threeDayAgo)
+# 2019-05-07 15:40:00
+</code></pre>
+<p>想要格式化时间，首先要获取时间对应的数组格式，也即是类似下面的对象，然后对该对象使用api来实现格式换时间的转换（时间戳到格式化时间，以及格式化时间到时间戳）</p>
+<pre><code class="language-javascript">time.struct_time(tm_year=2016, tm_mon=4, tm_mday=7, tm_hour=10, tm_min=3, tm_sec=27, tm_wday=3, tm_yday=98, tm_isdst=0)
+</code></pre>
+<p>https://blog.csdn.net/google19890102/article/details/51355282</p>
+<pre><code class="language-javascript">import time
+timestamp = 1462451334
+# 转换成时间数组
+time_array=time.localtime(timestamp)
+format_time = time.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;,time_array)
+# 将格式换时间转为时间戳
+time_array = time.strptime(format_time,&quot;%Y-%m-%d %H:%M:%S&quot;)
+new_time_stamp = time.mktime(time_array)
+</code></pre>
+<p>22、取消json.dumps将中文转为unicode</p>
+<p>json.dumps将字典转为字符串时，会将里面的中文字符转为unicode：</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/y63JjFT2EahrzHM.png" alt="" loading="lazy"></figure>
+<p>这是因为dumps函数默认是ensure_ascii的，我们在调用dumps时，指定为False就不会对中文进行转码：</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/uBvjIrdabthFOXs.png" alt="" loading="lazy"></figure>
+<p>23、str(字典)</p>
+<p>通过str函数将字典强制转换字符串，字符串使用的是单引号而不是双引号，在需要双引号的场景中，要使用json.dumps来完成这种需求。</p>
+<p>24、gevent</p>
+<p>snippet</p>
+<pre><code class="language-javascript">import gevent
+def test(param1):
+    print('helloworld',param1)
+    
+g = gevent.spawn(test,123456)
+g_list = [g]
+gevent.joinall(g_list) # 阻塞等待协程完成
+# 也可以轮训查询g.ready()
+for g in g_list:
+    if g.successful():
+        # handling
+        print(g.value) # 协程返回值
+    else:
+        print(g.exception)
+</code></pre>
+<p>25、 str.split(str=&quot;&quot;, num=string.count(str))</p>
+<p>分割字符串，默认使用所有空字符，包括制表符、空格、换行符等</p>
+<p>num表示分割的次数</p>
+<p>指定分割符</p>
+<p>mystr.split('a')</p>
+<p>返回的是分割后的结果列表</p>
+<p>26、requests</p>
+<pre><code class="language-javascript">data = {'hello':'world'}
+cookies={'username':'rex'}
+headers={'Content-Type':'application/json'}
+ret = requests.post(url,data=json.dumps(data),cookies=cookies,headers=headers)
+print(ret.json())
+print(ret.text)
+print(ret.content)
+</code></pre>
+<p>ret.text返回的是Unicode型的数据。</p>
+<p>ret.content返回的是bytes型也就是二进制的数据。</p>
+<p>27、'<strong>main</strong>' is not a package</p>
+<p>这是因为同一个目录下的import使用了相对路径句号：</p>
+<pre><code class="language-javascript">import .mypy
+</code></pre>
+<p>首先去掉句号，其次在同目录下创建一个空的__init__.py文件</p>
+<p>28、global变量</p>
+<p>在python中 在全局作用域声明的变量和c++不一样，在局部作用域想要读和写时，需要再声明一次：</p>
+<pre><code class="language-javascript">glo = 'helloworld'
+def test():
+    global glo
+    glo = 'nihao'
+print(glo) # helloworld
+test()
+print(glo) # nihao
+</code></pre>
+<p>29、for范围循环注意事项</p>
+<p>虽然python里是引用传参，但是对于for循环，我们不能直接通过for的变量来修改变量，这个时候没有引用：</p>
+<pre><code class="language-javascript">a = [1,2,3]
+for i in a:
+    i = 2
+print(a) # 1 2 3
+</code></pre>
+<p>我们需要显示赋值</p>
+<p>for i in range(len(a)):</p>
+<p>a[i]=2</p>
+<p>30、python list sort</p>
+<p>sort默认升序排序</p>
+<pre><code class="language-javascript">list.sort(cmp=None, key=None, reverse=False)
+</code></pre>
+<h2 id="参数">参数</h2>
+<ul>
+<li>
+<p>cmp -- 可选参数, 如果指定了该参数会使用该参数的方法进行排序。</p>
+</li>
+<li>
+<p>key -- 主要是用来进行比较的元素，只有一个参数，具体的函数的参数就是取自于可迭代对象中，指定可迭代对象中的一个元素来进行排序。</p>
+</li>
+<li>
+<p>reverse -- 排序规则，</p>
+</li>
+<li>
+<p>reverse = True 降序，</p>
+</li>
+<li>
+<p>reverse = False 升序（默认）。</p>
+</li>
+</ul>
+<p>没有返回值 直接对列表生效</p>
+<p>31、python的elasticsearch_dsl包</p>
+<p>https://blog.51cto.com/u_15127516/3422021</p>
+<p>http://fingerchou.com/2017/08/13/elasticsearch-dsl-with-python-usage-2/</p>
+<p>32、eval函数遇到的问题</p>
+<p>case：</p>
+<p>要执行</p>
+<pre><code class="language-javascript">eval('Q(&quot;match_phrase&quot;,test=&quot;%s&quot;)'%content)
+</code></pre>
+<p>当content有\u的时候，会执行失败，报下列错误：</p>
+<p>SyntaxError(&quot;(unicode error) 'unicodeescape' codec can't decode bytes in position 10190-10191: truncated \uXXXX escape&quot;, ('<string>', 1, 30, None))</p>
+<p>这是因为\u被当成unicode进行解码了，而实际上就是一个正常的字符，不代表unicode，导致了解码失败，正常情况下，\u应该当成原生字符串来对待。</p>
+<p>解决方法：</p>
+<pre><code class="language-javascript">eval('Q(&quot;match_phrase&quot;,test=%s)'%repr(content))
+
+
+</code></pre>
+<p>repr函数可以获得原生字符串，而且和eval搭配，还不需要额外的双引号，可以看到上面test右边的双引号省掉了，使用repr之后，代码可以正常执行。</p>
+<p>经过demo测试，发现eval函数会将表达式中所有用双引号括起来的内容，都执行一遍unicode解码，看前两行因为引号被转义了，所以eval不会处理里面的字符串unicode解码：</p>
+<pre><code class="language-javascript">&gt;&gt;&gt; 'Q(&quot;match_phrase&quot;,test=%s)'%repr(content)
+'Q(&quot;match_phrase&quot;,test=\'\\\\u\\n\')'
+
+&gt;&gt;&gt; eval('\u4f60\u597d')
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+  File &quot;&lt;string&gt;&quot;, line 1, in &lt;module&gt;
+NameError: name '你好' is not defined
+&gt;&gt;&gt; eval('r&quot;\u4f60\u597d&quot;')
+'你好'
+</code></pre>
+<p>str和repr的区别：</p>
+<p>https://blog.csdn.net/m0_37561765/article/details/78493834</p>
+<p>1.str()一般是将数值转成字符串，str()函数得到的字符串可读性好（故被print调用）</p>
+<p>2.repr()是将一个对象转成字符串显示，repr() 函数将对象转化为供解释器读取的形式。支持dict和list。</p>
+<pre><code>repr是representation及描述的意思，不是对人的描述，而是对python机器的描述，也就是它会将某物返回一个它在python中的描述。对python友好。
+
+repr()函数得到的字符串通常可以用来重新获得该对象，通常情况下 obj==eval(repr(obj)) 这个等式是成立的。这也是为什么上面的解码问题用了repr之后可以省略双引号的原因，eval将repr的结果执行了，所以得到的是符合预期的字符串内容。
+</code></pre>
+<p>3.python里的str()也能把列表、字典等对象转成字符串。对用户友好</p>
+<p>33、一些常见报错汇总</p>
+<p>https://www.sohu.com/a/386649354_642571</p>
+<ul>
+<li>SyntaxError: unexpected character after line continuation character</li>
+</ul>
+<p>这个报错是因为在python中，可以使用\来断开字符串，写多行：</p>
+<pre><code class="language-javascript">test='hello'\
+    'world'
+print(test)
+# helloworld
+</code></pre>
+<p>所以，如果python发现前面是字符串，然后接个反斜杠，但是反斜杠后面不是字符串，就会报这个错误：</p>
+<pre><code class="language-javascript">&gt;&gt;&gt; q =eval(''\u'')
+  File &quot;&lt;stdin&gt;&quot;, line 1
+    q =eval(''\u'')
+                  ^
+SyntaxError: unexpected character after line continuation character
+</code></pre>
+<p>上面的case中，python以为前面有个空字符串接着要给另外一个字符串，但是中间多了一个u，所以就报错了。</p>
+<ul>
+<li>SyntaxError: EOL while scanning string literal</li>
+</ul>
+<p>这个报错是指字符串要么没有给全引号，要么字符串最后一个字符是反斜杠：</p>
+<pre><code class="language-javascript">&gt;&gt;&gt; &quot;\\u\&quot;
+  File &quot;&lt;stdin&gt;&quot;, line 1
+    &quot;\\u\&quot;
+         ^
+         
+&gt;&gt;&gt; eval(&quot;'\\u\n'&quot;)
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+  File &quot;&lt;string&gt;&quot;, line 1
+    '\u
+      ^
+</code></pre>
+<p>重点说下第二个case，对于eval而言，他会将我们给的表达式中引号括起来的内容进行转换，转换成真正的字符串，我可以可以理解为如果想要得到一个字符串，那么我们自己该怎么书写才能得到这个字符串，例如，我想要得到\</p>
+<p>我们自己定义字符串的时候是：'\\'才能得到这个结果，所以eval也要这个内容才可以转换成\，如果我们天真的给了eval('\')，那么得到的是''这样就会被判断成最后一个字符是反斜杠，所以报这个错误。</p>
+<p>如果想要的字符串是'\u\n'，其实对应的内容是 \u换行，但是我们不能就这样传给eval，因为他要的是python能够执行的东西，所以要更高一层；为了得到\u换行，我们自己定义的时候给成\u\n，给了一层转义，对于使用eval，我们还需要一层，所以就需要传\\u\n给eval，他的层级更高。逻辑有点绕，但是应该挺好理解的。</p>
+<p>层级关系是：</p>
+<p>human_readable_str-&gt;escaped_str(对应我们自己定义字符串的方式)-&gt;escaped_escaped_str（对应给eval函数的方式）</p>
+<p>34、conda本地安装依赖包</p>
+<p>可以直接下载这个包，然后解压，然后用conda环境中的python解释器，执行</p>
+<p>python setup.py install</p>
+<p>就可以在这个环境中安装依赖包了</p>
+<p>网上很多使用conda命令行的方式，自己测试时，发现很多都不能和预期想的那样执行，所以按照上面的方式执行就完事了。</p>
+<p>35、gevent的事件循环</p>
+<p>https://www.gevent.org/api/gevent.html#getting-greenlets</p>
+<p>gevent有api：spawn、spawnlater，按照正常理解，使用这个api后，被执行的函数理应自动加入到事件循环，并开始等待事件循环进行执行，但是在使用时，发现使用了spawn之后，虽然程序的代码执行点往下走了，但是并没有调度去执行spawn的函数，这是因为我们还没有使用gevent的事件循环。</p>
+<p>可以理解成，spawn只是创建了协程，但是还没加入eventloop进行调度，我们需要显示的调用gevent.joinall(gevent_list)，执行了joinall之后，gevent才会有一个事件循环，此时如果在spawn的函数中再去spawn别的协程，那么才会自动被调度。</p>
+<p>在协程里，我们spawn一个新的协程后，也可以joinall去等待这个新协程的执行完毕，只有第一次joinall才是同时创建事件循环，后续的在被调度的协程中使用的joinall就是字面意思上的同步等待协程执行完毕。</p>
+<p>使用gevent，一定要在代码的最开头执行下列代码：</p>
+<pre><code class="language-javascript">import gevent
+from gevent import monkey
+monkey.patch_all()
+</code></pre>
+<p>patch_all会把所以依赖库中可以被修改的同步操作，都变成异步调用，例如requests包，这样才能达到真正的异步。</p>
+<p>如果自己的程序依赖包中，使用了asyncio的事件循环，这个时候自己有需要用gevent的话，需要统一两个事件循环，要么是将gevent的协程用asyncio的eventloop调度，要么反过来asyncio的协程用gevent的eventloop调度。</p>
+<p>这个时候需要引入一个包：</p>
+<p>https://github.com/gfmio/asyncio-gevent</p>
+<p>举例，将asyncio的协程用gevent的事件循环调度：</p>
+<pre><code class="language-javascript">import asyncio
+import asyncio_gevent
+asyncio.set_event_loop_policy(asyncio_gevent.EventLoopPolicy())
+</code></pre>
+<p>一般来说这样就够了，上面的github也给出了不同的方法。但是在自己使用的过程中，遇到了问题，即使执行了上面的代码，asyncio的还是不能正常执行，所以进行了下面的改造：</p>
+<pre><code class="language-javascript">def hello_world(content):
+    print(content)
+greenlet = asyncio_gevent.future_to_greenlet(
+            hello_world('nihao')
+        )
+greenlet.start()
+greenlet.join()
+ret = greenlet.get()
+</code></pre>
+<p>上面的是直接用asyncio_gevent创建一个gevent的协程，hello_world函数应该是一个await的函数才对，这里只是简单的示意该如何传参。</p>
+<p>36、json的dumps、dump loads load</p>
+<p>https://www.cnblogs.com/wswang/p/5411826.html</p>
+<p>dumps和loads是一对</p>
+<p>dump和load是一对</p>
+<p>前者是将字典转成字符串（dumps），以及将字符串转成字典（loads）</p>
+<p>后者实际的操作内容一样，但是从文件中读和写，dump将dict写到文件中，load将文件中的内容读出来并转成dict，所以这两个函数需要一个文件描述符（open函数的返回对象）</p>
+<p>json.dump(a_dict,fp)</p>
+<p>json.load(fp)</p>
+<p>37、pymysql/MySQLdb</p>
+<p>这两个第三方包都是封装了mysqlclient的，连接数据库和调用执行sql语句的api都相似，默认都是开启事务的：</p>
+<pre><code class="language-javascript">import pymysql
+db_con = pymysql.connect(db='',user='',password='',host='',charset='')
+db_cursor = db_con.cursor()
+db_cursor.execute(sql)
+db_con.commit()
+</code></pre>
+<p>普通使用上都没有什么太让人费解的地方，关键在于我们connect时指定的charset有点歧义，他并不是在connect的时候执行set names latin1，而是指整个连接的编解码方式，这类似于通信协议，例如json，作为mysql的客户端和服务端，两端通信的协议，例如要执行的sql语句按照什么字符集编码为二进制传给服务端，反过来服务端查询的结果根据什么字符集编码二进制返回。这是连接传输数据的编码方式，并不是set names。</p>
+<p>如果表的字符集是latin1，想要拿到正确的数据，例如中文拿回来是正确显示的，那么我们应该在CRUD之前，先执行execute一个set names语句，这样mysql服务端就知道用户传过来的数据以什么编码存在存储中。</p>
+<p>也即connect里的charset字符集指的是网络数据包的序列化和反序列化的方式，set names指定的字符集才真正表示mysql服务端如何将用户插入的数据编码存在存储中，以及如何将存储中的数据解码返回给用户端。</p>
+<p>正确的使用方法如下：</p>
+<pre><code class="language-javascript">db_con = pymysql.connect(db='',user='',password='',host='',charset='utf8')
+db_cursor = db_con.cursor()
+db_cursor.execute('set names latin1')
+db_cursor.execute(sql)
+db_cursor.fetchall()
+db_con.commit()
+</code></pre>
+<p>在这种使用方式上，已经确认了能正确插入中文和select含有中文的数据，但是奇怪的是，mysql服务端返回的内容，pymysql/MySQLdb在fetch结果的时候，会偶尔的报DecodeError，这说明mysql返回的数据按照utf8解码的时候失败了，但实际上有些数据又是正常处理了，两边不一致弄的很苦恼，最后查资料发现，也有人遇到了类似问题，直接通过修改pymysql的源文件，将编码错误忽略后，就可以正确插入了。（导致偶发的原因，可能是有些数据它编码有混合的编码情况）</p>
+<p>https://my.oschina.net/pallormoon/blog/629807</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/QueUoX9cmYxlW74.png" alt="" loading="lazy"></figure>
+<p>38、 str encode decode</p>
+<p>encode是把unicode的str字符串对象按照字符集编码为二进制数据，而decode则是将二进制数据转码成unicode的str字符串</p>
+<pre><code class="language-javascript">str= '你好'
+str.encode('utf8')  # b'\xe4\xbd\xa0\xe5\xa5\xbd'
+str.encode('utf8').decode('utf8')  # 你好
+</code></pre>
+<p>而decode可以指定参数ignore，表示出现无法解码的字符时直接忽略：</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/CnA4GHKjY5habcM.png" alt="" loading="lazy"></figure>
+<p>39、django获取request请求参数</p>
+<pre><code class="language-javascript">if request.method=='GET':
+    data = request.GET
+if request.method == 'POST':
+    data = request.POST
+    
+有可能POST拿不到数据可以使用
+request.json() #这个应该是django别的库提供的能力
+</code></pre>
+<p>一定要保证Content-Type=application/json，才有可能在POST里拿到数据</p>
+<p>40、获取celery任务的错误信息</p>
+<p>celery异步结果类：</p>
+<p>https://docs.celeryproject.org/en/latest/reference/celery.result.html#celery.result.AsyncResult%20AsyncResult</p>
+<p>当我们使用delay、apply_async提交一个异步任务后，该函数返回一个AsyncResult的类对象给我们，我们可以通过ready成员函数判断任务是否执行完毕，以及获取state成员看是成功还是失败还是pending。</p>
+<p>如果任务抛出异常，没有正常返回，那么：</p>
+<pre><code class="language-javascript">res = async_task_func.apply_async()
+if res.ready():
+    err = res.result
+    if isinstance(err,Exception):
+        print(res.traceback)
+        print(err)
+</code></pre>
+<p>python的异常类在生成的时候，会默认给异常类的成员__traceback__赋值当前的堆栈信息；</p>
+<p>发生异常后，celery会把任务的异常抛出，但是这个异常只包含初始化异常类的信息，没有相应的堆栈信息，因为堆栈是worker进程里的，而我们的主调进程是拿不到这个堆栈的，所以celery就没有返回这个堆栈，但是我们可以通过res.traceback获取到堆栈字符串，照样可以获得worker的堆栈信息，只不过是字符串，而不是traceback对象罢了。</p>
+<p>如果程序是往外层raise内部celery的异常，那么外层使用traceback.format_exc()打印异常的时候就只有主调进程的信息，没有celery的信息，可以考虑用下面的方法：</p>
+<pre><code class="language-javascript"># inner
+def test():
+    res = async_task_func.apply_async()
+    if isinstance(res.result,Exception):
+        err = res.result
+        err.args=(*err.args,res.traceback)
+        raise err
+        
+# outer
+if len(err.args)&gt;0 and err.args[-1].startswith(&quot;Traceback&quot;):
+    dosomething
+</code></pre>
+<p>因为堆栈信息字符串开头的就是Traceback，可以通过这个来判断给外层输出。</p>
+<p>41、根据别的错误堆栈，创建新的异常类并带上别人的堆栈信息：</p>
+<pre><code class="language-javascript">try:
+    1/0
+except Exception as err:
+    raise KeyError.with_traceback(err.__traceback__)
+</code></pre>
+<p>异常类都有__traceback__对象，这是一个traceback类型的对象，可以通过with_traceback赋值，将别的异常堆栈传给新的异常类。</p>
+<p>42、elastictsearch_dsl包</p>
+<p>https://elasticsearch-dsl.readthedocs.io/en/latest/search_dsl.html</p>
+<p>普通的使用Q函数进行查询的api用法看上面的链接即可，这里要特意给出一个从已有的查询json数据转成Q对象的方法，这样转完之后还可以进一步使用Q对象添加查询条件：</p>
+<pre><code class="language-javascript">t = {
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {
+          &quot;range&quot;: {
+            &quot;uisendtime&quot;: {
+              &quot;gte&quot;: 1644940800,
+              &quot;lte&quot;: 1645067043
+            }
+          }
+        },
+        {
+          &quot;terms&quot;: {
+            &quot;uiappid&quot;: [
+              200003,
+              300040,
+              300041,
+              300042,
+              300046,
+              300047,
+              300052,
+              300053,
+              300001
+            ]
+          }
+        },
+        {
+          &quot;match_phrase&quot;: {
+            &quot;strtitle&quot;: {
+              &quot;query&quot;: &quot;你好&quot;
+            }
+          }
+        }
+      ]
+    }
+  }
+from elasticsearch_dsl import Q
+q = Q(t)
+q &amp;= Q(&quot;terms&quot;,appid=[1,2,3,4,5]) 
+# 这样就可以实现在原查询条件上增加新的查询条件
+</code></pre>
+<p>43、elasticsearch包</p>
+<p>这个包与上面的dsl包的主要区别在于，这个包是用来请求ES的，会创建连接，处理请求和回包，而dsl更多的是定义查询的dsl结构体。</p>
+<p>目前用的不是很多，简单写下目前用到的API，后续补充</p>
+<p>https://elasticsearch-py.readthedocs.io/en/6.2.0/api.html#elasticsearch</p>
+<p>这是官方文档，可以选择不同版本的文档，不同版本的变化还是挺大的。</p>
+<pre><code class="language-python">from elasticsearch import ElasticSearch
+client = ElasticSearch(host='127.0.0.1',port=80,timeout=20)
+client.search(body=dsl_dict,preference='_primary')
+</code></pre>
+<p>https://elasticsearch-py.readthedocs.io/en/6.2.0/api.html#elasticsearch.Elasticsearch.search</p>
+<p>目前看来，这个包会将body参数作为body数据请求es，其他的参数会使用urlib的urlencode来转成url参数，完成一次请求，search函数的返回值就是查询结果dict。</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/ZBgIf8lL1aF4XYK.png" alt="" loading="lazy"></figure>
+<p>44、UnboundLocalError: local variable 'err' referenced before assignment</p>
+<p>这个错误，很容易复现，只要引用的变量未经定义就会报错，但在开发的时候遇到了下面这种神奇的报错：</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/spdwjUY3cqVDJtm.png" alt="" loading="lazy"></figure>
+<p>虽然函数一开始就声明了err，但是这个函数调用会报错，原因是，在exception分支进去之后，err这个名字变成了局部变量as err这个变量，等到finally再次访问err的时候，这个as err的局部变量已经没有了，也即这个时候已经是未定义的了，自然会报错，只需要改成下面的代码即可避免，这个时候会发生深拷贝，所以出了exception仍可正常访问：</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/dAMXxQ1cWJqPBNK.png" alt="" loading="lazy"></figure>
+<p>45、python parse包</p>
+<p>parse的作用和正则表达式的作用差不多，都是匹配字符串的一些内容，对于简单的文本匹配是挺好用的，但是没有正则表达式的方便，但比正则可读性更高。</p>
+<p>https://juejin.cn/post/6869911894153494536</p>
+<p>46、read</p>
+<p>read函数的参数只有一个size，表示要读取的字符数，如果给-1表示全部读取</p>
+<p>47、len函数</p>
+<p>在python中，对一个字符串使用len计算其长度，是和字符相关的，而不是底层的存储字节；</p>
+<p>例如</p>
+<pre><code class="language-javascript">string1 = &quot;你&quot;
+string2 = &quot;a&quot;
+len(string1) == len(string2) // 长度均为
+</code></pre>
+<p>而在c++中，对字符串size是底层的字节数，所以中文就会对应三个字节</p>
+<p>48、python 处理csv文件</p>
+<p>使用csv包</p>
+<pre><code class="language-javascript">import csv
+with open(&quot;xxx.csv&quot;,&quot;r&quot;) as f:
+    reader = csv.reader(f)
+    for row in reader: // 展示每一行数据
+        print(row) // 每一行都是一个数组
+        
+//或者
+with open(&quot;xxx.csv&quot;,&quot;r&quot;) as f:
+    reader = csv.DictReader(f)
+    for row in reader: // 展示每一行数据 不包括表头
+        print(row[&quot;col_name1&quot;],row[&quot;col_name2&quot;]) 
+        // 每行每一列的数据都放在一个类字典对象中
+// 也可以从字符串中加载
+import io
+with open(&quot;xxx.csv&quot;,&quot;r&quot;) as f:
+    file_content = f.read(-1)
+    reader = csv.DictReader(io.StringIO(file_content))
+    for row in reader:
+        print(row[&quot;col_name1&quot;],row[&quot;col_name2&quot;])
+</code></pre>
+<p>49、requests解析回包的内容</p>
+<pre><code class="language-javascript">import requests
+res = requests.get('url')
+print(res.encoding)
+res.encoding = res.apparent_encoding
+print(res.encoding)
+print(res.text)
+</code></pre>
+<p>res.encoding是requests包根据回包的header设置好的，例如</p>
+<p>Content-Type: text/plain; charset=utf8</p>
+<p>这样的话， 收到包的同时，res的encoding就被设置为utf8</p>
+<p>如果回包header没有告诉charset，则res.encoding默认为ISO-8859-1;</p>
+<p>res.text是按照res.encoding将res.content进行解码的，content是二进制数据，text为字符串；如果res.encoding不正确，就会出现UnicodeDecodeError；</p>
+<p>res.apparent_encoding实际上是一个函数，@property了，这个函数会用chardet包去检测回包的编码格式，将它设置为res.encoding，这样能够避免decode error；</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/elasticsearch-ji-chu-shi-yong/">
+                <h3 class="post-title">
+                  ElasticSearch基础使用
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

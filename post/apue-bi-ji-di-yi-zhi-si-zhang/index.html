@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第一至四章 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第一至四章</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>Unix文件和目录</p>
+<p>目录是一个包含目录项的文件，创建新目录时，会自动创建两个文件名 . （当前目录）..（上一级目录）</p>
+<p>文件描述符（fd），通常是一个非负整数，内核用以标识一个进程正在访问的文件，读写文件都通过这个fd。</p>
+<p>出错处理</p>
+<p>当系统函数出错时，通常会返回一个负数，或者返回空指针；整型变量errno通常设置成特定信息的值，每个线程有自己的局部errno，避免与其他线程混淆。</p>
+<p>任何系统函数都不会将errno设置为0.</p>
+<p>出错恢复：出错分为致命性和非致命性，致命性出错无法恢复，程序终止；非致命性出错，开发者可以进行妥善的异常处理进行恢复。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/vO6NxtqJ3ZmFEAz.png" alt="" loading="lazy"></figure>
+<p>进程就是一个程序的实例，exec函数用来执行程序</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/b7dg1nDRM3tv6UV.png" alt="" loading="lazy"></figure>
+<p>时间值</p>
+<p>1.日历时间</p>
+<p>用UTC计算，1970.1.1的零时零分开始算起到目前的总秒数。</p>
+<p>2.进程时间</p>
+<p>也成为CPU时间，进程时间以时钟滴答计算，例如每秒钟多少滴答。</p>
+<p>Unix系统为每个进程维护了三个时间值：时钟时间（墙上时钟时间）、用户CPU时间、系统CPU时间</p>
+<p>用户CPU时间指执行用户命令所用的时间，系统CPU时间值执行内核程序的时间，两者之和称为CPU时间，也即进程时间。</p>
+<p>时钟时间（墙上时钟时间）与当前系统的所有进程数有关，是某个进程运行的时间总量。</p>
+<p>时钟时间=阻塞时间+用户cpu时间+系统cpu时间，进程数目会影响阻塞时间。</p>
+<p>系统调用和库函数</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/tEOWNkfbjqVUhcv.png" alt="" loading="lazy"></figure>
+<p>直接进入内核的入口点叫做系统调用；库函数可能调用一个或多个系统调用；系统调用和库函数对于用户来说都是C函数，都给用户提供相应的服务。但系统调用是内核的直接入口点，也是最小入口，而库函数则不是。</p>
+<p>Linux是一种提供类似于Unix丰富编程环境的OS——类Unix</p>
+<p>Mac OS，Solaris是Unix系统。符合POSIX标准的系统称为Unix系统，Unix系统的一大特点就是丰富的编程环境。</p>
+<p>限制</p>
+<p>各个标准，ISO C,POSIX都定义了一些常量，表明某些类型或某些量的大小范围限制。</p>
+<p>这些常量都是硬编码的， 将数据直接嵌入到程序或其他可执行对象的源代码中的软件开发实践，与从外部获取数据或在运行时生成数据不同。   硬编码的数据通常表示不变的信息，例如物理常量，版本号和静态文本元素。 另一方面，软编码数据对用户输入，HTTP服务器响应或配置文件等任意信息进行编码，并在运行时确定。</p>
+<p>举例：int整型实际的位数，不同的系统是不一样的，而ISO C定义了int的最小长度，具体系统的实现不能小于该大小，这是限制的一个作用。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/Fgaue6pGPztsv4Q.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/133ED503B217419FB4259CA4E1E4015B.png" alt="" loading="lazy"></figure>
+<p>sysconf,pathconf,fpathconf用于运行时确定限制大小</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/dULqe3s8aFvM9tr.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/w83hluBH2FJQUGO.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/570C8522818E4F45B78444BD3939E81D.png" alt="" loading="lazy"></figure>
+<p>编译时选项定义在unistd.h头文件中，也即编译时能确定的常量。</p>
+<p>功能测试宏</p>
+<p>用于不同的实现都有一些自己定义的限制，而若只想用POSIX或XOPEN的定义，则可以通过功能测试宏来限制，排除实现的专有定义，功能测试宏一般是下划线开头的:</p>
+<p>_POSIX_C_SOURCE  _XOPEN_SOURCE</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/hr2SdYNp7UEOq4b.png" alt="" loading="lazy"></figure>
+<p>或者在源文件中#defin _POSIX_C_SOURCE 来提供功能测试宏</p>
+<p>文件I/O</p>
+<p>一个文件的文件偏移量只有一个，不分读操作和写操作两个偏移量，读写两者共用一个文件偏移量。</p>
+<p>#include&lt;fcntl.h&gt;</p>
+<p>int open(const char* path,int oflag,.../* */)</p>
+<p>int openat(int fd,const charpath,int oflag,.../ * */)</p>
+<p>oflag是标志位，表明对该fd要进行的一些操作的限制</p>
+<p>可以有多个标志位通过按位或给出，类似于文件流的标志位</p>
+<p>openat是新的打开函数，目的是可以使用相对路径打开目录中的文件，而不再是只能打开当前工作目录。</p>
+<p>同一进程中的线程共享当前工作目录，很难让同一进程的多个不同线程同一时间工作在不同的目录中</p>
+<p>open openat的区别</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/XryxlHOsQ2REdB5.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/vHCGgxKouQwaYct.png" alt="" loading="lazy"></figure>
+<p>由open和openat返回的文件描述符一定是当前可用的最小值，例如，如果在调用前有个较小的fd释放了，那么这次调用返回的就是这个较小的fd。</p>
+<p>close</p>
+<p>int close(int fd)</p>
+<p>关闭文件的同时，会释放其上的锁标记。当一个进程结束时，内核自动会关闭其打开的文件，所以很多程序不显示的给出close函数。</p>
+<p>lseek （location seek)</p>
+<p>类似文件流中的设置光标位置，表示当前读或者写的位置，通过偏移量（字节）来设置。</p>
+<p>打开文件时，若没有指定O_APPEND标志，偏移量默认为0，表示从文件开头开始。</p>
+<p>可以显式的使用lseek函数进行偏移量的设置，而且如果重新定位进行写操作时原本的位置有数据，不会将数据往后推，而是直接覆盖。</p>
+<p>如果指定了O_APPEND标志，则无论怎么设置写都是追加写，读写的文件当前位置是不同的，其他打开方式则读写都是同一个文件位置。</p>
+<p>off_t lseek(int fd,off_t offset,int whence) 可用来判断fd能否设置偏移量，不能则返回-1</p>
+<p>根据whence的值和offset的值设置当前偏移量，offset可正可负，返回设置后的偏移量</p>
+<p>可以通过lseek(fd,0,SEEK_CUR)得到当前偏移量</p>
+<p>whence=SEEK_SET表明文件头开始+offset  对应0</p>
+<p>whence=SEEK_CUR表明当前位置+offset 对应1</p>
+<p>whence=SEEK_END表明文件末+offset  对应2   可以直接用数字0，1，2代替常量</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/DZSMx2B8gkaLIi9.png" alt="" loading="lazy"></figure>
+<p>空洞部分并不要求在磁盘上占用存储区，具体实现与文件系统有关，一般是不会存储的。</p>
+<p>off_t是有符号类型，其类型的大小会影响文件的最大字节上限，也即文件大小上限，有32位文件偏移量，也有64位文件偏移量</p>
+<p>若为有符号32位的数，则文件最大为2G（2^31-1字节）。尽管可以有64位的偏移量，但能否创建大于2G的文件取决于文件系统</p>
+<p>read</p>
+<p>int read(int fd,void* buf,size_t nbytes)</p>
+<p>读取nbytes字节的数据，返回实际读取的字节数。</p>
+<p>将数据读取到buf中</p>
+<p>write</p>
+<p>ssize_t write(int fd,const void* buf,size_t nbytes)</p>
+<p>将buf中的数据写入文件中，若对该文件没有写权限，虽然无法写进东西，但是write函数不会报错，也即不会返回-1.</p>
+<p>在指定的fd上写入数据，返回写入的数据字节数，一般返回值与nbytes一样，否则都代表出错。出错有可能是磁盘已经写满或超过了给定fd的最大文件长度限制。</p>
+<figure data-type="image" tabindex="13"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/C3661DCB577847A0BCCB5F0484427BBF.png" alt="" loading="lazy"></figure>
+<p>read和write都要经过内核缓冲区和用户缓冲区的复制。</p>
+<p>文件共享</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/CchQnXa8Emr4tgw.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/8zQwvRe7kqSno5u.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/jyDWpJragV92H3O.png" alt="" loading="lazy"></figure>
+<p>多个进程打开同一个文件时，系统会为每个进程维护一张文件表，这样每个进程都有自己的当前文件偏移量，如果多个文件同时写文件可能产生预想不到的结果。</p>
+<p>原子操作</p>
+<p>所谓原子性或原子操作，就是多个步骤组成一个操作，而且这个操作要么执行完所有步骤，要么一步也不执行，不可能只执行所有步骤中的一个子集。</p>
+<p>O_APPEND标志</p>
+<p>如果两个进程对同一个文件进行追加写操作，若操作逻辑是两者都先调用了lseek定位到文件尾，再分别执行写操作，则会发生问题，第二次写的内容会覆盖第一次写的内容。</p>
+<p>打开文件时若选择了O_APPEND标志，则每次写操作会自动获得当前文件的尾进行追加，不用单独执行lseek，内核在写之前会将当前文件偏移量设置为该文件的尾端处。</p>
+<p>pread pwrite</p>
+<p>相当于先调用lseek，再调用read/write</p>
+<p>创建一个文件</p>
+<p>int creat(char* pathname,mode_t mode);创建具有mode文件访问权限的文件，返回以写方式打开的文件描述符，其等同于open(pathname,O_CREAT|O_TRUNC|O_WRONLY)；只有使用了O_TRUNC标志，在文件名已存在时才会覆盖原文件，否则创建文件失败。</p>
+<p>若检查文件是否存在和创建文件是两个函数分别执行的，那么可能存在另一个进程先一步创建了文件并写了内容，这些该进程再创建就会抹去原有的内容。</p>
+<p>在一个目录下创建文件，必须拥有该目录的执行权限和写权限，可以没有读权限，没有读权限只是你不能看到该目录下的东西，实际上文件是已经创建成功了。</p>
+<p>dup  dup2</p>
+<p>复制一个现有的文件描述符</p>
+<p>int dup(int fd) 复制文件描述符fd，返回当前可用的文件描述符中最小值</p>
+<p>int dup2(int fd, int fd2)复制文件描述fd，返回指定文件描述fd2，若fd2已存在，则先将其关闭后返回</p>
+<p>dup(fd) == fcntl(fd,F_DUPFD,0);</p>
+<p>dup2(fd,fd2) ==  close(fd2) ; fcntl(fd,F_DUPFD,fd2); 两者有些许不同，dup2是原子操作，而后者是两步操作，dup2和fcntl的errno也有不同</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/t5ASfmb1WV8qcDo.png" alt="" loading="lazy"></figure>
+<p>注意这与一般的文件共享不同，这里的文件表项只有一个，而不是各自有一个</p>
+<p>sync fsync fdatasync</p>
+<p>内核维护缓冲区高速缓存或页高速缓存，磁盘I/O通过缓冲区进行，写的时候，内核先将数据写入缓冲区，然后排入队列，然后晚些时候延迟写入磁盘。这种叫延迟写。</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/l3vS8V1bBPQt6wD.png" alt="" loading="lazy"></figure>
+<p>sync将所有修改过的块缓冲区排入写队列，然后就返回，并不等待实际的磁盘I/O写操作后返回</p>
+<p>fsync指定文件描述符fd进行磁盘I/O，等待磁盘I/O后才返回，这种用于应用程序需要立即写入的情境下，例如数据库</p>
+<p>fdatasync,与fsync作用相同，但只影响文件的数据部分，而fsync会同步更新文件属性</p>
+<p>函数fcntl</p>
+<p>fcntl函数可以改变已打开文件的属性</p>
+<p>#include &lt;fcntl.h&gt;</p>
+<p>int fcntl(int fd,int cmd,...) 若成功返回与cmd相关的值，否则返回-1</p>
+<p>fcntl(fd,F_DUPFD,0)复制文件描述符，返回目前可用的大于等于第三个参数的最小值</p>
+<p>在设置修改文件描述符标志和文件状态标志时要谨慎，要先获得现在的标志然后按照期望修改它，要注意是否会关闭所需要的标志</p>
+<p>同步写标志O_SYNC，表明写操作必须等待磁盘I/O完成后再返回，而默认情况下，write函数只是把数据排入队列后就返回，不等待磁盘I/O的完成</p>
+<p>ioctl函数</p>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/4nVJEgwWpL5QHyU.png" alt="" loading="lazy"></figure>
+<p>/dev/fd</p>
+<p>在该目录下的文件是当前系统中用到的文件描述符，打开这些文件描述符相当于进行了文件描述符的复制</p>
+<p>fd=open('/dev/fd/0',mode) == fd=dup(0);</p>
+<p>大多数系统忽略mode参数，而有些系统要求mode参数</p>
+<p>需要注意的是，Linux将这些文件与底层物理文件连接，所以打开这些文件需要注意，避免误操作导致文件内容被意外修改。</p>
+<p>core dump</p>
+<p>通常情况下，core文件会包含了程序运行时的内存，寄存器状态，堆栈指针，内存管理信息还有各种函数调用堆栈信息等，我们可以理解为是程序工作当前状态存储生成的一个文件，许多的程序出错的时候都会产生一个core文件，通过工具分析这个文件，我们可以定位到程序异常退出的时候对应的堆栈调用等信息，找出问题所在并进行及时解决。</p>
+<p>core文件的生成不一定打开了，需要用命令进行打开，以及进行相应的设置。</p>
+<p>core dump就是将程序异常终止时保存存储的信息，用于分析错误原因。</p>
+<p>不带缓冲的I/O</p>
+<p>第三章所用的IO函数都是不带缓冲的，他们都是直接的系统调用，虽然说在磁盘I/O的时候，会经过内核的块缓存区，但这不是缓冲，缓冲是指进程内部对读写的数据进行缓冲处理，这是软件定义的，不是硬件的缓存。</p>
+<p>硬件的叫缓存，软件的叫缓冲。</p>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/AxQpyVFtgoNUsc8.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/wvA8XleOpynPW6I.png" alt="" loading="lazy"></figure>
+<p>重定向指让两个fd进行共享</p>
+<p>用O_APPEND模式打开的文件，可以用lseek在任意位置开始读，但是对于write则不能使用，会自动在末尾进行写操作</p>
+<p>文件和目录</p>
+<p>stat fstat lstat fstatat函数</p>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/prs5SmvTK2Z4nxR.png" alt="" loading="lazy"></figure>
+<p>文件类型</p>
+<p>1.普通文件(regular file)</p>
+<p>包含某种形式的数据，该文件是二进制文件还是文本文件对于内核并无区别，但若是二进制可执行文件，那么需要遵循统一的标准，内核才可以确定程序文本和数据加载位置。</p>
+<p>2.目录文件(directory file)</p>
+<p>可以理解成文件夹，目录文件包含了其他文件的名字和指向这些文件有关信息的指针，具有该目录文件读权限的进程可以读取该目录的内容，而写操作只能通过内核进行，需要使用给定的函数才能执行。</p>
+<p>3.块特殊文件(block special file)</p>
+<p>这种类型的文件提供对设备（如磁盘）的带缓冲访问，每次访问以固定长度进行。</p>
+<p>4.字符特殊文件（character special file）</p>
+<p>这种类型的文件提供对设备的不带缓冲访问，每次访问长度可以改变。系统中的所有设备要么是字符特殊文件，要么是块特殊文件。</p>
+<p>5.FIFO</p>
+<p>用于进程间通信，也成为命名管道</p>
+<p>6.套接字（socket）</p>
+<p>用于进程间的网络通信，也可以用于同一主机的不同进程的非网络通信</p>
+<p>7.符号链接（symbolic link）</p>
+<p>这种类型的文件指向另一个文件。</p>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/wt1KX6o8akdb7Mi.png" alt="" loading="lazy"></figure>
+<p>设置用户ID和组ID</p>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/3TnuVkXSwOvUZzW.png" alt="" loading="lazy"></figure>
+<p>可以通过设置用户ID位和设置组ID为来使得程序在执行时的有效用户ID和组ID为相应的可执行文件的所有者ID和组ID。实际用户就是我们当前登录系统的用户是谁。</p>
+<p>如果不使用设置用户ID和设置组ID标志，则我们打开程序时，有效用户ID和组ID就是我们当前用户（实际用户）的ID，而设置用户ID和组ID则是当程序执行时，将进程的有效ID设为该文件的所有者ID。</p>
+<p>用户访问权限</p>
+<p>所有文件都有访问权限，st_mode值包含了对文件的访问权限位。</p>
+<figure data-type="image" tabindex="25"><img src="https://s2.loli.net/2022/08/28/rmPoKQTpsztj85W.png" alt="" loading="lazy"></figure>
+<p>1.当我们给定一个路径，要打开该路径下的某个文件时，必须对该路径上的所有目录都具有执行权限，包含对隐含的当前目录的执行权限，然后该文件必须有相应的权限才能打开。若中间某个目录没有执行权限，那么打开是失败的。目录的读权限和执行权限是两回事，读权限是指可以读取该目录下所有文件列表，而执行权限是可以让我们通过该目录</p>
+<p>2.在一个目录中创建新文件，必须要对该目录有执行权限和写权限。若删除某个文件，必须对目录有写权限和执行权限，没有对文件的读写权限要求</p>
+<p>3.用exec函数执行文件时，该文件必须有执行权限，并且文件必须为普通文件</p>
+<figure data-type="image" tabindex="26"><img src="https://s2.loli.net/2022/08/28/IxsT6BnwmruUY9h.png" alt="" loading="lazy"></figure>
+<p>上述的权限测试是按顺序执行的，若已经确定了权限则不会执行下一步的判断，并且会根据所确定的权限来进行文件的权限访问。</p>
+<p>所以，每个进程对于系统中文件的访问权限，与进程的有效用户ID和有效组ID有关，会根据权限测试进行判断。设置用户ID位和设置组ID位就是用来设置进程打开时的有效ID位的，与访问文件的权限相关</p>
+<p>新文件和新目录的ID</p>
+<p>新文件和新目录的ID设置相同，用户ID设置为进程的有效用户ID，而组ID可以有两种情况：</p>
+<p>1.设置为进程的有效组ID 2.设置为所在目录的组ID</p>
+<p>Linux通过所有目录的设置组ID位是否被置位，是则新文件的组ID与其一样，否则与进程的有效组ID一样</p>
+<p>access faccessat函数</p>
+<p>用于测试实际用户ID和组ID是否对指定文件有相应的权限</p>
+<figure data-type="image" tabindex="27"><img src="https://s2.loli.net/2022/08/28/3TnuVkXSwOvUZzW.png" alt="" loading="lazy"></figure>
+<p>mode是指测试什么权限，如果测试文件是否存在，则mode为F_OK；</p>
+<figure data-type="image" tabindex="28"><img src="https://s2.loli.net/2022/08/28/LERe7ndXgjtOPJD.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="29"><img src="https://s2.loli.net/2022/08/28/7XfPboZuTGmlwe9.png" alt="" loading="lazy"></figure>
+<p>函数umask</p>
+<p>设置创建文件屏蔽字，</p>
+<figure data-type="image" tabindex="30"><img src="https://s2.loli.net/2022/08/28/6mZ3MEbvcrgkyFB.png" alt="" loading="lazy"></figure>
+<p>cmask是由9个常量按位或的值，这9个常量是访问权限位，控制用户、组、其他的访问权限的位</p>
+<p>只要cmask中置位的对应的权限，则创建文件时，该文件不会拥有该权限，被ban了。</p>
+<p>系统登录后，会自动设置umask，若我们的进程想要在创建文件时使用自己的创建文件屏蔽字，则需要调用umask函数进行设置。</p>
+<figure data-type="image" tabindex="31"><img src="https://s2.loli.net/2022/08/28/ouGclhLWsy6aRYE.png" alt="" loading="lazy"></figure>
+<p>注意八进制值与屏蔽位的对应关系</p>
+<figure data-type="image" tabindex="32"><img src="https://s2.loli.net/2022/08/28/CimBlhGEgTHpyjn.png" alt="" loading="lazy"></figure>
+<p>chmod fchmod fchmodat</p>
+<p>这三个函数更改文件的访问权限，要想更改文件的访问权限，必须进程的有效用户ID等于该文件的所有者用户ID，或者是超级用户。</p>
+<figure data-type="image" tabindex="33"><img src="https://s2.loli.net/2022/08/28/zJieG6rDlS5b8U7.png" alt="" loading="lazy"></figure>
+<p>多了6个位，所以在ls -l命令中，可能的权限位不止9个，下面这个新增了一个设置组ID的位</p>
+<figure data-type="image" tabindex="34"><img src="https://s2.loli.net/2022/08/28/4kV9HIEXypFGnwx.png" alt="" loading="lazy"></figure>
+<p>ls -l显示的是文件内容修改的最后时间，而chmod修改的是i节点的最后更新时间，所以ls -l的时间没有变化</p>
+<p>chmod可能自动清除的mode位</p>
+<p>若没有超级用户权限，而又设置普通文件粘着位，则会被自动清除，但Linux和Mac OS并不进行这样的处理，因为粘着位对于这些系统没有意义。</p>
+<figure data-type="image" tabindex="35"><img src="https://s2.loli.net/2022/08/28/pocEFTngziL4N59.png" alt="" loading="lazy"></figure>
+<p>Linux中若没有超级用户权限的进程写一个文件，则该文件的设置用户ID和设置组ID位都被自动清除。</p>
+<p>粘着位 S_ISVTX</p>
+<p>粘着位也叫正文保持位（saved_text），设置了该位的程序，在程序终止时，其正文部分（机器指令）会存在交换区中，下次再执行时能够更快，交换区是一个连续的区域，对于交换区中可以存放的设置了粘着位的文件数量是有限制的，避免过多占用交换区，但由于现在的文件系统都提供虚拟存储系统以及快速文件系统，所以这个技术逐渐被淘汰了。</p>
+<figure data-type="image" tabindex="36"><img src="https://s2.loli.net/2022/08/28/X2QebCdhrSmA7Rs.png" alt="" loading="lazy"></figure>
+<p>函数chown fchown fchownat lchown</p>
+<p>上述四个函数可以更改文件的用户ID和组ID，不同于chmod，chmod是更改文件访问权限，而上述四个是改变文件的所有者用户ID和组ID</p>
+<figure data-type="image" tabindex="37"><img src="https://s2.loli.net/2022/08/28/Vh8izXmTlRqDp9S.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="38"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/9C624F98934249E984424D7236D054FA.png" alt="" loading="lazy"></figure>
+<p>若_POSIX_CHOWN_RESTRICTED限制生效，超级用户可以改文件的所有者用户ID和组ID，非超级用户只能更改自己所拥有的文件的组ID，且只能改成自己所属的组ID。</p>
+<p>文件长度</p>
+<p>stat结构中的st_size代表文件按字节算的长度，只对普通文件，目录和符号链接有意义</p>
+<p>对于目录和符号链接，文件长度不会为0，因为目录至少包含. ..两项，而符号链接的长度指路径名中包含的字节数。</p>
+<p>对于普通文件，其长度可以为0，读该文件得到eof提示</p>
+<p>目录文件通常是一个数（16或512）的整数倍；对于符号链接，长度为其文件名的实际字节数，不包含空字符</p>
+<figure data-type="image" tabindex="39"><img src="https://s2.loli.net/2022/08/28/deUNWDmaLiyjl6F.png" alt="" loading="lazy"></figure>
+<p>文件中的空洞</p>
+<p>文件的大小分为逻辑大小和实际内存大小，用ls -l 文件名，获得文件的逻辑大小，du -s 文件名获得文件实际占的磁盘内存大小。</p>
+<p>对于空洞文件，逻辑大小为包括空洞在内的字节数，而其实际所占的存储块大小为除去空洞后的大小，这个大小不一定就是文件所有字节的大小，因为文件系统存储的结构，存在着对存储块的指针，所以实际存储会大些。</p>
+<p>如果把文件中的空洞填充了，那么文件系统才会实质上为其分配存储块。</p>
+<p>空洞文件的用途：1.我们下载文件时，文件还没下好，一个临时文件已经有所下载文件的大小了，这就是空洞文件</p>
+<p>2.创建虚拟机时，我们分配的磁盘空间也是利用了空洞文件，否则一下就划走了真实的磁盘存储大小。</p>
+<p>文件截断</p>
+<p>O_TRUNC标志位在打开文件的时候将文件长度截断为0</p>
+<p>#include &lt;unistd.h&gt;</p>
+<p>int truncate(const char* pathname,off_t length);</p>
+<p>int ftruncate(int fd,off_t length); 函数成功执行返回0，否则返回-1</p>
+<p>截断指定的文件为length长度，若length比以前的长度小，则截断为length长，若以前的长度小于length则阶段后文件长度将增加，中间会补空洞。</p>
+<p>文件系统</p>
+<p>磁盘上有不同的分区，每个分区都可以有各自的文件系统</p>
+<figure data-type="image" tabindex="40"><img src="https://s2.loli.net/2022/08/28/R6MQ5pBbvwx9j2a.png" alt="" loading="lazy"></figure>
+<p>i节点包含了文件的所有信息：文件类型，文件访问权限位，文件长度，指向文件数据块的指针等。</p>
+<p>一个文件想要被删除，首先必须去链接计数要为0，对于一个文件，其i节点可能会有多个目录项指向它，每有一个指向则链接计数+1。</p>
+<p>所有的文件都是通过i节点管理所有信息，然后i节点再指向实际数据块，体现为整个文件。</p>
+<p>在文件系统移动文件时，并不需要复制文件，只需要创新的目录项指向i节点，删除旧的指向，就可以了，相当于只是指针的创建、删除，不涉及数据的复制。</p>
+<figure data-type="image" tabindex="41"><img src="https://s2.loli.net/2022/08/28/GjV34vQfDMLKu8a.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="42"><img src="https://s2.loli.net/2022/08/28/HycCvU6SeRiwEQj.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="43"><img src="https://s2.loli.net/2022/08/28/nHFXycCAMROakbP.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="44"><img src="https://s2.loli.net/2022/08/28/BsSryuU3fZqxipL.png" alt="" loading="lazy"></figure>
+<p>函数link linkat unlink unlinkat remove</p>
+<figure data-type="image" tabindex="45"><img src="https://s2.loli.net/2022/08/28/byqtEF9N3l7aSvI.png" alt="" loading="lazy"></figure>
+<p>也即创建一个新的目录去指向一个现有的目录或者文件，增加起链接计数，大多数操作系统不支持对目录的硬链接，也即不支持对目录的link操作，即使支持也是只有超级用户可以，一般不允许这种硬链接。</p>
+<figure data-type="image" tabindex="46"><img src="https://s2.loli.net/2022/08/28/MKjH8WhF3m5xJiX.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="47"><img src="https://s2.loli.net/2022/08/28/jqd1MCbtFJaNVov.png" alt="" loading="lazy"></figure>
+<p>unlink函数用来删除一个目录项或文件，同时对其所指向的所有文件，这些文件的链接计数都减一，若此时为0则该文件会被删除，否则该文件还可以通过其他链接进行访问。想要删除一个目录，必须对包含该目录项的路径都有执行和写权限。</p>
+<p>当链接计数为0时，会删除文件，但若该文件已经在进程中打开了，在执行了unlink之后，该文件已经被删除了，是找不到该文件的，但是实质上数据块还没有删除，要等到进程结束了，才自动删除数据。du命令是找不到该文件的话就不会统计其大小，而ds则会统计实质当前磁盘的存储情况。</p>
+<figure data-type="image" tabindex="48"><img src="https://s2.loli.net/2022/08/28/GT8sOScCZpmxgtk.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="49"><img src="https://s2.loli.net/2022/08/28/fYVNxuEZ3sTADcL.png" alt="" loading="lazy"></figure>
+<p>remove函数对于文件相当于unlink，对于目录相当于rmdir</p>
+<p>函数rename renameat</p>
+<figure data-type="image" tabindex="50"><img src="https://s2.loli.net/2022/08/28/LNEirujQTlXzGap.png" alt="" loading="lazy"></figure>
+<p>文件或目录通过上述函数进行重命名，前提是要改名的文件必须先存在，否则没有任何效果。</p>
+<p>对于文件，若不存在重名的就直接重命名。若newname对应的文件已经存在了，则该文件不能是目录，此时会删除现有的newname文件，然后将oldname重命名为newname，这种情况下需要对oldname和newname都具有写权限。</p>
+<p>对于目录，若不存在重名就直接重命名；若已存在newname的文件，则该文件必须是目录，且该目录必须是空目录，只有.和..。这是会删除该目录，然后将oldname重命名为newname。newname不能包含oldname作为其前缀，例如不允许oldname=/usr/foo newname=/usr/foo/testdir 因为这样涉及到要删除旧目录，把原来的foo改成foo/testdir后，原来的foo是不存在的，但是最终结果又要有这个目录，·	逻辑上有冲突。</p>
+<figure data-type="image" tabindex="51"><img src="https://s2.loli.net/2022/08/28/XzUB51kiLot3fN7.png" alt="" loading="lazy"></figure>
+<p>符号链接</p>
+<p>硬链接是直接指向文件的i节点，而符号链接是对一个文件的间接指针，可以简单的理解成类似文件的指针一样 。硬链接增加文件的链接计数，而符号链接不增加（因为符号链接可以指向不存在的文件），硬链接类似于shared_ptr，符号链接类似于weak_ptr。使用符号链接可以避免硬链接的限制：</p>
+<p>1.硬链接要求链接和文件必须在同一文件系统中</p>
+<p>2.只有超级用户才能创建硬链接</p>
+<p>对于符号链接以及他所指向的对象没有文件系统限制，符号链接一般用于将一个文件或目录结构移到系统中的另一个位置。</p>
+<figure data-type="image" tabindex="52"><img src="https://s2.loli.net/2022/08/28/SF4k8yex7UtlPr2.png" alt="" loading="lazy"></figure>
+<p>所谓的符号跟随是指，访问符号链接实质上是访问其所指向的文件，而不跟随符号则是访问符号链接本身。</p>
+<p>符号链接可能成环，若这种情况下，函数或者操作跟随符号链接的话，那么会出现死循环：</p>
+<figure data-type="image" tabindex="53"><img src="https://s2.loli.net/2022/08/28/EhSuxt6DVrBkYFL.png" alt="" loading="lazy"></figure>
+<p>只要不进行符号跟随就能正常运作，也有些函数直接不显示这些循环的结果。</p>
+<p>符号链接的循环是很好清除的，通过unlink函数即可，例如unlink(foo/testdir)</p>
+<p>创建符号链接和读取符号链接</p>
+<figure data-type="image" tabindex="54"><img src="https://s2.loli.net/2022/08/28/2waSO6fKg1v9btY.png" alt="" loading="lazy"></figure>
+<p>创建一个sympath符号链接指向actualpath，actualpath的文件可以不存在，例子如上一节。</p>
+<p>因为open函数跟随符号链接，所以想要打开符号链接本身，需要用到专门的函数。readlink 和readlinkat</p>
+<figure data-type="image" tabindex="55"><img src="https://s2.loli.net/2022/08/28/2gGF7pSIcHQMCKu.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="56"><img src="https://s2.loli.net/2022/08/28/lXPZ9DJKAzsaUgv.png" alt="" loading="lazy"></figure>
+<p>文件的时间</p>
+<p>stat结构体中有三个量用来存放文件的相关时间;</p>
+<p>1.st_atim 文件的最后一次访问时间</p>
+<p>2.st_mtim 文件数据的最后一次修改时间</p>
+<p>3.st_ctim i节点的状态最后一次更改时间</p>
+<p>注意i节点的最后一次修改时间和文件内容的最后一次修改时间是有区别的，因为在文件系统中，两者是分开存放的。</p>
+<figure data-type="image" tabindex="57"><img src="https://s2.loli.net/2022/08/28/k4xCzYRXeITt3po.png" alt="" loading="lazy"></figure>
+<p>目录是包含目录项的文件（文件名，相关的i节点编号），所以增加删除修改目录项会影响它所在目录的3个时间。不同的函数对文件的操作不同，所以可能除了修改了文件自身的时间外，还可能修改了其父目录的时间。</p>
+<p>函数futimens utimensat utimes</p>
+<figure data-type="image" tabindex="58"><img src="https://s2.loli.net/2022/08/28/lMCh68mJvTQxkzp.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="59"><img src="https://s2.loli.net/2022/08/28/MsPhY1L3SziITdb.png" alt="" loading="lazy"></figure>
+<p>指定修改文件的修改时间和访问时间时，状态更改时间st_ctim会自动更新为实时时间，且不能指定。</p>
+<figure data-type="image" tabindex="60"><img src="https://s2.loli.net/2022/08/28/BXgDvsJyEhNFmaZ.png" alt="" loading="lazy"></figure>
+<p>函数mkdir mkdirat rmdir</p>
+<p>用于创建目录（若存在则不创建，不会覆盖）和删除目录</p>
+<figure data-type="image" tabindex="61"><img src="https://s2.loli.net/2022/08/28/JSBCXc5AMlK1Nx9.png" alt="" loading="lazy"></figure>
+<p>文件的访问权限由mode和进程的文件创建屏蔽字决定。对于目录一般需要指定执行权限，这样才能通过目录路径，访问该目录下的文件名。</p>
+<p>rmdir可以删除一个空目录，该目录只包含. ..两项</p>
+<figure data-type="image" tabindex="62"><img src="https://s2.loli.net/2022/08/28/fk7nsE6pQIqabTg.png" alt="" loading="lazy"></figure>
+<p>读目录</p>
+<p>对目录具有访问权限的用户可以读目录，但只有内核才可以写目录，一个目录的写权限和执行权限只是决定了是否可以在该目录中创建文件和删除文件，但不代表能写目录本身。</p>
+<p>如果目录没有读权限，我们不能获得该目录下有什么内容。</p>
+<figure data-type="image" tabindex="63"><img src="https://s2.loli.net/2022/08/28/o5dyzKfk8YnjJb9.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="64"><img src="https://s2.loli.net/2022/08/28/aiyW7rL1ZUwSmIe.png" alt="" loading="lazy"></figure>
+<p>函数chdir fchdir getcwd</p>
+<p>进程使用chdir fchdir可以更改当前工作目录</p>
+<figure data-type="image" tabindex="65"><img src="https://s2.loli.net/2022/08/28/6yT3PdM8NsawqVv.png" alt="" loading="lazy"></figure>
+<p>当前工作目录是进程的一个属性，chdir只会更改进程自身的cwd而不会改变其他的进程。</p>
+<figure data-type="image" tabindex="66"><img src="https://s2.loli.net/2022/08/28/8bcoa5IYjP9iSrK.png" alt="" loading="lazy"></figure>
+<p>chdir跟随符号链接，所以如果某个目录是符号链接，那么会更换到其所指向的目录。</p>
+<figure data-type="image" tabindex="67"><img src="https://s2.loli.net/2022/08/28/ANKrCTO7ztosH6d.png" alt="" loading="lazy"></figure>
+<p>fchdir提供了更便捷的方式，如果我们想要回到文件打开的目录位置，只需要保存open函数返回的fd值，然后调用fchdir就能返回到原来的目录下。</p>
+<p>getcwd是返回当前目录的绝对路径。可用于工作路径之间的切换，保存之前的，切换到新的后，可以chdir回到之前的路径。</p>
+<p>设备特殊文件</p>
+<p>每个文件系统所在的存储设备由主设备号和次设备号表示。若各个文件系统都在同一个磁盘下，则主设备号相同，但次设备号不同。st_dev和st_rdev来表示这两个设备号，是stat结构体的成员。只有字符特殊文件和块特殊文件才有rdev。</p>
+<p>主设备号标识设备驱动程序，有时编码为与其通信的外设板；次设备号表示特定的子设备。</p>
+<p>实现预定义了宏函数major和minor，分别返回主设备号和次设备号：major(st.st_dev) minor(st.st_rdev)；Linux将这两个宏定义在&lt;sys/macros.h&gt;，而该文件由包含在&lt;sys/types.h&gt;</p>
+<p>一个文件系统中的所有文件，其st_dev都是保存的该系统的设备号。</p>
+<p>通常只有包含随机访问文件系统的设备是块特殊文件设备。</p>
+<p>头文件</p>
+<p>关于文件I/O的open read write creat等系统调用函数，都在unistd.h</p>
+<p>O_RDONLY,O_WRONLY,O_RDW等标志常量在fcntl.h头文件中</p>
+<p>涉及文件类型相关的函数一般定义在sys/stat.h中</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/python-yu-yan-ji-chu/">
+                <h3 class="post-title">
+                  Python语言基础
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge ">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge success">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

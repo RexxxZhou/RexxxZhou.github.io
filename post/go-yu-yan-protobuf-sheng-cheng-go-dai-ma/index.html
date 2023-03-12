@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言Protobuf生成go代码 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言Protobuf生成go代码</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="go-generated-code-protobuf">Go generated code (protobuf)</h2>
+<p><code>.proto</code>文件中所有的名字（例如message名，字段名），编译后生成go文件后都是驼峰式的名字，<strong>名字转换规则都是一样的</strong>。</p>
+<p>例如message名为Test，test编译后都是Test</p>
+<h3 id="messages">Messages</h3>
+<p>假设有message的定义为：</p>
+<pre><code class="language-protobuf">message Foo{
+	string hello=1;
+}
+</code></pre>
+<p>则编译后的go文件会对应生成有类型名为Foo的结构体，以及以*Foo指针接收者的方式实现了proto.Message接口，该接口有一个ProtoReflect方法，返回protoreflect.Message，提供反射角度下的message信息。</p>
+<h4 id="嵌套类型-nested-types">嵌套类型 nested types</h4>
+<p>假设message定义为</p>
+<pre><code class="language-protobuf">message Foo{
+	message Bar{
+	}
+}
+</code></pre>
+<p>则编译后的go文件有两种结构体类型，分别叫做Foo和FooBar</p>
+<p>例子：</p>
+<pre><code class="language-protobuf">message Test{
+    int32 i1=1;
+    enum NUMBER{
+        DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+    }
+    NUMBER num=2;
+    message inner {
+        string FirstName=1;
+        string LastName=2;
+    }
+    inner inner_msg=3;
+}
+</code></pre>
+<p>编译出来：</p>
+<pre><code class="language-go">type Test struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	I1       int32       `protobuf:&quot;varint,1,opt,name=i1,proto3&quot; json:&quot;i1,omitempty&quot;`
+	Num      Test_NUMBER `protobuf:&quot;varint,2,opt,name=num,proto3,enum=Test_NUMBER&quot; json:&quot;num,omitempty&quot;`
+	InnerMsg *TestInner  `protobuf:&quot;bytes,3,opt,name=inner_msg,json=innerMsg,proto3&quot; json:&quot;inner_msg,omitempty&quot;`
+}
+
+type TestInner struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	FirstName string `protobuf:&quot;bytes,1,opt,name=FirstName,proto3&quot; json:&quot;FirstName,omitempty&quot;`
+	LastName  string `protobuf:&quot;bytes,2,opt,name=LastName,proto3&quot; json:&quot;LastName,omitempty&quot;`
+}
+</code></pre>
+<h4 id="字段">字段</h4>
+<p>message中的每个字段都会被编译成go结构体中的字段，在pb中使用的下划线和小写组合的字段名（都应该这么写），在编译后变成驼峰式的字段名。</p>
+<p>规则如下：</p>
+<p>1.如果pb中字段名的第一个字符是下划线，该下划线会被去掉，并改成X。</p>
+<p>2.如果pb中字段名中间出现了下划线，下划线都会被去掉，并且下划线的下一个字符将变成大写。</p>
+<p>例子：</p>
+<p>pb中： foo_bar_baz  ==&gt; go中：FooBarBaz</p>
+<p>pb中：_hello_world  ==&gt; go中：XHelloWorld</p>
+<h4 id="对于singular字段">对于singular字段</h4>
+<pre><code class="language-protobuf">message Test{
+	int32 foo=1;
+}
+</code></pre>
+<p>编译器除了生成一个Test结构体类型，且该结构体含有<strong>名为Foo的字段</strong>外，还会提供访问的API，<code>GetFoo()</code>，如果有该字段的信息，则会返回一个int32的值，如果没有则返回零值。<strong>其他类型的singular字段同理</strong>，如果没有该字段的信息则返回的是相应类型的零值。</p>
+<p>对于singular的message字段，编译后是message对应的结构的指针。</p>
+<pre><code class="language-protobuf">message Bar{}
+message Baz{
+	Bar foo=1;
+}
+</code></pre>
+<p>编译后得到的是：</p>
+<pre><code class="language-go">type Baz struct{
+	Foo *Bar
+}
+</code></pre>
+<p>可以看到编译后的Foo字段是个指向Bar类型的指针，这样当没有该字段时，赋值为nil。类似地，编译器也提供了<code>GetFoo()</code>的API， <code>func (m *Baz) GetFoo() *Bar </code>，当m为nil或foo没有给定时，均返回nil的*Bar指针。</p>
+<h4 id="对于repeated字段">对于repeated字段</h4>
+<p>每个repeated字段编译后都对应一个该字段类型的切片</p>
+<pre><code class="language-protobuf">message Baz{
+	repeated Bar foo =1;
+}
+</code></pre>
+<p>编译后：</p>
+<pre><code class="language-go">type Baz struct{
+	Foo []*Bar
+}
+
+</code></pre>
+<p>Likewise, for the field definition <code>repeated bytes foo = 1;</code> the compiler will generate a Go struct with a <code>[][]byte</code> field named <code>Foo</code>. For a repeated <a href="https://developers.google.com/protocol-buffers/docs/reference/go-generated#enum">enumeration</a> <code>repeated MyEnum bar = 2;</code>, the compiler generates a struct with a <code>[]MyEnum</code> field called <code>Bar</code>.</p>
+<p><strong>对于每个字段而言，编译后相应的都有Getter和Setter方法，只是要留一下这些函数的返回值类型是值还是引用。</strong></p>
+<p>对于上面的结构体，初始化和获取的方式：</p>
+<pre><code class="language-go">baz:=&amp;Baz{
+	Foo:[]*Bar{{},{}} //初始化Foo字段有两个空的Bar元素
+}
+foo:=baz.GetFoo() //foo type is []*Bar
+f1=foo[0] //f1类型为*Bar，是foo的第一个元素
+
+</code></pre>
+<h4 id="map字段">map字段</h4>
+<p>这个很好理解，pb中的map字段类型，编译后为go结构体中的一个map字段</p>
+<pre><code>message Bar{}
+message Baz{
+	map&lt;string,Bar&gt; foo=1;
+}
+
+</code></pre>
+<p>编译后</p>
+<pre><code class="language-go">type Baz struct{
+	Foo map[string]*Bar
+}
+
+</code></pre>
+<h4 id="oneof字段">oneof字段</h4>
+<p>因为oneof字段是其中某个字段之一，所以在编译后，<strong>该字段在结构体中是一个接口类型</strong>，接口的类型名为<code>isMessageName_FieldName</code>，oneof中的所有字段则会单独编译成一个结构体（结构体的类型名格式<code>MessageName_FieldName</code>），这些结构体都实现了<code>isMessageName_FieldName</code>接口，因此oneof中的字段就可以赋给oneof字段。</p>
+<p>说起来比较拗口，看例子秒懂：</p>
+<pre><code class="language-protobuf">message Profile{
+	oneof avatar{
+		string image_url=1;
+		bytes image_data=2;
+	}
+}
+
+</code></pre>
+<p>编译后</p>
+<pre><code class="language-go">type Profile struct{
+	Avatar isProfile_Avatar `protobuf_oneof:&quot;avatar&quot;`
+}
+type Profile_ImageUrl struct{
+	ImageUrl string
+}
+type Profile_ImageData struct{
+	ImageData []byte
+}
+
+</code></pre>
+<p><code>Profile_ImageUrl</code>和<code>Profile_ImageData</code>都<strong>以指针接收者</strong>的方式实现了接口<code>isProfile_Avatar</code>，该接口有一个方法isProfile_Avatar()，两种结构体都实现了该空方法。</p>
+<p>因此，在go代码中的使用方法：</p>
+<pre><code class="language-go">p1:=&amp;Profile{Avatar:&amp;Profile_ImageUrl{ImageUrl:&quot;www.baidu.com&quot;}}
+
+//assume data is []byte
+data:=getImageData()
+p2:=&amp;Profile{Avatar:&amp;Profile_ImageData{ImagData:data}}
+
+</code></pre>
+<p>注意由于是以指针接收者的方式实现了oneof的接口，所以上述代码在指定Avatar字段时都用了指针。</p>
+<p><strong>编译器会提供oneof中每个字段的getter方法。</strong></p>
+<p>编译器相应的也提供了profile对象获取oneof字段对象的方法，以上述为例，提供了<code>func(m *Profile) GetImageUrl() string</code>和<code>func(m *Profile) GetImageData() []byte</code>的方法。根据oneof字段的特性，如果恰好oneof字段的类型就是某个类型A，则GetA返回A的值，否则其他情况下GetX都返回X的零值。</p>
+<p>具体来说，如果当前Profile的Avatar存的是&amp;Profile_ImageData，则GetImageData返回data数据，而如果此时调用GetImageUrl，则得到的是一个空字符串。</p>
+<h4 id="枚举型字段">枚举型字段</h4>
+<pre><code class="language-protobuf">message SearchRequest{
+	enum Corpus{
+		UNIVERSAL=0;
+		WEB = 1;
+        IMAGES = 2;
+        LOCAL = 3;
+        NEWS = 4;
+        PRODUCTS = 5;
+        VIDEO = 6;
+	}
+	Corpus corpus=1;
+}
+
+</code></pre>
+<p>编译后</p>
+<pre><code class="language-go">type SearchRequest struct{
+	Corpus SearchRequest_Corpus
+}
+type SearchRequest_Corpus int32
+const(
+	SearchRequest_Corpus_UNIVERSAL=0
+	SearchRequest_Corpus_WEB=1
+	SearchRequest_Corpus_IMAGES=2
+	SearchRequest_Corpus_LOCAL=3
+	SearchRequest_Corpus_NEWS=4
+	SearchRequest_Corpus_PRODUCTS=5
+	SearchRequest_Corpus_VIDEO=6
+)
+func(s SearchRequest_Corpus) String() string //根据s的取值，返回相应的enum的名字，相当于从数字映射回enum名
+func(SearchRequest_Corpus) Enum() *SearchRequest_Corpus//根据当前SearchRequest_Corpus的值，分配新的内存，返回一个新的SearchRequest_Corpus的指针
+
+</code></pre>
+<p>同时，编译器还会编译从枚举值到枚举名的map，和枚举名到枚举值的map：</p>
+<pre><code class="language-go">var SearchRequest_Corpus_name=map[int32]string{
+	0:&quot;UNIVERSAL&quot;,1:&quot;WEB&quot;,2:&quot;IMAGES&quot;,3:&quot;LOCAL&quot;,4:&quot;NEWS&quot;,5:&quot;PRODUCTS&quot;,6:&quot;VIDEO&quot;
+}
+
+var SearchRequest_Corpus_value=map[string]int32{
+	&quot;UNIVERSAL&quot;:0,&quot;WEB&quot;:1,&quot;IMAGES&quot;:2,&quot;LOCAL&quot;:3,&quot;NEWS&quot;:4,&quot;PRODUCTS&quot;:5,&quot;VIDEO&quot;:6
+}
+
+</code></pre>
+<p><strong>这两个map分别以name和value为后缀</strong></p>
+<h4 id="services">services</h4>
+<p>默认情况下，编译器不会编译services的输出，如果开启了gRPC的插件，这些service才会被编译输出。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-protobuf/">
+                <h3 class="post-title">
+                  Go语言Protobuf
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge warning">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

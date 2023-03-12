@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第五章-标准IO库 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第五章-标准IO库</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第五章-标准I/O库</p>
+<p>流和FILE对象</p>
+<p>当使用标准I/O打开一个文件时，就用一个流与该文件关联了，一个流被创建时是没有定向的，即没有告知其读写的是单字节还是多字节（宽字符，wchar），若第一次使用的是多字节函数则定向为宽定向，若使用的是单字节函数则定向为字节定向。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/SFsklZqtvV7eUux.png" alt="" loading="lazy"></figure>
+<p>fwide并不改变已定向流的定向，mode为负数则定向为字节定向，为正数则定向为宽定向，为0则不改变并返回该流定向的值。</p>
+<p>当我们用fopen打开文件，返回指向FILE结构的指针，该结构包含了管理流的所有信息，后续的所有标准I/O操作都会用到该指针来操作流。把FILE指针成为文件指针，也可以理解成这才是真正的流对象。</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/YRNZMoIad76COKF.png" alt="" loading="lazy"></figure>
+<p>标准输入、输出、标准错误</p>
+<p>对每个进程预定义了这三个流，这三个标准I/O通过预定义了stdin,stdout,stderr文件指针加以运用。这些指针存在于头文件&lt;stdio.h&gt;中</p>
+<p>标准输入、输出、错误其实默认关联到我们的显示器和键盘了，所以对他们进行操作就是对这些设备进行操作。</p>
+<p>缓冲</p>
+<p>分为三种：</p>
+<p>全缓冲</p>
+<p>只有在填满了缓冲区后，才进行实际的I/O操作（read，write）。可以调用fflush函数，冲洗刷新一个流，即使其没填满缓冲区也会执行I/O。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/mrOFMgyf3XZY1JH.png" alt="" loading="lazy"></figure>
+<p>行缓冲</p>
+<p>遇到换行符的时候，执行实际的I/O操作，若遇到换行符之前已经填满缓冲区了，也会执行实际的I/O。一般对于一个终端都是行缓冲。</p>
+<p>若从不带缓冲的流或者带行缓冲的流中得到输入数据，会立刻冲洗刷新所有行缓冲输出流。</p>
+<p>不带缓冲</p>
+<p>标准I/O库不对字符进行缓冲（fput函数），标准错误就是不带缓冲的，所以能够立刻执行实际I/O，尽快显示错误信息。</p>
+<p>很多系统默认若标准输入和标准输出指向交互式设备，其是行缓冲的，否则是全缓冲的，而标准错误是不带缓冲的。</p>
+<p>可以自己设置自己的缓冲区，我们打开流默认用的时标准I/O缓冲区，</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/paLYmTfRAxsr3WN.png" alt="" loading="lazy"></figure>
+<p>setbuf是设置一个流的缓冲区，其缓冲类型系统会进行判断（是否为终端设备），若关闭缓冲则buf为NULL；</p>
+<p>setvbuf能够精确设置缓冲类型，mode有_IOFBF全缓冲，_IOLBF行缓冲，_IONBF不带缓冲。</p>
+<figure data-type="image" tabindex="5"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/8BD67CA256D54E229A193C733A56225D.png" alt="" loading="lazy"></figure>
+<p>合适长度是常量BUFSIZE指定的值。</p>
+<p>某些实现中会将管理操作信息也放到缓冲区中，所以实际存放有效数据的字节数会少于给定的缓冲区大小。</p>
+<p>应由系统选择缓冲区的大小并自动分配缓冲区，在这种情况下，在关闭流的时候，标准I/O库会自动释放缓冲区。若函数内部分配了一个缓冲区，需要在结束返回前关闭该流，这样系统会自动释放缓冲区。</p>
+<p>缓冲区满了或者使用fflush冲洗刷新缓冲区了，则会进行write系统调用</p>
+<p>打开流</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/9SGjcOxm2bK3iuW.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/lGLaJcfxz6TqR8B.png" alt="" loading="lazy"></figure>
+<p>fopen按照type模式打开文件，并关联到一个流。fdopen将文件描述符与一个流关联。freopen一般将一个预定义的流关联到指定文件，若该流已打开则先关闭，若已定向则清楚定向。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/L6NopKndCUJwbva.png" alt="" loading="lazy"></figure>
+<p>其中b用来区分二进制文件和文本文件，但由于unix系统不区分两者，所以指定b并无效果。</p>
+<p>其中对于fdopen，使用a必须保证该文件存在，而使用w不会进行截断，因为该文件描述符已经被打开了。</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/McKEbqzPF5avHCU.png" alt="" loading="lazy"></figure>
+<p>由此可见，除去fdopen对于a和w的特殊性，一般的文件若用a和w模式打开，其不需要保证该文件已存在，所以会创建新文件，此时创建的文件访问权限设置了用户，组和其他的读写权限，可以通过umask进行创建屏蔽。</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/bvsPmGzMnpDeA4X.png" alt="" loading="lazy"></figure>
+<p>在调用fclose之后，所有未写的存在缓冲区的输出数据（写的数据）都会被冲洗刷新，而缓冲区的所有输入数据（读的数据）都会被丢弃，如果标准I/O为流自动分配了缓冲区，关闭后会自动释放缓冲区。</p>
+<p>当一个进程正常退出时，所有未写缓冲数据都会被冲洗刷新，所有的标准I/O流都被关闭。</p>
+<p>读和写流</p>
+<p>输入函数（读）</p>
+<p>#include&lt;stdio.h&gt;</p>
+<p>int getc(FILE*fd);</p>
+<p>​</p>
+<p>int fgetc(FILE*fd);</p>
+<p>​</p>
+<p>int getchar(void);</p>
+<p>getchar相当于getc(stdin);getc可被实现为宏，fgetc一定是个函数，所以一般fgetc比getc慢，因为通常调用函数比调用宏慢。返回的int是该字符对应的整型值，-1代表出错或者到达了EOF文件末尾。</p>
+<p>在GNU C库中，宏被扩展为函数调用，所以此时的宏调用与函数调用效率上相近。</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/QiNvZCDJLh8kA6V.png" alt="" loading="lazy"></figure>
+<p>注意ferror和feof返回的值是用来做判断区分的。ungetc可以把任何一个字符压送回流，支持任意次数的回送，但每次只能回送一个字符。不能回送EOF字符，ungetc回送前会嗲用clearerr清除EOF标志，然后再补回EOF标志，所以即使当前文件已经EOF了，亦可以正常压送。流是一个队列结构，但压送回去不是压到队尾，是压到队头，所以可以getc判断是否是我们想要的字符后再放回去，所以我们压送的顺序和读出的顺序是相反的。</p>
+<p>ungetc压送回流，只是把字符放到缓冲区了，并没有对文件进行实际的I/O</p>
+<p>输出函数（写）</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/VyANu7iXmnIfCQc.png" alt="" loading="lazy"></figure>
+<p>注意出错返回的是EOF而成功返回的是所写的字符的整型值。</p>
+<p>每次一行I/O</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/kUCNhixl1g9oRHI.png" alt="" loading="lazy"></figure>
+<p>不推荐使用gets，而且也不要使用它，因为它不能指定缓冲区长度，所以若所读的行字节大于缓冲区，则会溢出且发生不可预知的后果，曾经是个漏洞。</p>
+<p>gets是从stdin读取一行，换行符不会放到缓冲区中；fgets从指定的流中读取，并指定了缓冲区的大小，所读取的字节不会超过n-1，因为每次读取都会在最后补空字符，换行符会放在缓冲区中，若该行长度大于n-1则下次调用会继续读取该行</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/wLfzJgbmXt9Ze1u.png" alt="" loading="lazy"></figure>
+<p>这里其实不一定说一定要写一行，可以理解成一次写多个字符，换不换行自己选。</p>
+<p>puts对stdout写入一数据，fputs对给定流写入数据，尽量不用puts虽然不是安全问题，但是因为它会随后将换行符写到流中，避免记忆，统一对读写一行我们都用fgets和fputs，这样我们只需要记着自己需要处理换行符就行。</p>
+<p>对于写入，我们写的是一个c_str，以空字符结尾，但空字符不写入流中，我们需要自己补换行符，才能实现流的换行。</p>
+<p>系统调用比普通函数调用需要花费更多的时间</p>
+<p>标准I/O的效率与直接调用read和write差不多</p>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/BMs1tO4drnKc6vj.png" alt="" loading="lazy"></figure>
+<p>二进制I/O</p>
+<p>对于fgets，遇到换行符或空字符会忽略，不会读取到该字符；对于fputs，遇到空字符就停止写入，空字符也不会写到二进制中，这种情况下如果想要进行二进制I/O就不能用这些函数。</p>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/1H4OqjYEiNta6fd.png" alt="" loading="lazy"></figure>
+<p>ptr是要读写的对象的地址，size是该对象的大小，nobj是要读写的对象数，返回读写的对象数</p>
+<p>对于数组，size是数组元素的大小，nobj是要读写的元素个数，对于结构体size是结构体的大小，nobj 是结构体的个数。</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/Vqn1sHoFIaUSAge.png" alt="" loading="lazy"></figure>
+<p>对于二进制文件的I/O需要注意在不同系统之间可能会出问题，一方面是不同的变量的字节数可能不同系统不一样以及结构体可能不同系统的编译器存放的顺序也不一样；另一方面可能不同系统的对齐方式不同，也会导致系统之间I/O有问题。需要有统一的调节，例如网络结构中的转换层，。</p>
+<p>定位流</p>
+<p>long ftell(FILE*fp);用于返回当前流的位置，对于二进制文件是返回字节位置</p>
+<p>int fseek(FILE*fp,long offset,int whence);whence和lseek一样，有SEEK_SET,SEEK_CUR,SEEK_END三种，二进制文件三个都可以用，需要指定offset，此时与lseek基本一样，而文本文件只能使用SEEK_SET,且offset必须为0或者ftell的返回值。前两个函数出错都返回-1</p>
+<p>void rewind(FILE*fp);将流定位到起始位置</p>
+<p>函数ftello，fseeko，与前面功能一样，只是定位的位置类型不是long而是off_t类型。</p>
+<p>fgetpos，fsetpos是ISO C引入的函数，且如果在不同的系统中使用定位流函数时，推荐使用该函数，该函数管理一个fpos_t的对象，表示文本位置指示器，</p>
+<p>int fgetpos(FILE<em>FP,fget_t</em>pos); 将文本位置指示器的当前值存到pos中；int fsetpos(FILE<em>fp,fpos_t</em>pos);用pos中的值来定位流</p>
+<p>格式化I/O</p>
+<p>格式化输出</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/YSmCjqouDEA1pfa.png" alt="" loading="lazy"></figure>
+<p>printf将格式化数据输出到标准输出，fprintf输出到指定流中，dprintf输出到指定文件描述符中；</p>
+<p>sprintf和snprintf将数据写到缓冲区buf中，在最后会添上空字符，但其返回的字符数不包含空字符，sprintf有可能会溢出，snprintf指定写入多少个字符。</p>
+<p>格式化字符串format注意是c_str，其中转换说明以%开始，其他不是转换说明的都照常输出。</p>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/UbLHVmagF7ryo9c.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/Y7P3mQ8vhyrknAa.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/bdA6UhqGsNfiZVE.png" alt="" loading="lazy"></figure>
+<p>格式化输入</p>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/PTjIcxX9lL3rFaz.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/24AJZxWgXYOdhVe.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/lxKoVyOHTQEUw4v.png" alt="" loading="lazy"></figure>
+<p>格式化输入根据格式字符串的控制说明，将相应的值赋给后面的参数，这些参数要给出其地址，也即这些参数类型都是指针类型。*号用来抑制转换，按照转换说明对输入进行转换，但转换结果不会存放到对应参数中。m是赋值分配符，强制内存缓冲区分配空间以接纳转换字符串。</p>
+<p>格式化输入，一旦输入不符合格式，就在该位置终止，停止后续的格式化输入了，不再读取剩余部分。</p>
+<figure data-type="image" tabindex="25"><img src="https://s2.loli.net/2022/08/28/WXp2mCOwKiqLYSk.png" alt="" loading="lazy"></figure>
+<p>实现细节</p>
+<p>标准I/O底层是调用系统I/O进行实际磁盘I/O的，所以每个流都关联到一个文件描述符，可以用fileno来得到流关联的文件描述符</p>
+<p>int fileno(FILE*fp);</p>
+<p>临时文件</p>
+<p>char* tmpnam(char* ptr);如果ptr为NULL，则函数产生的唯一路径名会存在静态区中，后续的tmpnam调用会重写该区，返回该路径名字符串的指针；所以需要保存该路径的副本而不是保存它的指针。如果不是NULL，则将产生的路径名写到ptr对应的数组中，并返回ptr。</p>
+<p>FILE* tmpfile()；创建一个临时的二进制文件(wb+)，关闭文件或者程序结束时会自动删除该文件。</p>
+<figure data-type="image" tabindex="26"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/3090FDDC49B149D584AFB416EF322610.png" alt="" loading="lazy"></figure>
+<p>注意返回的类型和值不一样，前者返回名字，后者返回文件描述符</p>
+<p>template可以用于指定生成的临时文件的位置和名字：template=&quot;/usr/local/dirXXXXXXX&quot;，函数将占位符X进行替换，得到唯一的路径名。</p>
+<p>mkdtemp生成临时目录，默认有用户的读写执行权限，可以通过创建屏蔽字进行屏蔽。</p>
+<p>mkstemp生成临时文件，默认有用户的读写权限，也可通过创建屏蔽字进行屏蔽。</p>
+<p>但这两者不会对文件进行自动删除，需要用户自己进行unlink。</p>
+<p>tmpnam函数在返回路径名和创建文件之间有时间窗口，该窗口内其他进程有可能用改路径名创建了文件。而mkstemp和tmpfile不存在该问题，应该使用这两个。</p>
+<p>标准I/O把数据缓存在内存中，缓冲区再与主存进行数据交换，因此每次一字符和一行字符的I/O更有效。</p>
+<p>内存流</p>
+<figure data-type="image" tabindex="27"><img src="https://s2.loli.net/2022/08/28/6BxN9k25ZEMUu8p.png" alt="" loading="lazy"></figure>
+<p>fmenopen可以指定一个缓冲区buf，和缓冲区大小size，缓冲区冲buf位置开始算起，type与基于文件的标准I/O相同，例如r，w，a，r+，w+，a+等。若buf为NULL，则系统自动分配一个缓冲区。</p>
+<p>但对于内存流，a+，以追加写的方式打开内存流时，当前文件位置会定位到缓冲区中第一个null字符的位置，若没有null字符则定位到缓冲区的尾后位置。</p>
+<p>追加写模式通过第一个NULL字节确定数据的尾端，所以内存流不适合于存储二进制数据（二进制数据在数据尾端之前可能有多个null字节）</p>
+<figure data-type="image" tabindex="28"><img src="https://s2.loli.net/2022/08/28/bTaZXelBmsALShz.png" alt="" loading="lazy"></figure>
+<p>标准I/O的缺点</p>
+<figure data-type="image" tabindex="29"><img src="https://s2.loli.net/2022/08/28/WuylE9TJXO8BoNp.png" alt="" loading="lazy"></figure>
+<p>之所以这里提到了标准I/O缓冲区和用户缓冲区，实际上是因为我们打开一个流的时候，系统给我们分配了一个缓冲区，这个就是标准I/O缓冲区，我们对这个流的读写，就会涉及到内核，标准I/O缓冲和用户缓冲之间的拷贝过程。读写一般都涉及了两次拷贝。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-yi-zhi-si-zhang/">
+                <h3 class="post-title">
+                  APUE笔记-第一至四章
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

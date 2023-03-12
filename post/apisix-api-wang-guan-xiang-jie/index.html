@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APISIX-api网关详解 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APISIX-api网关详解</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+                  apisix
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>apisix没有rewrite阶段，rewrite和access阶段都在access中执行，也即虽然可以写rewrite的插件，但是会在access阶段执行，并且rewrite的插件会比access插件以更高优先级执行</p>
+<p>https://cloudnative.to/blog/apisix-source-code-reading/#1-apisix-%E6%A6%82%E8%BF%B0</p>
+<figure data-type="image" tabindex="1"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE2896a73177437148c04db5f1098e209b.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://cdn.jsdelivr.net/gh/apache/apisix@release/2.12/docs/assets/images/flow-load-plugin.png" alt="插件加载流程" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://cdn.jsdelivr.net/gh/apache/apisix@release/2.12/docs/assets/images/flow-plugin-internal.png" alt="插件内部结构" loading="lazy"></figure>
+<h2 id="api路由是即时生效的但是插件的更新-修改-新增需要手动reloaddashboard要重启">api路由是即时生效的，但是插件的更新、修改、新增需要手动reload，dashboard要重启</h2>
+<h2 id="一些插件的介绍服务发现-负载均衡等">一些插件的介绍（服务发现、负载均衡等）</h2>
+<p>https://www.modb.pro/db/152237</p>
+<p>编写插件需要最终制定插件的执行阶段，rewrite、access还是其他的。</p>
+<p>而这些阶段都有两个传参：conf和ctx</p>
+<p>https://apisix.apache.org/zh/docs/apisix/plugin-develop#%E7%BC%96%E5%86%99%E6%89%A7%E8%A1%8C%E9%80%BB%E8%BE%91</p>
+<p>conf 参数是插件的相关配置信息（当前插件的配置数据），ctx 参数缓存了请求相关的数据信息（包含所有插件、route设置等的信息）。</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/AZs6DpERG2OfFj9.png" alt="" loading="lazy"></figure>
+<p>官方的插件例子：</p>
+<p>https://github.com/apache/apisix/blob/35269581e21473e1a27b11cceca6f773cad0192a/apisix/plugins/limit-count.lua#L177</p>
+<h2 id="官方使用方法介绍">官方使用方法介绍</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/2.8/architecture-design/#service</p>
+<p>使用admin api创建route、service、upstream等对象，并且介绍了核心常用概念</p>
+<p>route就是路由设置，是最原子的一个api路由配置</p>
+<p>service是upstream和插件的组合，为了避免重复设置相同的upstream和插件，可以创建一个service对象，然后route设置时引用</p>
+<p>注意：当service和route都使用了同样的插件时，route的插件设置优先级更高，所以此时使用route中的插件设置</p>
+<p>consumer是api消费方的抽象，我们有时候需要知道到底有谁使用了这个api，并且为不同的消费方制定不同的插件，consumer必须有鉴权，通过某个key鉴权通过后，apisix才会拿到consumer_name，进而查询etcd，拉取该消费方的配置信息，来完成整个http请求周期。</p>
+<p>注意：consumer中也有插件设置，在apisix中，插件设置的优先级为consumer&gt;route&gt;service，使用相同的插件时，前者会覆盖后者。</p>
+<p>script是http请求生命中求中执行的脚本，与plugin互斥，有script则会优先执行script，而不执行plugin，script是lua代码，我们也可以在script中执行一些插件的调用。</p>
+<p>radixtree是一个匹配搜索引擎，主要用来匹配route中设置的uri，来确定使用的是哪个route的信息。</p>
+<p>global rule是全局的插件设置，一旦创建某个global rule以后，就会对所有的route生效，所有的route都会使用这个插件设置。</p>
+<p>plugin config是一组插件的配置，将重复使用到的插件组合抽象成一个plugin config对象，在设置route时进行引用，如果引用了一个没有设置的plugin config，则该路由报503错误，如果route也设置了插件，则会与plugin config的插件合并，都会在http请求周期内被调用，而如果route自身设置了与plugin config相同的插件，则优先使用plugin config中的配置（也即覆盖route中的设置）。</p>
+<h2 id="官方博客">官方博客</h2>
+<p>https://apisix.apache.org/zh/blog/2020/12/11/beike-how-to-build-gateway-based-on-apache-apisix</p>
+<h2 id="官方插件开发文档">官方插件开发文档</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/plugin-develop#%E7%BC%96%E5%86%99%E6%89%A7%E8%A1%8C%E9%80%BB%E8%BE%91</p>
+<p>新插件的优先级（ priority 属性 ）不能与现有插件的优先级相同，您可以使用 control API 的</p>
+<p>/v1/schema 方法查看所有插件的优先级。另外，同一个阶段里面，优先级( priority )值大的插件，会优先执行，比如</p>
+<p>example-plugin 的优先级是 0 ，</p>
+<p>ip-restriction 的优先级是 3000 ，所以在每个阶段，会先执行</p>
+<p>ip-restriction 插件，再去执行</p>
+<p>example-plugin 插件。</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/3hpoPO52m1uQxel.png" alt="" loading="lazy"></figure>
+<p>为了实现路由动态配置，Apache APISIX 做了两件事：</p>
+<ol>
+<li>
+<p>在 Nginx 配置文件里面配置单个 server，这个 server 里面只有一个 location。我们把这个 location 作为主入口，这样所有的请求都会走到这个地方上来。</p>
+</li>
+<li>
+<p>我们用 Lua 完成路由分发的工作。Apache APISIX 的路由分发模块，支持在运行时增减路由，这样就能动态配置路由了。</p>
+</li>
+</ol>
+<h2 id="openresty的执行阶段概念">openresty的执行阶段概念</h2>
+<figure data-type="image" tabindex="6"><img src="https://moonbingbing.gitbooks.io/openresty-best-practices/content/images/openresty_phases.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/sxe8hTgj9LSyGNr.png" alt="" loading="lazy"></figure>
+<p>apisix和openresty的执行阶段较为相似，但存在一定的不同，例如apisix没有rewrite阶段，rewrite的相关操作都在access中一并执行，只是优先级更高。</p>
+<h2 id="apisix官方文档-md">apisix官方文档 md</h2>
+<p>https://www.bookstack.cn/read/apisix-2.8-zh/architecture-design-apisix.md</p>
+<h2 id="apisix-discovery相关">apisix discovery相关</h2>
+<p>在apisix/upstream.lua中调用了discovery的nodes函数，来使用服务发现获取下游节点：</p>
+<p>该函数其中一个形参为api_ctx。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/OxGoefylVnKuHYM.png" alt="" loading="lazy"></figure>
+<p>所有获取的nodes，会在apisix/balancer.lua中使用checker来检查健康度，过滤不健康的node，在apisix/balancer.lua中的pick_server函数来从nodes中选择最终访问的下游地址；可以理解成，discovery返回所有的地址，由apisix的负载均衡模块来具体选择某一个地址。</p>
+<p>-- pick_server will be called:</p>
+<p>-- 1. in the access phase so that we can set headers according to the picked server</p>
+<p>-- 2. each time we need to retry upstream</p>
+<p>pick_server函数会在access phase中被调用，以便设置一些headers。</p>
+<p>server_picker就是我们route中设置的type指定的负载均衡类型，每个type都在apisix/balancer/xxx.lua中对应有代码：</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/W85JGNXuFzZv321.png" alt="" loading="lazy"></figure>
+<p>server_picker在apisix中会做一个LRU缓存。</p>
+<p>从服务发现返回的节点中，会做健康检查（apisix/balancer.lua的fetch_health_nodes函数），APISIX 的健康检查使用lua-resty-healthcheck实现，你可以在 upstream 中使用它。</p>
+<p>注意:</p>
+<ul>
+<li>
+<p>只有在 upstream 被请求时才会开始健康检查。 如果一个 upstream 被配置但没有被请求，那么就不会有健康检查。（也即我们的upstream要提供一个可以探活的接口）</p>
+</li>
+<li>
+<p>如果没有健康的节点，那么请求会继续发送给上游。</p>
+</li>
+<li>
+<p>如果 upstream 中只有一个节点，就不会有健康检查。 因为该唯一节点无论是否健康，请求都会发送给上游，</p>
+</li>
+<li>
+<p>主动健康检查是必须的，这样不健康的节点才会恢复。</p>
+</li>
+</ul>
+<p>健康检查分为主动和被动两类，主动是指请求指定的探活接口判断是否健康，而被动则是指根据请求upstream返回的状态码来判断（只是例子）。</p>
+<p>https://www.bookstack.cn/read/apisix-2.8-zh/health-check.md</p>
+<p>上面的链接解释了apisix的健康检查配置逻辑，以及每个配置项的意义。</p>
+<p>lua-resty-healthcheck会对使用add_target添加的upstream进行get_target_status来判断健康与否，如果没有add就不会被判断，但目前看apisix的代码，都add了（apisix/upstream.lua）：</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/og7IrpJfOsqTkNC.png" alt="" loading="lazy"></figure>
+<p>看healthcheck的源码，即使我们的upstream配置没有给checks相关的设置项，都会被添加到健康检查的target_list中，然后在apisix/balancer.lua中调用get_target_status来获取健康状态，目前没有看到是在哪里主动探测健康度的（checks配置中可以设置主动检测的接口，目前不知道是哪里请求了）。</p>
+<h2 id="admin-api使用文档">admin api使用文档</h2>
+<p>https://github.com/apache/apisix/blob/master/docs/en/latest/admin-api.md</p>
+<p>https://apisix.apache.org/zh/docs/apisix/admin-api/ 中文版</p>
+<h2 id="ip-restriction插件">ip-restriction插件</h2>
+<p>在插件中增加打印：</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/QGcy9LPhCOZtDM2.png" alt="" loading="lazy"></figure>
+<p>打印结果：</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/AkEnf3bVBWP2FjX.png" alt="" loading="lazy"></figure>
+<p>该route的插件设置为，（disable字段可以忽略，是dashboard自动加上的，false表示现在这个插件正在被使用）：</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/bDGtLFXmJVfZnky.png" alt="" loading="lazy"></figure>
+<p>所以可以看到，conf确实是插件的配置json内容，但ctx现在无法打印，报错说是一个函数无法被序列化。</p>
+<p>使用core.log.warn(core.json.encode(conf))和core.log.warn(core.json.encode(ctx, true))能够打印conf和ctx。</p>
+<pre><code class="language-javascript">local ngx = ngx
+core.log.warn(&quot;in ip_restriction ngx.req.get_headers(): &quot;,core.json.encode(ngx.req.get_headers(), true))
+core.log.error(&quot;type of ngx.req.get_headers() is : &quot;,type(ngx.req.get_headers()))
+</code></pre>
+<p>ngx.req中有请求的一些信息，如下所示，都是函数，可以用来获取请求信息，ngx是一个全局对象，应该是可以在任何一个插件中获取信息。</p>
+<p>ngx.req的成员函数：</p>
+<pre><code class="language-javascript">{
+  &quot;get_method&quot;: &quot;function: 0x7f4482bd3680&quot;,
+  &quot;http_version&quot;: &quot;function: 0x7f4482c160b8&quot;,
+  &quot;raw_header&quot;: &quot;function: 0x7f4482c16120&quot;,
+  &quot;set_header&quot;: &quot;function: 0x7f4482bd39f0&quot;,
+  &quot;set_uri&quot;: &quot;function: 0x7f4482c161f0&quot;,
+  &quot;set_uri_args&quot;: &quot;function: 0x7f4482c16250&quot;,
+  &quot;get_post_args&quot;: &quot;function: 0x7f4482c162b8&quot;,
+  &quot;read_body&quot;: &quot;function: 0x7f4482c16320&quot;,
+  &quot;discard_body&quot;: &quot;function: 0x7f4482c16388&quot;,
+  &quot;get_body_data&quot;: &quot;function: 0x7f4482c163f0&quot;,
+  &quot;get_body_file&quot;: &quot;function: 0x7f4482c16458&quot;,
+  &quot;set_body_data&quot;: &quot;function: 0x7f4482c164c0&quot;,
+  &quot;set_body_file&quot;: &quot;function: 0x7f4482c16528&quot;,
+  &quot;start_time&quot;: &quot;function: 0x7f4482bd2f98&quot;,
+  &quot;get_headers&quot;: &quot;function: 0x7f4482bd1598&quot;,
+  &quot;append_body&quot;: &quot;function: 0x7f4482c165f8&quot;,
+  &quot;finish_body&quot;: &quot;function: 0x7f4482c16660&quot;,
+  &quot;socket&quot;: &quot;function: 0x7f4482c166c8&quot;,
+  &quot;clear_header&quot;: &quot;function: 0x7f4482be8d18&quot;,
+  &quot;is_internal&quot;: &quot;function: 0x7f4482c16728&quot;,
+  &quot;get_uri_args&quot;: &quot;function: 0x7f4482bd3540&quot;,
+  &quot;set_method&quot;: &quot;function: 0x7f4482bd3798&quot;,
+  &quot;init_body&quot;: &quot;function: 0x7f4482c16590&quot;
+}
+</code></pre>
+<p>获取请求体的数据代码snippet：</p>
+<pre><code class="language-javascript">ngx.req.read_body()
+local body_data = ngx.req.get_body_data()
+core.log.error(&quot;body data is : &quot;,body_data)
+</code></pre>
+<p>日志输出：</p>
+<p>2022/02/10 15:46:11 [error] 52#52: *5498 [lua] init.lua:96: phase_func(): body data is : {&quot;echo&quot;:&quot;helloworld&quot;}, client: 9.134.111.144, server: _, request: &quot;POST /test_apisix HTTP/1.1&quot;, host: &quot;9.134.111.144:9080&quot;</p>
+<p>也可以直接core.log.error(&quot;ngx is : &quot;,core.json.encode(ngx, true))打印ngx所有的内容，主要是一些函数，日志打印没有完全显示，应该是apisix限制了日志输出的长度：</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/QMPaRfJo3crWlO6.png" alt="" loading="lazy"></figure>
+<h2 id="插件开发">插件开发</h2>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/Owf7YdB2zGambyU.png" alt="" loading="lazy"></figure>
+<p>插件的新增apisix是热加载的，只需要通过admin api来reload即可</p>
+<p>curl http://127.0.0.1:9080/apisix/admin/plugins/reload -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT</p>
+<p>X-API-KEY是conf/config.yaml中配置的admin的key：</p>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/iEQp1uJgmU82asz.png" alt="" loading="lazy"></figure>
+<p>（现在测试是要在容器内执行才行，在容器外执行会403）</p>
+<p>如果想要在容器外访问admin api，需要设置allow_admin：</p>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/ui5qn9BwLWp6CJE.png" alt="" loading="lazy"></figure>
+<p>可以在allow_admin下添加一个新的元素，例如：</p>
+<pre><code class="language-javascript">allow_admin:
+  - 127.0.0.0/24
+  - 9.11.22.33
+</code></pre>
+<p>这样，在容器外使用下列请求就可以正常使用admin api：</p>
+<p>curl http://9.11.22.33:9080/apisix/admin/plugins/reload -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT</p>
+<p>（遗留问题：ip-restriction插件，修改apisix/plugins/ip-restriction/init.lua代码，reload之后没有直接生效，有可能是因为init.lua的问题，并不是普通插件的代码加载，这种情况下还是要重启容器。。。）</p>
+<hr>
+<p>插件代码文件需要放置在apisix/plugins/下面，或者在我们的apisix配置文件中添加外部lua脚本的加载路径，插件代码放在该路径下也可以。</p>
+<p>简单的插件（print_conf_ctx.lua）：</p>
+<pre><code class="language-javascript">local ngx = ngx
+local core = require(&quot;apisix.core&quot;)
+local plugin_name = &quot;print_conf_ctx&quot;
+local schema = {
+    type = &quot;object&quot;,
+    properties = {
+        labels = { type = &quot;object&quot; },
+    },
+    additionalProperties = false,
+}
+local _M = {
+    version = 0.1,
+    priority = 0,
+    name = plugin_name,
+    schema = schema,
+}
+function _M.check_schema(conf)
+    return core.schema.check(schema,conf)
+end
+-- 打印请求内容
+function _M.access(conf, ctx)
+    ngx.req.read_body()
+    local body_data = ngx.req.get_body_data()
+    core.log.info(&quot;print_conf_ctx:\n conf is: &quot;,core.json.encode(conf))
+    core.log.info(&quot;print_conf_ctx:\n ctx is: &quot;,core.json.encode(ctx,true))
+end
+return _M
+</code></pre>
+<p>插件开发完成后，我们还需要修改config.yaml配置文件，将插件添加到插件列表，不然插件不会加载。</p>
+<pre><code class="language-javascript"># config.yaml
+plugins:    
+...
+- print_conf_ctx
+</code></pre>
+<p>注意：</p>
+<p>1、虽然conf/config-default.yaml中列了一系列的插件，在新增插件时，需要将default里面的插件都复制到conf/config.yaml中，不然找不到别的插件，相当于conf/config.yaml与config-default.yaml的同名对象是覆盖而不是append的关系。</p>
+<p>2、config.yaml中的插件名就是我们lua中指定的插件名，一定要对应上，不然是找不到的（保证代码中的name、文件名、config.yaml中的插件名都是相同的就OK）：</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/bVTFG329NSCsyrY.png" alt="" loading="lazy"></figure>
+<p>（补充一下，上述的properties就是插件配置的字段，default表示有默认值）</p>
+<p>新写的插件，如果想要在dashboard上可视化的配置，需要根据下面的步骤实现：</p>
+<p>https://apisix.apache.org/zh/docs/dashboard/FAQ</p>
+<p>需要打开apisix的control api，修改conf/config.yaml文件：</p>
+<pre><code class="language-javascript">apisix:
+  ...
+  enable_control: true
+  control:
+    ip: &quot;127.0.0.1&quot;
+    port: 9090
+</code></pre>
+<p>如果是docker启动的apisix，则需要进入容器后，curl 127.0.0.1:9090/v1/schema才能获取当前的配置信息，在容器外9090端口没有暴露，没有被监听。</p>
+<p>1、curl  127.0.0.1:9090/v1/schema &gt; schema.json</p>
+<p>2、将该schema.json文件复制到apisix dashboard容器的conf目录下（替换）</p>
+<p>3、重启dashboard</p>
+<h2 id="apisix插件可用的打印全局变量的snippet">apisix插件可用的打印全局变量的snippet</h2>
+<pre><code class="language-javascript">local tablePrinted = {}
+local global_info = &quot;&quot;
+function printTableItem(k, v, level)
+    for i = 1, level do
+        global_info = global_info .. &quot;    &quot;
+        --core.log.error(&quot;    &quot;)
+    end
+   global_info = global_info .. tostring(k) .. &quot; = &quot; .. tostring(v) .. &quot;\n&quot;
+   -- core.log.error(tostring(k), &quot; = &quot;, tostring(v), &quot;\n&quot;)
+    if type(v) == &quot;table&quot; then
+        if not tablePrinted[v] then
+            tablePrinted[v] = true
+            for k, v in pairs(v) do
+                printTableItem(k, v, level + 1)
+            end
+        end
+    end
+end
+printTableItem(&quot;_G&quot;, _G, 0)
+core.log.error(&quot;global_info is:\n&quot;,global_info)
+</code></pre>
+<h2 id="使用服务发现获取upstream时ctx中有discovery_args等相关信息">使用服务发现获取upstream时，ctx中有discovery_args等相关信息</h2>
+<figure data-type="image" tabindex="19"><img src="https://s2.loli.net/2022/08/28/VsDJrBOQLvf2WSZ.png" alt="" loading="lazy"></figure>
+<p>因此，我们可以在某一个插件中，通过ngx获取headers/body的参数，然后改写ctx的upstream的内容，ctx应该是一个全局变量，可以测试下是否如此，如果这样可以的话，comm_cgi的原有能力就可以迁移（甚至基于规则路由的灰度发布也可以重现）</p>
+<p>下面是一个使用插件改写服务发现参数的例子，为了保证获取完实例后，能正确转发到具体服务的接口上，使用了proxy-rewrite插件，改写了转发的uri。</p>
+<p>https://www.madp.xyz/post/34</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/routes/333 -H 'X-API-KEY: 2aczvx5cwsexsd4o3g692v07yy7uhcae' -X PUT -i -d '
+{
+    &quot;uri&quot;: &quot;/comm_cgi/*&quot;,
+    &quot;plugins&quot;:{
+        &quot;replace_polaris&quot;:{
+            &quot;namespace&quot;: &quot;Development&quot;,
+            &quot;discorvery_type&quot;: &quot;polaris&quot;,
+            &quot;service_name&quot;: &quot;event_svr&quot;
+        },
+        &quot;proxy-rewrite&quot;:{
+            &quot;regex_uri&quot;: [&quot;^/comm_cgi/*&quot;,&quot;/$1&quot;]
+        }
+    },
+    &quot;upstream&quot;: {
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;discovery_type&quot;: &quot;polaris&quot;,
+        &quot;service_name&quot;: &quot;event_svr&quot;,
+        &quot;discovery_args&quot;: {
+            &quot;namespace&quot;: &quot;Development&quot;
+        }
+    },
+    &quot;status&quot;: 1,
+    &quot;desc&quot;: &quot;测试自定义北极星路由参数&quot;
+}'
+</code></pre>
+<p>https://github.com/apache/apisix/blob/master/docs/zh/latest/admin-api.md</p>
+<p>各个admin api的请求body参数说明</p>
+<p>问题：</p>
+<p>1、重启容器和./bin/apisix reload都可以实现插件的生效，但是admin api的reload是失败的。（2022.0225测试发现还是得可执行文件操作才生效）</p>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/jqnm1akvZX2fLht.png" alt="" loading="lazy"></figure>
+<p>按道理确实是两种方法都可以，但api的目前不行。。</p>
+<p>调试发现内置的插件ldap-auth有问题，导致api reload失败，在config.yaml去掉后，api正常可用</p>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/onLjUCgvMtzfJXp.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/claDTdxbU8foBrv.png" alt="" loading="lazy"></figure>
+<p>2、access.log日志输出的upstream_host居然是容器所在的ip</p>
+<p>access_log的输出格式：</p>
+<figure data-type="image" tabindex="23"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE80775f07e368fd436997e6dee425f247.png" alt="" loading="lazy"></figure>
+<p>其中，最后一项输出$upstream_host/upstream_uri为容器的ip/uri，结合下面route设置的参数，默认情况下，pass_host为pass，所以作为服务，收到apisix的请求头中的host就是容器的ip，也即导致acces_log打印了这个内容。</p>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/wlJF6cPtTMxqZCG.png" alt="" loading="lazy"></figure>
+<h2 id="apisix使用etcd做缓存">apisix使用etcd做缓存</h2>
+<p>有时候网关层需要缓存一些用户的数据，例如用户的ticket，ticket是用来鉴权的，但是ticket有过期时间，如果每次网关层鉴权都真实请求到鉴权服务器，一方面是会降低网关层的转发性能，另一方面是会导致下游鉴权服务压力过大。</p>
+<p>因此，如果要在apisix做一层鉴权，那么要自己做一层缓存，而apisix与etcd是耦合的，可以直接使用etcd作为缓存组件。</p>
+<p>下面是读写缓存的snippet：</p>
+<pre><code class="language-javascript">local core = require(&quot;resty.core&quot;)
+local function has_cache(ticket)
+    local ticket_info, err = core.etcd.get(ticket)
+    if not ticket_info or ticket_info.status ~= 200 then
+        core.log.error(&quot;miss cache: ticket&quot;,ticket)
+        return false
+    end
+    local prev_expire_time = core.json.decode(ticket_info.body.node.value).Data.ExpireTimestamp
+    -- 缓存还有5s过期 重新进行
+    if prev_expire_time - ngx.time() &lt; 5 then
+        return false
+    end
+    core.log.error(&quot;OA-auth: request OA-ticket hit valid cache&quot;)
+    return true
+end
+local function set_cache(tof_resp)
+    local expire_time = get_timestamp(tof_resp.Data.Expiration)
+    tof_resp.Data.ExpireTimestamp = expire_time
+    local now_time = ngx.time()
+    if now_time &lt; expire_time then
+        core.etcd.set(ticket, core.json.encode(tof_resp), expire_time - now_time)
+    end
+end
+local function has_expire_cache(ticket)
+    local exp_ticket_info, err = core.etcd.get(ticket .. &quot;_expired&quot;)
+    if not exp_ticket_info or exp_ticket_info.status ~= 200 then
+        core.log.error(&quot;miss expired cache: ticket&quot;,ticket)
+        return false
+    end
+    core.log.error(&quot;OA-auth: request OA-ticket hit expired cache&quot;)
+    return true
+end
+local function set_expire_cache(ticket)
+    core.etcd.set(ticket .. &quot;_expired&quot;, &quot;expired&quot;, 3600)
+end
+</code></pre>
+<p>resty.core已经继承了etcd的模块，可以直接用来访问etcd，set、get缓存对象，set函数的参数为(key,value,ttl)，ttl为缓存超时的时间，这个比较好理解。</p>
+<p>但是对于core.etcd.get(key)操作来说，返回的对象就比较复杂，分为两种情况，一种是缓存命中，一种是缓存未命中。</p>
+<p>get返回的对象类似于lua.http的response对象，调试过程中，打印结果如下：</p>
+<figure data-type="image" tabindex="25"><img src="https://s2.loli.net/2022/08/28/Akth4MRPsCbH1DQ.png" alt="" loading="lazy"></figure>
+<p>我们可以通过status判断，这次请求etcd获取数据是否成功，成功的话是200，此时</p>
+<p>local res,err = core.etcd.get(key)</p>
+<p>res.body就是存在etcd中的数据结构，如下所示：</p>
+<pre><code class="language-javascript">{
+  &quot;node&quot;: {
+    &quot;key&quot;: &quot;your_key&quot;,
+    &quot;value&quot;: &quot;your_value&quot;,
+    &quot;modifiedIndex&quot;: 161094,
+    &quot;createdIndex&quot;: 161094
+  },
+  &quot;action&quot;: &quot;get&quot;,
+  &quot;count&quot;: &quot;1&quot;,
+  &quot;header&quot;: {
+    &quot;revision&quot;: &quot;161095&quot;,
+    &quot;member_id&quot;: &quot;10276657743932975437&quot;,
+    &quot;raft_term&quot;: &quot;2&quot;,
+    &quot;cluster_id&quot;: &quot;14841639068965178418&quot;
+  }
+}
+</code></pre>
+<p>我们如果想要获取数据就使用res.body.node.value，不过我们用之前一定要判断这个是拿到缓存的情况，我们可以这么判断：</p>
+<pre><code class="language-javascript">local res,err = core.etcd.get(key)
+if not res or res.status ~= 200 or not res.body.node then
+    -- get cache failed
+else
+    local val = res.body.node.value
+end
+</code></pre>
+<h2 id="apisix插件进行http请求">apisix插件进行http请求</h2>
+<p>https://github.com/ledgetech/lua-resty-http</p>
+<p>使用这个库就可以</p>
+<p>snippet</p>
+<pre><code class="language-javascript">local http_client = require(&quot;resty.http&quot;).new()
+-- 然后参考github的demo就行 注意要判断http status
+</code></pre>
+<h2 id="apisix灰度发布插件traffic-split">apisix灰度发布插件traffic-split</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/plugins/traffic-split/#%E5%B1%9E%E6%80%A7</p>
+<p>简单来说，就是在路由配置中启用这个插件，在这个插件中配置匹配规则，而匹配的变量是从请求中取出来的，可以使用nginx的一些内部变量名；例如下面的arg_name，表示从请求的参数重，取出name，如果name=json，那么就命中了这条匹配规则，使用这条规则下的upstream</p>
+<figure data-type="image" tabindex="26"><img src="https://s2.loli.net/2022/08/28/uhtwQreLJWB5Z7s.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="27"><img src="https://s2.loli.net/2022/08/28/Wyr9YGLK2gQ4Ovm.png" alt="" loading="lazy"></figure>
+<p>上面这种是从请求的header中取参数</p>
+<p>https://apisix.apache.org/zh/docs/apisix/plugins/traffic-split/#%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83</p>
+<p>使用traffic-split做灰度发布，理论上和北极星的规则路由很像，只是用于灰度发布的参数是nginx直接帮你取出来了而已。</p>
+<p>nginx的内部变量：</p>
+<p>https://blog.csdn.net/m0_37556444/article/details/84563520</p>
+<p>猜测，arg_name,cookie_name,http_name分别对应从uri参数、cookie、header中取参数</p>
+<p>有没有办法接入apisix，不需要过多的测试验证工作呢</p>
+<h2 id="apisix做tcpudp代理">apisix做tcp/udp代理</h2>
+<p>简单来说，apisix可以监听额外的端口，在这些端口上，请求apisix的流量将会被代理转发给下游，就是一个proxy。</p>
+<p>https://apisix.apache.org/zh/docs/apisix/stream-proxy</p>
+<p>稍微详细一些的看官方教程，这里备注下简单的例子。</p>
+<p>首先想要开启tcp/udp代理，需要在conf/config.yaml文件中，配置stream_proxy选项，默认情况下是没有开放tcp/udp代理的。</p>
+<pre><code class="language-javascript">apisix:
+  stream_proxy: # TCP/UDP proxy
+    tcp: # TCP proxy address list
+      - 9100
+      - &quot;127.0.0.1:9101&quot;
+    udp: # UDP proxy address list
+      - 9200
+      - &quot;127.0.0.1:9211&quot;
+</code></pre>
+<figure data-type="image" tabindex="28"><img src="https://s2.loli.net/2022/08/28/RI845qbh7tvrZTL.png" alt="" loading="lazy"></figure>
+<p>上面地址的含义为，当客户端请求127.0.0.1:9101，该tcp请求将会被转发，具体转发的下游服务，是在stream_route中配置的。</p>
+<p>mysql是使用tcp连接的，我们可以在stream_route中配置客户端的地址，知道哪些客户端的请求才需要被转发，以及配置转发到哪里去。</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/stream_routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    &quot;server_addr&quot;: &quot;127.0.0.10&quot;,
+    &quot;server_port&quot;: 9101,
+    &quot;upstream&quot;: {
+        &quot;nodes&quot;: {
+            &quot;127.0.0.1:3306&quot;: 1
+        },
+        &quot;type&quot;: &quot;roundrobin&quot;
+    }
+}'
+</code></pre>
+<p>例子中 APISIX 会把请求服务器地址为 127.0.0.10, 端口为 9101 代理到上游地址 127.0.0.1:3306。</p>
+<p>这个例子是说，如果我们在本地部署了一个mysql，我们可以用下面的命令行直接连接mysql：</p>
+<pre><code class="language-javascript">mysql --host=127.0.0.10 --port=9101 -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 26
+...
+mysql&gt;
+</code></pre>
+<p>tcp/udp代理还能处理TLS证书的代理，需要更复杂的配置，需要的时候搜索下看看文档。</p>
+<h2 id="apisix-grpc代理">apisix-grpc代理</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/grpc-proxy</p>
+<p>这个代理就和普通的route配置差不多，只是在upstream的配置中，要指定scheme字段为grpc/grpcs（有无TLS加密），以及route的uri格式为/service_name/method</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    &quot;methods&quot;: [&quot;POST&quot;, &quot;GET&quot;],
+    &quot;uri&quot;: &quot;/helloworld.Greeter/SayHello&quot;,
+    &quot;upstream&quot;: {
+        &quot;scheme&quot;: &quot;grpc&quot;,
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;nodes&quot;: {
+            &quot;127.0.0.1:50051&quot;: 1
+        }
+    }
+}'
+</code></pre>
+<p>这种代理的用途是指用户请求就是grpc的包，如果是前端发起过来的，一般是json，所以还需要grpc-json的协议转换。</p>
+<p>要支持grpc，说明apisix支持proto文件的管理：</p>
+<h2 id="apisix-external-plugin">apisix external plugin</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/external-plugin</p>
+<p>这里的external plugin指的是用lua以外的语言开发的插件，需要通过中间件sidecar的方式被加载和运行，因而扩充了语言的写法，可以支持python、go、java、js</p>
+<figure data-type="image" tabindex="29"><img src="https://s2.loli.net/2022/08/28/GVlUqNz1aLiFbw9.png" alt="" loading="lazy"></figure>
+<h2 id="支持的-plugin-runner">支持的 Plugin Runner#</h2>
+<ul>
+<li>
+<p>Java:</p>
+</li>
+<li>
+<p>https://github.com/apache/apisix-java-plugin-runner</p>
+</li>
+<li>
+<p>Go:</p>
+</li>
+<li>
+<p>https://github.com/apache/apisix-go-plugin-runner</p>
+</li>
+<li>
+<p>Python:</p>
+</li>
+<li>
+<p>https://github.com/apache/apisix-python-plugin-runner</p>
+</li>
+<li>
+<p>JavaScript:</p>
+</li>
+<li>
+<p>https://github.com/zenozeng/apisix-javascript-plugin-runner</p>
+</li>
+</ul>
+<h2 id="apisix-grpc-transcode">apisix grpc-transcode</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/plugins/grpc-transcode/</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/proto/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    &quot;content&quot; : &quot;syntax = \&quot;proto3\&quot;;
+    package helloworld;
+    service Greeter {
+        rpc SayHello (HelloRequest) returns (HelloReply) {}
+    }
+    message HelloRequest {
+        string name = 1;
+    }
+    message HelloReply {
+        string message = 1;
+    }&quot;
+}'
+</code></pre>
+<p>首先要在apisix中增加proto，使用admin/proto</p>
+<p>然后在需要进行grpc-transcode的route中，选择grpc-transcode插件，并在插件的配置中选择proto_id，以及指定upstream为grpc</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/routes/111 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    &quot;methods&quot;: [&quot;GET&quot;],
+    &quot;uri&quot;: &quot;/grpctest&quot;,
+    &quot;plugins&quot;: {
+        &quot;grpc-transcode&quot;: {
+         &quot;proto_id&quot;: &quot;1&quot;,
+         &quot;service&quot;: &quot;helloworld.Greeter&quot;,
+         &quot;method&quot;: &quot;SayHello&quot;
+        }
+    },
+    &quot;upstream&quot;: {
+        &quot;scheme&quot;: &quot;grpc&quot;,
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;nodes&quot;: {
+            &quot;127.0.0.1:50051&quot;: 1
+        }
+    }
+}'
+</code></pre>
+<p>不过看官方文档，好像请求包都是在url中的，这个要确认下：</p>
+<pre><code class="language-javascript">$ curl -i &quot;http://127.0.0.1:9080/zeebe/WorkflowInstanceCreate?bpmnProcessId=order-process&amp;version=1&amp;variables=\{\&quot;orderId\&quot;:\&quot;7\&quot;,\&quot;ordervalue\&quot;:99\}&quot;
+HTTP/1.1 200 OK
+Date: Wed, 13 Nov 2019 03:38:27 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+grpc-encoding: identity
+grpc-accept-encoding: gzip
+Server: APISIX web server
+Trailer: grpc-status
+Trailer: grpc-message
+
+{&quot;workflowKey&quot;:&quot;#2251799813685260&quot;,&quot;workflowInstanceKey&quot;:&quot;#2251799813688013&quot;,&quot;bpmnProcessId&quot;:&quot;order-process&quot;,&quot;version&quot;:1}
+</code></pre>
+<p>要找下例子，看看有没有放在json里面的，还是说这种情况需要grpc-json转换插件。</p>
+<p>看了下官方的插件代码，其中有一个函数，是从http请求中取数据的，如下所示，可以从json body中取，也可以是url_param。</p>
+<pre><code class="language-javascript">local function get_request_table()
+    local method = ngx.req.get_method()
+    local content_type = ngx.req.get_headers()[&quot;Content-Type&quot;] or &quot;&quot;
+    if string.find(content_type, &quot;application/json&quot;, 1, true) and
+        (method == &quot;POST&quot; or method == &quot;PUT&quot; or method == &quot;PATCH&quot;)
+    then
+        local req_body, _ = core.request.get_body()
+        if req_body then
+            local data, _ = json.decode(req_body)
+            if data then
+                return data
+            end
+        end
+    end
+
+    if method == &quot;POST&quot; then
+        return ngx.req.get_post_args()
+    end
+
+    return ngx.req.get_uri_args()
+end
+</code></pre>
+<h2 id="grpc-transcode和grpc-json-transcode插件的区别">grpc-transcode和grpc-json-transcode插件的区别</h2>
+<p>两者都可以将http请求经过apisix代理转发给下游grpc服务，grpc-transcode是官方自带的，具体看上一节笔记的文档。</p>
+<p>两者的主要差别在于，grpc-transcode需要在apisix这里维护proto文件，apisix会去编译，并且会将编译的结果放到lrucache缓存中，第一次请求有一定的编译成本，有缓存的时候则请求比较快。</p>
+<p>apisix会基于proto文件，对请求中的数据（在lua中是一个table，这个table可以是json body，也可以是url_param），然后将数据core.json.encode之后，在二进制数据前加上grpc的一些头部信息，转发到下游。</p>
+<p>proto文件在里面的作用就是一个校验的标准，没有定义在proto文件中的请求字段不会带到下游，apisix这里做了一层根据proto定义的请求过滤，apisix知道用户请求的是grpc，也知道是哪个grpc服务下的哪个接口，也即知道下面的内容,apisix完全知道这次grpc相关的服务信息：</p>
+<pre><code class="language-javascript">service HelloWorld{
+    rpc method_name(req_type) returns (resp_type);
+}
+</code></pre>
+<p>反过来也有一层协议转换。</p>
+<p>而grpc-json-transcode只是截取了grpc-transcode插件中的grpc-json协议互转的部分，只需要对数据进行协议转换，而不需要管理proto文件，只管这么转，请求字段是否合法由客户端保证，apisix只做编解码，而且不知道这次请求的是grpc的什么service的什么method，以及该接口的协议都不知道。</p>
+<p>全部由下游服务自己来处理，处理出错就出错返回，逻辑非常简单。</p>
+<p>grpc-transcode是严格按照protobuf来编码数据部分的，传输的时候就是proto的二进制；</p>
+<p>而grpc-json-transcode是简单的将json数据encode之后，加上grpc需要的界定信息（是否压缩、数据长度，总计五个字节）传给下游，是否正常处理请求，需要下游服务知道从请求中按照json反序列化，由下游网络框架保证。</p>
+<h2 id="apisix插件control-metdata">apisix插件control metdata</h2>
+<p>https://apisix.apache.org/zh/docs/apisix/control-api</p>
+<p>上面是官方control API的介绍，如果插件有开启control api，则有插件自身的control api；</p>
+<p>可以获取当前apisix使用的schema.json、upstream的健康度检查状态、发起apisix的gc等操作。</p>
+<p>control API 可以被用来：</p>
+<ul>
+<li>
+<p>暴露 APISIX 内部状态信息</p>
+</li>
+<li>
+<p>控制单个 APISIX 的数据平面的行为</p>
+</li>
+</ul>
+<p>https://gitcode.net/apache/apisix/-/blob/master/apisix/admin/plugin_metadata.lua?from_codechina=yes</p>
+<pre><code class="language-javascript">curl http://127.0.0.1:9080/apisix/admin/plugin_metadata/trpc-transcode -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    &quot;response_package&quot;: {
+        &quot;code_name&quot;: &quot;ret&quot;,
+        &quot;msg_name&quot;: &quot;err&quot;,
+        &quot;data_name&quot;: &quot;body&quot;,
+        &quot;enable&quot;: true
+    }
+}'
+</code></pre>
+<p>plugin_metdata这个admin api可以控制插件的一些配置，例如trpc-transcode插件可以设置回包的字段名，通过上面这个就可以设置指定字段名，看plugin_metada.lua的代码（apisix/admin/plugin_metadata.lua），是设置在etcd里的。</p>
+<p>https://github.com/apache/apisix-dashboard/issues/2148（关于plugin_metadata的issue）</p>
+<figure data-type="image" tabindex="30"><img src="https://s2.loli.net/2022/08/28/R8FGdDBxmjZLY4i.png" alt="" loading="lazy"></figure>
+<h2 id="apisix-实现http到https">apisix 实现http到https</h2>
+<p>https://www.bookstack.cn/read/apisix-2.9-zh/d90bbe53ca9ebc33.md</p>
+<figure data-type="image" tabindex="31"><img src="https://s2.loli.net/2022/08/28/IJbTN1zGPAHUv5Q.png" alt="" loading="lazy"></figure>
+<h2 id="apisix-支持https请求">apisix 支持https请求</h2>
+<p>https://www.bookstack.cn/read/apache-apisix-1.4-zh/6345c5ad2e3521d2.md</p>
+<p>需要配置证书，以及证书允许的域名</p>
+<figure data-type="image" tabindex="32"><img src="https://s2.loli.net/2022/08/28/jtELSBcsAbZxMk5.png" alt="" loading="lazy"></figure>
+<p>apisix网关层支持https请求之后，用户chrome上发起的https请求就能正确响应，避免有很多服务还没有支持https的异常无法响应，继续往下访问下游服务就没问题了。</p>
+<h2 id="apisix使用etcd的原因">apisix使用etcd的原因</h2>
+<p>https://juejin.cn/post/7025898649758466062</p>
+<h2 id="apisix和openresty">apisix和openresty</h2>
+<p>目前了解到的，apisix其实就是一套lua库，openresty集成了nginx和lua解释器，本身openresty已经提供了大量的好用的lua库；</p>
+<p>apisix会生成nginx.conf，openresty的nginx会用这个配置文件进行启动；</p>
+<p>在这个nginx.conf中我们用到的apisix的uri都有对应的处理location、server；</p>
+<p>使用了nginx中的xxx_by_lua_block的功能，将我们的lua代码可以在nginx中执行；</p>
+<p>我们写的所有插件，通过配置config.yaml的刷新，可以被apisix搜索到，从而扩展网关的能力；</p>
+<p>本质上就是nginx+etcd+xxx_by_lua_block的架构</p>
+<p>启动的nginx worker数量默认和cpu核数相同</p>
+<figure data-type="image" tabindex="33"><img src="https://s2.loli.net/2022/08/28/ek5vEciuLaFXj19.png" alt="" loading="lazy"></figure>
+<p>https://openresty.org/cn/components.html</p>
+<p>上面的链接包含了openresty的所有组件，这些组件都是在apisix的lua代码中可以去引用使用的</p>
+<figure data-type="image" tabindex="34"><img src="https://s2.loli.net/2022/08/28/ANkUz7wOdDCLMuY.png" alt="" loading="lazy"></figure>
+<p>openresty启动的时候-p 指定了工作目录（set prefix），在启动的时候指定为apisix所在的目录，然后就可以使用apisix的nginx.conf来启动nginx；</p>
+<p>-p 是用来指定文件前缀的，在指定了文件前缀后，OpenResty 启动时则会基于该前缀去拼接对应的 Nginx 配置文件、日志文件地址等。</p>
+<p>openresty的ngx_lua模块，使得我们可以直接编写lua代码，来实现高性能的web服务，nginx是c写的，因此有了openresty，我们不需要去改变核心代码，以模块、插件化的形式编写我们基于nginx的web服务；</p>
+<p>而apisix也是基于openresty提供的这一套机制，有一套自己的core代码（都是lua），来实现apisix自己的特性；</p>
+<p>因为apisix是基于openresty的，openresty自身也是支持我们编写lua代码，然后指定代码要执行的阶段的；只是apisix在重新加载nginx，生成nginx.conf文件上比openresty方便，因为我们会把新的插件写入到config.yaml中，apisix的命令行reload后会自动根据这个新的yaml生成nginx.conf（可以查看apisix/cli/ops.lua的代码），我们自己不需要去改nginx.conf（可能openresty需要这个步骤）；</p>
+<p>apisix基于openresty，搭配etcd作为配置中心，提供比openresty更方便的执行，性能上其实和openresty相差无几，因为网络逻辑层都是一样的；</p>
+<pre><code class="language-javascript">// openresty的常用指令和参数
+--[[
+参考文档： https://www.nginx.com/resources/wiki/modules/lua/#nginx-api-for-lua
+Nginx Lua模块指令：
+    Nginx共11个处理阶段，而相应的处理阶段是可以做插入式处理，即可插拔式架构；
+    另外指令可以在http、server、server if、location、location if几个范围进行配置：
+指令: init_by_lua/init_by_lua_file
+    处理阶段:
+        loading-config
+    使用范围:
+        http
+    解释:
+        nginx Master进程加载配置时执行；
+        通常用于初始化全局配置/预加载Lua模块
+指令: init_worker_by_lua/init_worker_by_lua_file
+    处理阶段:
+        starting-worker
+    使用范围:
+        http
+    解释:
+        每个NginxWorker进程启动时调用的计时器，
+        如果Master进程不允许则只会在init_by_lua之后调用；
+        通常用于定时拉取配置/数据，或者后端服务的健康检查
+指令: set_by_lua/set_by_lua_file
+    处理阶段:
+        rewrite
+    使用范围:
+        server,server if,location,location if
+    解释:
+        设置nginx变量，可以实现复杂的赋值逻辑；此处是阻塞的，Lua代码要做到非常快；
+指令: rewrite_by_lua/rewrite_by_lua_file
+    处理阶段:
+        rewrite tail
+    使用范围:
+        http,server,location,location if
+    解释:
+        rewrite阶段处理，可以实现复杂的转发/重定向逻辑；
+指令: access_by_lua/access_by_lua_file
+    处理阶段:
+        access tail
+    使用范围:
+        http,server,location,location if
+    解释:
+        请求访问阶段处理，用于访问控制
+指令: content_by_lua/content_by_lua_file
+    处理阶段:
+        content
+    使用范围:
+        location，location if
+    解释:
+        内容处理器，接收请求处理并输出响应
+指令: header_filter_by_lua/header_filter_by_lua_file
+    处理阶段:
+        output-header-filter
+    使用范围:
+        http，server，location，location if
+    解释:
+        设置header和cookie
+指令:body_filter_by_lua/body_filter_by_lua_file
+    处理阶段:
+        output-body-filter
+    使用范围:
+        http，server，location，location if
+    解释:
+        对响应数据进行过滤，比如截断、替换。
+指令:log_by_lua/log_by_lua_file
+    处理阶段:
+        log
+    使用范围:
+        http，server，location，location if
+    解释:
+        log阶段处理，比如记录访问量/统计平均响应时间
+]]
+ 
+ngx.var
+-- nginx变量，如果要赋值如ngx.var.b = 2，此变量必须提前声明；
+-- 另外对于nginx location中使用正则捕获的捕获组可以使用ngx.var[捕获组数字]获取；
+ 
+ngx.var.request_uri
+-- 这个变量等于包含一些客户端请求参数的原始URI，它无法修改，请查看$uri更改或重写URI。
+ 
+ 
+ngx.var.scheme -- ngx.var.server_addr
+-- HTTP方法（如http，https）。按需使用
+ 
+ngx.var.server_addruri
+-- 服务器地址，在完成一次系统调用后可以确定这个值，如果要绕开系统调用，则必须在listen中指定地址并且使用bind参数。
+ 
+ngx.var.uri
+-- 请求中的当前URI(不带请求参数，参数位于$args)，可以不同于浏览器传递的$request_uri的值，它可以通过内部重定向，或者使用index指令进行修改。
+ 
+ngx.var.server_name
+-- 服务器名称
+ 
+ngx.var.server_port
+-- 请求到达服务器的端口号。
+ 
+ngx.var.remote_addr
+-- 获取远程的IP地址
+ 
+ngx.var.remote_port
+-- 获取远程的端口号
+ 
+ngx.header
+-- 输出响应头；
+ 
+ngx.print
+-- 输出响应内容体；
+ 
+ngx.say
+-- 通ngx.print，但是会最后输出一个换行符；
+ 
+ngx.exit
+-- 指定状态码退出。
+ 
+ 
+ngx.redirect
+-- 重定向；
+ 
+ngx.status = 301
+-- 设置响应的状态码；
+ 
+ngx.resp.get_headers()
+-- 获取设置的响应状态码；
+ 
+ngx.send_headers()
+-- 发送响应状态码, ，当调用ngx.say/ngx.print时自动发送响应状态码；
+ 
+ngx.headers_sent = true
+-- 判断是否发送了响应状态码。
+ 
+ngx.req.get_headers
+-- 获取请求头，默认只获取前100，如果想要获取所以可以调用ngx.req.get_headers(0)；
+-- 获取带中划线的请求头时请使用如headers.user_agent这种方式；
+-- 如果一个请求头有多个值，则返回的是table；
+ 
+ngx.req.get_uri_args
+-- 获取url请求参数，其用法和get_headers类似；
+ 
+ngx.req.get_post_args
+-- 获取post请求内容体，其用法和get_headers类似，但是必须提前调用ngx.req.read_body()来读取body体
+--（也可以选择在nginx配置文件使用lua_need_request_body on;开启读取body体，但是官方不推荐）；
+ 
+ngx.req.raw_header
+-- 未解析的请求头字符串；
+ 
+ngx.req.get_body_data
+-- 为解析的请求body体内容字符串。
+ 
+ngx.req.set_uri(uri, false)
+-- 可以内部重写uri（可以带参数），等价于 rewrite ^ /lua_rewrite_3；
+-- 通过配合if/else可以实现 rewrite ^ /lua_rewrite_3 break；
+-- 这种功能；此处两者都是location内部url重写，不会重新发起新的
+ 
+ngx.req.set_uri_args
+-- 重写请求参数，可以是字符串(a=1&amp;b=2)也可以是table；
+ 
+ngx.escape_uri
+ngx.unescape_uri
+-- uri编码解码；
+ 
+ngx.encode_args
+ngx.decode_args
+-- 参数编码解码；
+ 
+ngx.encode_base64
+ngx.decode_base64
+-- BASE64编码解码；
+ 
+ngx.re.match
+-- nginx正则表达式匹配；
+ 
+ngx.timer.at
+-- 延时调用相应的回调方法；
+-- ngx.timer.at(秒单位延时，回调函数，回调函数的参数列表)；
+-- 可以将延时设置为0即得到一个立即执行的任务，任务不会在当前请求中执行不会阻塞当前请求，而是在一个轻量级线程中执行。
+ 
+ 
+ 
+-- 指令： init_by_lua
+--[[
+    nginx.conf配置文件中的http部分添加如下代码,
+    #共享全局变量，在所有worker间共享
+    lua_shared_dict shared_data 1m;
+    init_by_lua_file /usr/example/lua/init.lua;
+]]
+--init.lua
+--初始化耗时的模块
+local redis = require 'resty.redis'
+local cjson = require 'cjson'
+ 
+--全局变量，不推荐
+count = 1
+--共享全局内存
+local shared_data = ngx.shared.shared_data
+shared_data:set(&quot;count&quot;, 1)
+ 
+-- test.lua
+count = count + 1
+ngx.say(&quot;global variable : &quot;, count)
+local shared_data = ngx.shared.shared_data
+ngx.say(&quot;, shared memory : &quot;, shared_data:get(&quot;count&quot;))
+shared_data:incr(&quot;count&quot;, 1)
+ngx.say(&quot;hello world&quot;)
+ 
+-- 访问如http://192.168.1.2/lua 会发现全局变量一直不变，而共享内存一直递增
+-- global variable : 2 , shared memory : 8 hello world
+-- 另外注意一定在生产环境开启lua_code_cache，否则每个请求都会创建Lua VM实例。
+ 
+ 
+ 
+-- 指令： init_worker_by_lua
+--[[
+    用于启动一些定时任务，比如心跳检查，定时拉取服务器配置等等；
+    此处的任务是跟Worker进程数量有关系的，比如有2个Worker进程那么就会启动两个完全一样的定时任务。
+    nginx.conf配置文件中的http部分添加如下代码：
+    init_worker_by_lua_file /usr/example/lua/init_worker.lua;
+    另外根据实际情况设置如下指令
+    lua_max_pending_timers 1024;  #最大等待任务数
+    lua_max_running_timers 256;   #最大同时运行任务数
+]]
+ 
+-- init_worker.lua
+local count = 0
+local delayInSeconds = 3
+local heartbeatCheck = nil
+ 
+heartbeatCheck = function(args)
+    count = count + 1
+    ngx.log(ngx.ERR, &quot;do check &quot;, count)
+    local ok, err = ngx.timer.at(delayInSeconds, heartbeatCheck)
+    if not ok then
+        ngx.log(ngx.ERR, &quot;failed to startup heartbeart worker...&quot;, err)
+    end
+end
+ 
+heartbeatCheck()
+ 
+ 
+ 
+-- 指令： set_by_lua
+--[[
+    设置nginx变量，我们用的set指令即使配合if指令也很难实现负责的赋值逻辑；
+    语法set_by_lua_file $var lua_file arg1 arg2...;
+    在lua代码中可以实现所有复杂的逻辑，但是要执行速度很快，不要阻塞；
+    example.conf配置文件:
+    location /lua_set_1 {
+        default_type &quot;text/html&quot;;
+        set_by_lua_file $num /usr/example/lua/test_set_1.lua;
+        echo $num;
+    }
+]]
+-- test_set_1.lua
+local uri_args = ngx.req.get_uri_args()
+local i = uri_args[&quot;i&quot;] or 0
+local j = uri_args[&quot;j&quot;] or 0
+return i + j
+-- 访问如http://192.168.1.2/lua_set_1?i=1&amp;j=10进行测试。 如果我们用纯set指令是无法实现的。
+</code></pre>
+<h2 id="etcd访问方式">etcd访问方式</h2>
+<p>https://github.com/etcd-io/etcd</p>
+<p>如果想本地搭建的话，下载prebuild release版本的内容（https://github.com/etcd-io/etcd/releases），整个程序是用go编译的，如果机器没有go编译器就下载二进制，etcd默认启动在2379端口，启动方式就不多赘述了，官方github文档有解释。</p>
+<figure data-type="image" tabindex="35"><img src="https://s2.loli.net/2022/08/28/SdkHlvjmue1XKqh.png" alt="" loading="lazy"></figure>
+<p>apisix默认的配置中心为etcd，所以有必要对etcd进行一定的学习，方便后续调试debug时，排除etcd的问题；</p>
+<p>现在的etcd都是v3.xxx的版本，这里只记录v3的api，至于v2的api这里就不记录了</p>
+<p>https://doczhcn.gitbook.io/etcd/index/index/interacting_v3</p>
+<p>这个链接是官方的中文文档，里面有详细的restful api的调用方式，以及etcdctl的客户端交互方式，用于设置、获取key以及集群的一系列操作，还包括了如何搭建etcd集群（运维相关），这里只简单摘取部分常用的方法，其他的参见文档：</p>
+<p>有两种方式和etcd交互，一种是通过etcdctl，自带的etcd client，另一种是通过restful api访问；</p>
+<p>etcdctl的安装方式（需要有go编译器，并且注意这里安装的是v3版本，如果要兼容使用v2的，需要修改环境变量export ETCDCTL_API=2）</p>
+<pre><code class="language-javascript">go get go.etcd.io/etcd/client/v3
+</code></pre>
+<p>下面的命令都是基于v3版本的</p>
+<p>查看etcd集群的成员</p>
+<p>etcdctl --write-out=table --endpoints=localhost:12379 member list</p>
+<p>会以表的形式输出成员信息</p>
+<p>向一个etcd实例设置key（有raft协议保证数据在多个实例的一致性）</p>
+<p>etcdctl --endpoint=your_etcd_addr put key value</p>
+<p>获取key的值</p>
+<p>etcdctl --endpoint=your_etcd_addr get key</p>
+<p>获取范围的key</p>
+<p>etcdctl --endpoint=your_etcd_addr get key key2</p>
+<p>返回key到key2的所有kv</p>
+<p>获取前缀为xxx的kv并限制输出数量</p>
+<p>etcdctl --endpoint=your_etcd_addr get --prefix --limit=2 xxx</p>
+<p>注意上面的--endpoints是一个全局设置，设置etcdctl要交互的etcd实例地址</p>
+<p>查看etcdctl的版本</p>
+<p>etcdctl version</p>
+<p>查看etcdctl的帮助</p>
+<p>etcdctl help 或 etcdctl -h</p>
+<p>etcd对每一个kv的设置都会生成一个版本，每一次的put操作都会生成一个新版本revision，我们可以使用这个信息来回滚到某个版本的kv</p>
+<p>如果想要访问某个版本的kv值(下面是获取版本4的key为foo的kv)</p>
+<p>etcdl --endpoint your_etcd_addr get --prefix foo --rev=4</p>
+<p>获取大于等于某个值的kv</p>
+<p>etcdctl --endpoint your_etcd_addr get --from-key foo</p>
+<figure data-type="image" tabindex="36"><img src="https://s2.loli.net/2022/08/28/CTiRbaDcsfJ1yMp.png" alt="" loading="lazy"></figure>
+<p>删除某个key</p>
+<p>etcdctl --endpoint your_etcd_addr del foo</p>
+<p>范围删除（删除foo-foo9的kv），还可以搭配prefix、from-key组合使用</p>
+<p>etcdctl --endpoint your_etcd_addr del foo foo9</p>
+<p>监听key的变化，例如某个客户端修改了key的值，能够显示出来（也可以搭配prefix）</p>
+<p>etcdctl --endpoint your_etcd_addr watch foo</p>
+<p>etcdctl --endpoint your_etcd_addr watch foo foo9 范围watch</p>
+<p>观察多个key</p>
+<p>etcdctl watch -i</p>
+<p>watch foo</p>
+<p>watch zoo</p>
+<p>可以搭配rev，查看历史版本以来的key的修改</p>
+<p>etcdctl --endpoint your_etcd_addr watch --rev=2 foo（查看版本2以来，foo这个key的修改）</p>
+<p>压缩版本，为了减少空间占用，etcd会压缩版本，如果版本被压缩了，那么上面的rev就不能使用这些版本号了，否则都是报找不到这个版本的错误：</p>
+<p>Error: etcdserver: mvcc: required revision has been compacted</p>
+<p>etcdctl --endpoint your_etcd_addr compact 5 （压缩前五个版本）</p>
+<p>如果想查看当前etcd的版本号，可以使用下方的方法，无需使用一个存在的key，不存的key也可以正常访问：</p>
+<p>etcdctl --endpoint your_etcd_addr get mykey -w=json</p>
+<p>{&quot;header&quot;:{&quot;cluster_id&quot;:14841639068965178418,&quot;member_id&quot;:10276657743932975437,&quot;revision&quot;:15,&quot;raft_term&quot;:4}}</p>
+<p>我们可以给kv设置ttl，也即etcd所谓的租约，租约的ttl是全局的，要先设置ttl，然后再去给kv设置租约，这样新建的key的ttl就是我们刚刚设置的ttl；</p>
+<p>因此我们可能多次修改全局ttl的大小，所以集群中所有的kv的租约都大于等于历史设置过的最小的ttl。</p>
+<h1 id="授予租约ttl为10秒">授予租约，TTL为10秒</h1>
+<p>$ etcdctl lease grant 10</p>
+<p>lease 32695410dcc0ca06 granted with TTL(10s)</p>
+<h1 id="附加键-foo-到租约32695410dcc0ca06">附加键 foo 到租约32695410dcc0ca06</h1>
+<p>$ etcdctl put --lease=32695410dcc0ca06 foo bar</p>
+<p>OK</p>
+<p>--lease后面的一串是租约的id，是我们随便指定的，但是不能重复，我们可以通过这个id来撤销租约，注意撤销租约的同时会把这个kv给删掉</p>
+<p>etcdctl lease revoke 32695410dcc0ca06</p>
+<p>如果想要维持租约，那么可以keep-alive ttl</p>
+<p>$ etcdctl lease keep-alive 32695410dcc0ca06</p>
+<p>lease 32695410dcc0ca06 keepalived with TTL(10)</p>
+<p>lease 32695410dcc0ca06 keepalived with TTL(10)</p>
+<p>lease 32695410dcc0ca06 keepalived with TTL(10)</p>
+<p>...</p>
+<p>我们也可以根据租约id来获取kv的租约信息</p>
+<p>etcdctl lease timetolive 694d5765fc71500b</p>
+<p>如果租约不存在，则会报错</p>
+<h2 id="etcd-restful-api访问">etcd restful api访问</h2>
+<p>etcd v3使用grpc协议来进行通信，但是我们的curl使用的是http，因此etcd还提供了一个grpc-gateway来实现json到grpc的协议转换，提供restful的api，翻译http/json到grpc的消息。</p>
+<p>https://app.swaggerhub.com/apis/390311010/etcd_restful_api/v3</p>
+<p>上面是所有提供的接口信息，从官方openapi导入的，很详细了，但是可能缺少一些解释</p>
+<p>下面的文档可以提供一定的帮助</p>
+<p>https://doczhcn.gitbook.io/etcd/index/index/api_grpc_gateway</p>
+<p>忽略文档中的v3alpha，自己使用的使用改成v3即可</p>
+<pre><code class="language-javascript"># 创建 root 用户
+curl -L http://localhost:2379/v3alpha/auth/user/add \
+    -X POST -d '{&quot;name&quot;: &quot;root&quot;, &quot;password&quot;: &quot;pass&quot;}'
+# {&quot;header&quot;:{&quot;cluster_id&quot;:&quot;14841639068965178418&quot;,&quot;member_id&quot;:&quot;10276657743932975437&quot;,&quot;revision&quot;:&quot;1&quot;,&quot;raft_term&quot;:&quot;2&quot;}}
+
+# 创建 root 角色
+curl -L http://localhost:2379/v3alpha/auth/role/add \
+    -X POST -d '{&quot;name&quot;: &quot;root&quot;}'
+# {&quot;header&quot;:{&quot;cluster_id&quot;:&quot;14841639068965178418&quot;,&quot;member_id&quot;:&quot;10276657743932975437&quot;,&quot;revision&quot;:&quot;1&quot;,&quot;raft_term&quot;:&quot;2&quot;}}
+
+# 授予 root 角色
+curl -L http://localhost:2379/v3alpha/auth/user/grant \
+    -X POST -d '{&quot;user&quot;: &quot;root&quot;, &quot;role&quot;: &quot;root&quot;}'
+# {&quot;header&quot;:{&quot;cluster_id&quot;:&quot;14841639068965178418&quot;,&quot;member_id&quot;:&quot;10276657743932975437&quot;,&quot;revision&quot;:&quot;1&quot;,&quot;raft_term&quot;:&quot;2&quot;}}
+
+# 开启认证
+curl -L http://localhost:2379/v3alpha/auth/enable -X POST -d '{}'
+# {&quot;header&quot;:{&quot;cluster_id&quot;:&quot;14841639068965178418&quot;,&quot;member_id&quot;:&quot;10276657743932975437&quot;,&quot;revision&quot;:&quot;1&quot;,&quot;raft_term&quot;:&quot;2&quot;}}
+</code></pre>
+<h2 id="etcdctl-获取apisix的key">etcdctl 获取apisix的key</h2>
+<p>etcdctl --endpoint your_etcd_addr get --prefix /apisix</p>
+<p>这是默认的，至于前缀是什么，由conf/config.yaml中的etcd项指定</p>
+<p>key就是我们admin api用后缀路径</p>
+<p>例如我们admin api获取一个路由的设置是</p>
+<p>curl &quot;http://apisix_host:9091/apisix/admin/routes/1&quot; -XGET- H &quot;X-API-KEY: xxxxx&quot;</p>
+<p>那么在etcd中的key就是</p>
+<p>/apisix/routes/1</p>
+<p>/apisix/services/9</p>
+<p>以此类推</p>
+<h2 id="插件的ctx参数需要注意的事项">插件的ctx参数需要注意的事项</h2>
+<figure data-type="image" tabindex="37"><img src="https://s2.loli.net/2022/08/28/RwG4X2SOgUlZ89C.png" alt="" loading="lazy"></figure>
+<p>虽然官方文档写了是缓存了请求的相关信息，但是这部分信息中，有一部分是同一个路由下共用的，例如ctx.matched_route，如果两个请求同时修改了这个对象的数据，就会出现不可预知的情况。也即ctx这个table下的一些元素，是通过etcd拉取回来的，而在lua中，table是引用的，所以如果请求A改变了这个元素的值，请求B又要用到，那么就出现不可预期的错误。</p>
+<h2 id="apisix的worker最大可打开的文件数">apisix的worker最大可打开的文件数</h2>
+<p>因为apisix是基于nginx的，所以这里的配置都是nginx的配置</p>
+<figure data-type="image" tabindex="38"><img src="https://s2.loli.net/2022/08/28/iGdUq3tjf721Hhn.png" alt="" loading="lazy"></figure>
+<p>黑体标粗的第一行表示worker可以打开的文件数量，而第二行表示worker可以处理的最大连接数，因为连接需要通过socket打开fd来处理，所以第一行的大小是第二行配置的上限，例如nofile为1000，而connections为2000，那么最大也就只能并发1000个连接。</p>
+<p>查看配置的连接数是否生效，首先ps -elf | grep worker查到pid，然后 cat /proc/pid/limits</p>
+<figure data-type="image" tabindex="39"><img src="https://s2.loli.net/2022/08/28/DpkhaiBVluSvryU.png" alt="" loading="lazy"></figure>
+<p>当然这里配置的上限还受linux的全局配置影响，可以通过ulimit -a查看进程的最大打开文件数量限制</p>
+<figure data-type="image" tabindex="40"><img src="https://s2.loli.net/2022/08/28/myJw4HbjRzt3nsN.png" alt="" loading="lazy"></figure>
+<p>想要全局修改并一直生效的话，需要vim /etc/security/limits.conf进行修改</p>
+<p>在该配置文件的最后加上：</p>
+<ul>
+<li>
+<p>soft nofile 65535</p>
+</li>
+<li>
+<p>hard nofile 65535</p>
+</li>
+</ul>
+<p>注意*号是要写入配置文件的，表示对于所有用户的进程都适用，soft表示应用程序的上限，hard表示内核的上限。</p>
+<p>如果只是想本次会话生效，那么ulimit -n 65535即可</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/ri-chang-kai-fa-yun-wei-zhi-shi-ji-lu-3/">
+                <h3 class="post-title">
+                  日常开发运维知识记录-3
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

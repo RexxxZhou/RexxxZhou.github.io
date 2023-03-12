@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>APUE笔记-第十章-信号 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>APUE笔记-第十章-信号</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+                  apue读书笔记
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>第十章-信号</p>
+<p>信号概念</p>
+<p>信号是定义在signal.h头文件中的一些正整数常量，标识符以SIG开头。</p>
+<p>如果内核和应用程序都需要用到同一个定义，那么该定义应该包含在内核头文件中，然后用户级头文件再包含内核级头文件。signal.h是用户及头文件，在linux中，对应的信号相关的定义在内核级头文件bits/signum.h中。</p>
+<p>不存在编号0的信号，这种信号称为空信号，kill函数对此信号有特殊应用。</p>
+<p>wait函数得到了什么</p>
+<p>很多条件下会产生信号:</p>
+<p>1.当用户在终端中键入某些终端键时，例如ctrl+c退出，ctrl+z挂起，ctrl+\中断</p>
+<p>2.硬件异常产生信号</p>
+<p>3.进程调用kill函数，或用户使用kill命令。</p>
+<p>4.当检测到某些软件信号，例如当程序检测到某种条件发生后，将某个信号发送给其他进程。</p>
+<p>在某个信号出现后，内核会以下列三种方式处理该信号：</p>
+<p>1.忽略该信号。SIGKILL和SIGSTOP这两种信号绝对不能忽略。</p>
+<p>2.捕捉信号。程序在收到信号后，通知内核执行给定的用户函数，类似回调。</p>
+<p>3.执行系统默认动作。大多数系统默认动作是终止进程。</p>
+<p>kill函数和kill命令并不是指杀死进程，而是向该进程发送信号，至于该进程如何处理信号则取决于其是采用上述三种方式中的哪种。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/kvRCnyZqh8SrFfI.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/08/28/79dhANwC3rORpbl.png" alt="" loading="lazy"></figure>
+<p>SIGHUP状态与SIGINT不同的地方在于，SIGHUP可以通知后台进程，而SIGINT只会通知前台进程。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/s7JTI9fvFYHXSAt.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/8D7mRyfcJozaGV3.png" alt="" loading="lazy"></figure>
+<p>通过键入ctrl+z挂起键、ctrl+c退出键、ctrl+\中断键，终端驱动程序会向前台进程组中的所有进程发送相应的信号：</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/08/28/8Cg7veANsHfnYhd.png" alt="" loading="lazy"></figure>
+<p>函数signal</p>
+<p>typedef void SigFunc (int);</p>
+<p>SigFunc* signal (int signo,SigFunc*func);</p>
+<p>使用signal函数，可以为指定的信号设置相应的处理方式，系统中有预定义的宏变量SIG_IGN和SIG_DFL，这两个变量都是SigFunc类型的函数，前者代表对信号进行忽略，后者代表对信号执行系统默认动作。</p>
+<p>signal的返回值是该信号之前的信号处理函数的地址，也即上一次的处理程序。</p>
+<p>当程序执行时，所有的信号处理方式为忽略或者系统默认动作，通常所有信号处理都被设置为系统默认动作，除非调用exec函数进程忽略该进程。调用exec函数后，原本进程中的需要捕捉的信号都更改为默认动作，因为exec之后，以前的信号处理程序函数地址在所执行的程序中无意义了。</p>
+<p>而对于进程创建，也即使用fork函数后，子进程的相应的信号处理程序还是以前的设置，不会更改为系统默认动作，因为fork之后的子进程有父进程的内存映像，这些信号处理程序的地址在子进程中是有意义的。</p>
+<p>signal函数的鸡肋：如果想知道当前对于某种信号的处理函数是什么，必须执行signal函数先设置了新的处理函数后才能得到之前的处理函数，后面采用sigaction函数可以确定当前处理函数，而不需要先改变它。</p>
+<p>中断的系统调用</p>
+<p>如果进程在执行一个低速系统调用而阻塞期间捕捉到一个信号，则该系统调用就被中断，不再执行。</p>
+<p>注意：这里中断的是系统调用。</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/gvIf2VaQE1PJtFO.png" alt="" loading="lazy"></figure>
+<p>例如read和write系统调用会阻塞等待读写磁盘I/O，这两者如果在被中断之前已经读写了一定的数据，具体系统是认为其出错还是返回只读写的数据量由不同的系统实现规定。</p>
+<p>与被中断的系统调用相关的问题是要显示的处理出错返回：是中断该系统调用，还是重启动该系统调用。</p>
+<p>不同的系统其处理出错返回的方式不一样，也跟相应的处理信号的函数有关。</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/QVruLnkaTJdqwjs.png" alt="" loading="lazy"></figure>
+<p>可重入函数</p>
+<p>可重入函数是指，该函数在执行的过程中被中断后，在信号处理程序中可以再次调用的函数，并且当信号控制程序返回后并不会造成错误的函数。也即这类函数所有使用到的变量都是自己栈帧上的量，不会用到全局、静态、或者堆上的数据，这样不管在哪里的调用都不会影响别处的调用，因为各自在自己的栈上。</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/lwseWFH7kdtgunK.png" alt="" loading="lazy"></figure>
+<p>不可重入函数由于使用了系统资源，比如数据段的数据，如果被中断的话，再次调用它这些数据的修改上可能会出现冲突。</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/aP9lgAF27Mc4sEG.png" alt="" loading="lazy"></figure>
+<p>简单的说，如果一个函数它自身在修改或者使用其栈帧外的数据，那么如果信号处理程序中也有函数访问或修改了相应数据，则会导致出错。</p>
+<figure data-type="image" tabindex="10"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588301965192.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>SIGCLD语义</p>
+<p>SIGCHLD是当子进程状态改变后产生该信号，父进程需要调用wait函数来知道子进程的状态。</p>
+<figure data-type="image" tabindex="11"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588301719110.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>Linux中设置了信号处理程序后，执行一次后内核不会设置其为默认值。</p>
+<p>可靠信号术语和语义</p>
+<p>当一个信号产生时，内核通常在进程表中以某种形式设置一个标志。</p>
+<p>信号产生后，内核会将该信号递送给相应进程，在信号产生和信号递送之间的时间，称信号是未决的。</p>
+<p>进程可以选用信号阻塞递送，如果产生了一个阻塞的信号，且相应进程对此信号设置为系统默认操作或捕捉信号，则在解除阻塞之前，内核不会递送该信号给进程，解除阻塞或者将对该信号的操作改成忽略后，信号被递送到进程中。</p>
+<p>内核在递送一个信号时，才决定对它的处理方式；所以进程在内核将信号传递给它之前都可以更改信号处理方式。</p>
+<p>如果在阻塞期间，被阻塞的信号产生了多次，那么不同的实现可能只递送一次信号，也可能递送多次信号；递送多次信号的系统实现会对信号进行排队。</p>
+<p>若有多个信号要递送给进程，标准并不要求递送顺序，但要求与进程当前状态有关的信号有限递送。</p>
+<p>进程可以设置信号屏蔽字，每种信号都对应于sigset_t的一位，设置该值，使得进程阻塞某一信号，进程可以调用sigpromask函数来检测和更改当前信号屏蔽字。</p>
+<p>函数kill和raise</p>
+<p>kill函数用来向某个进程或进程组发送信号，raise函数用来向进程自身发送信号。</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int kill(pid_ pid,int signo);</p>
+<p>int raise(int signo);</p>
+<figure data-type="image" tabindex="12"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588431823013.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="13"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588431830262.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>若要发送给别的进程或进程组，那么该进程必须有权限发送信号给别的进程或进程组，超级用户谁都可以发，而普通用户则需要其实际用户ID、有效用户ID或保存的设置用户ID要等于接收信号的进程或进程组的对应ID。如果发送的SIGCONT，则可以将该信号发给与发送进程统一会话的其他任一进程。</p>
+<p>若signo为0，空信号，kill不会发送信号；可用来判断一个进程是否还存在，因为若不存在，会出错，返回-1；但其实没什么用，这个操作不是原子操作，因为在kill返回时若该进程终止了，则毫无意义。</p>
+<p>如果kill发送给进程的信号不是进程的组赛信号，则kill在返回之前，该信号或者在信号队列中的未决、非阻塞信号就会被递送到该进程。</p>
+<p>函数alarm pause</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>unsigned int alarm(unsigned int seconds);</p>
+<p>seconds参数指定产生SIGALRM要经过的秒数。</p>
+<figure data-type="image" tabindex="14"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588434593048.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>每个进程只有一个闹钟时间。在未超时前再次调用alarm函数有以下情况：</p>
+<figure data-type="image" tabindex="15"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588434744801.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>#include&lt;unistd.h&gt;</p>
+<p>int pause();//返回-1，errno设为EINTR</p>
+<p>pause函数一直阻塞等待一个信号的到来，并在该信号的信号处理程序返回后返回-1，并将errno设为EINTR。</p>
+<p>信号集</p>
+<p>用sigset_t类型的每一位对应一个信号，来保存一个信号集。</p>
+<figure data-type="image" tabindex="16"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588562890578.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>sigemptyset函数将set指向的信号集全部置为0，清空信号；而sigfillset函数将信号集全部置为1，使其包含所有信号。sigaddset向信号集中添加信号，sigdelset则是删除一个信号，sigismember用于判断信号集中是否包含了执行信号。</p>
+<p>所有应用程序，在使用信号集之前要对信号集调用一次sigemptyset或sigfillset。所有对信号集进行操作的函数，总是以信号集的地址作为参数。</p>
+<p>函数sigprocmask</p>
+<p>sigprocmask用于检测和更改当前进程的信号屏蔽字，如前所述，信号屏蔽字用于阻塞某个信号而不能递送给进程。</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigprocmask(int how,const sigset_t * set,sigset_t*oset);//成功返回0，出错返回-1</p>
+<p>若oset是非空指针，则将进程当前的信号屏蔽字返回到oset中；若set非空，则其行为与how有关：</p>
+<figure data-type="image" tabindex="17"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588563583072.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>SIG_BLOCK是添加set指向的信号集中的信号进行阻塞；SIG_UNBLOCK是将set指向的信号集的信号取消阻塞；SIG_SETMASK是按照set设置新的信号屏蔽字。</p>
+<p>注意，不能阻塞SIGKILL和SIGSTOP信号。</p>
+<p>在调用sigprocmask后，如有任意未决的、非阻塞的信号，在sigprocmask返回前，至少将其中之一递送给该进程。</p>
+<p>sigprocmask是只为单线程进程设计的，多线程的要用其他的函数。</p>
+<p>函数sigpending</p>
+<p>返回一信号集，为进程当前的未决信号，因为阻塞信号一定是未决的，所以会包含信号屏蔽字中屏蔽的并且已经产生了的信号。</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigpending(sigset_t* set);//成功0，失败-1</p>
+<p>Linux没有对多次产生的信号进行排队，只递送了一次。</p>
+<p>函数sigaction</p>
+<p>sigaction函数是用于检查/修改与指定信号相关的信号处理程序，作用与signal类似，但一般用该函数而不用signal，甚至有些实现是用sigaction来实现signal函数的。</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigaction(int signo,struct sigaction* act,struct sigaction*oact);//成功0，出错-1</p>
+<p>signo参数是指定要检测或修改具体动作的信号编号，若act非空，则将signo对应的信号处理程序进行修改，如果oact非空，则返回之前的信号处理相关的信息。</p>
+<p>sigaction结构体如下：</p>
+<figure data-type="image" tabindex="18"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588570378928.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>sa_handler是我们设置的信号处理函数，而sa_sigaction是我们备用的信号处理函数，使用哪个函数，通过sa_flags标志位指定。</p>
+<p>sa_mask是一信号集，在调用信号处理程序前，该信号集被设为进程的信号屏蔽字，当信号处理程序完成后，才恢复原来的信号屏蔽字，一般默认正在处理的信号会被加入到信号屏蔽字中，避免在执行该信号处理程序时，系统又递送多次该信号。</p>
+<figure data-type="image" tabindex="19"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588570549482.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>对于备用信号处理函数sa_sigaction的参数详情看书。</p>
+<p>一旦sigaction设置了信号处理函数后，在下次显式修改前该信号的处理程序都不会变。</p>
+<figure data-type="image" tabindex="20"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588570606839.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>函数sigsetjmp siglongjmp</p>
+<p>#include&lt;setjmp.h&gt;</p>
+<p>int sigsetjmp(sigjmp_buf env,,int savemask);</p>
+<p>//直接调用返回0，若从siglongjmp调用返回，返回非0</p>
+<p>void siglongjmp(sigjmp_buf env,int val);</p>
+<p>savemask如果非0，则sigsetjmp保存当前的信号屏蔽字，在siglongjmp跳转到该点后，把信号屏蔽字恢复为保存的值。</p>
+<p>val是从siglongjmp跳到sigsetjmp后该处的返回值，也即回跳后，sigsetjmp的返回值。</p>
+<p>sigsetjmp和siglongjmp与setjmp和longjmp不同的地方在于前者可以恢复原来的信号屏蔽字，而后者不行。</p>
+<p>系统内核会自动将当前引起信号处理程序的信号自动添加到信号屏蔽字中，直到从信号处理程序中返回后才恢复原来的信号屏蔽字，防止在处理信号时，又响应相同信号。</p>
+<p>函数sigsuspend</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigsuspend(sigset_t *sigmask);//总是返回-1，errno设置为EINTR。</p>
+<p>如果我们在解除某个信号的阻塞后调用pause，可能在解除之后pause之前发生了信号，并调用了信号处理函数，这样pause将会永久阻塞（假设信号只产生一次）。</p>
+<p>而sigsuspend函数提供了一种原子操作，它把挂起操作和解除阻塞操作融为一体，就不会再出现上述的信号被提前处理了。</p>
+<p>sigsuspend函数将进程当前的信号屏蔽字设置为sigmask指向的信号集，然后在结束调用返回前恢复成原来的信号屏蔽字。</p>
+<p>sigsuspend只有在捕捉了信号并从信号处理程序返回后，才返回，否则一直挂起，且返回值总为-1.</p>
+<p>函数abort</p>
+<p>#include&lt;stdlib.h&gt;</p>
+<p>void abort();</p>
+<p>此函数将SIGABRT信号递送给当前进程，进程不应该忽略该信号，POSIX说明了abort函数并不会理会进程对该信号的忽略或阻塞，在abort函数内部，会修改该信号的处理方式，一般是若设置对该信号忽略，则更改为系统默认操作，若是捕捉该信号，则执行该信号处理程序后，再将该信号设置为系统默认操作，也即调用了abort之后，进程一定会终止。</p>
+<figure data-type="image" tabindex="21"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588651323395.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>函数system</p>
+<figure data-type="image" tabindex="22"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588733692123.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>int system(char * cmdstring);</p>
+<p>调用system函数的进程先fork和exec一个shell，然后该shell再执行给定的cmdstring命令行命令。如果该命令是要执行一个程序，则由该shell再fork和exec指定程序。顺序上如上图所示。</p>
+<p>调用system函数后，调用进程被设置成忽略SIGINT和SIGQUIT信号，阻塞SIGCHLD信号。</p>
+<p>因为SIGINT,SIGQUIT信号会通过终端递送到前台进程组中，而一般在执行system后是执行了一个新的应用程序，假设为cat程序，这种交互式的程序我们键入中断键或退出键是为了中断或者终止cat进程本身，如果父进程没有设置忽略这两个信号，则也会被跟着中断和退出。</p>
+<p>而对于SIGCHLD，system函数内部会调用waitpid来获取子进程的终止状态，进而作为system函数的返回值，如果在父进程中不阻塞SIGCHLD，则可能父进程的信号处理程序提前获取了子进程的终止状态，那么在system函数中的waitpid就会失败，得不到正确的返回值。</p>
+<p>所以system函数内部先忽略SIGINT,SIGQUIT和阻塞SIGCHLD，然后子进程再恢复SIGINT,SIGQUIT的默认设置，父进程则在waitpid返回后再解除SIGCHLD阻塞和恢复SIGINT,SIGQUIT。</p>
+<p>system的返回值是fork的shell的终止状态，返回值为128+信号编号对应的值。只有当shell本身异常终止时，system的返回值才报告一个异常终止。</p>
+<p>函数sleep nanosleep clock_nanosleep</p>
+<p>#include&lt;unistd.h&gt;</p>
+<p>unsigned int sleep(unsigned int seconds);//返回0或未休眠完的秒数</p>
+<p>#include&lt;time.h&gt;</p>
+<p>int nanosleep(struct timespec* reqtp,struct timespec*remtp);//若休眠到给定时间返回0，若出错返回-1</p>
+<p>int clock_nanosleep(clockid_t clock_id,int flag,struct timespec* reqtp,struct timespec*remtp);//若休眠到指定时间返回0，若出错，返回错误码</p>
+<p>这三个函数一旦调用后，进程被挂起，除非：1.休眠了指定时长 2.调用进程捕捉到一个信号并从信号处理程序返回。</p>
+<p>对于sleep，第一种情况返回0，第二种情况返回剩余秒数。</p>
+<p>Linux用nanosleep实现sleep。</p>
+<p>nanosleep提供更高精度的休眠，reqtp参数用秒和纳秒指定了休眠时间；如果某个信号中断了休眠，则剩余的时间会写入remtp参数对应的timespec中，如果不关心该时间，remtp可以为NULL。</p>
+<p>clock_nanosleep函数是根据不同的系统时钟来计算休眠时间的，clock_id指定了计算休眠时间的时钟，flag可为0或1，为0代表相对时间，也即reqtp指定一个时长，为1代表绝对时间，reqtp指定一个绝对时间。使用绝对时间作为休眠会更精确：</p>
+<figure data-type="image" tabindex="23"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588735931791.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>函数sigqueue</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>int sigqueue(pid_t pid,int signo,union sigval value);//成功返回0，失败-1.</p>
+<p>sigqueue与kill函数作用相似，但其只能向单个进程发送指定信号，同时能够给相应的信号处理程序传递value信息，union sigval类型是联合类，有一个整数和一个指针作为其数据成员，所以可以通过sigqueue传递一个整数或一个指针信息给相应的信号处理程序。</p>
+<p>使用排队信号必须做以下的操作：</p>
+<p>1.使用sigaction函数必须指定SA_SIGINFO标志，但在Linux中不设置也会支持信号排队。</p>
+<p>2.使用结构sigaction中的sa_sigaction成员，而不是通常用的sa_handler成员，来提供信号处理程序，因为只有sa_sigaction成员才能接收sigval类型的参数。</p>
+<p>3.使用sigqueue函数来发送信号。</p>
+<p>信号不能无限排队，有一个限制值，超过该限制值的sigqueue出错返回。</p>
+<figure data-type="image" tabindex="24"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588736539284.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>作业控制信号</p>
+<p>SIGCHLD  子进程已停止或终止</p>
+<p>SIGCONT 若进程停止，则使其继续运行</p>
+<p>SIGSTOP 停止信号，不能被捕捉或忽略</p>
+<p>SIGTSTP 交互式停止信号</p>
+<p>SIGTTIN 后台进程试图读控制终端</p>
+<p>STGTTOU 后台进程试图写控制终端</p>
+<p>除了SIGCHLD外，大多数应用程序不会处理这些信号，交互式shell通常会处理这些信号的所有工作。</p>
+<figure data-type="image" tabindex="25"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588737424311.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="26"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588737428959.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>SIGCONT不管进程是否阻塞或忽略该信号，只要该进程是停止的，收到该信号后都会继续运行。</p>
+<figure data-type="image" tabindex="27"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588737457120.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>信号名和编号</p>
+<p>Linux提供了信号编号和信号名的映射字符数组：</p>
+<p>extern char* sys_siglist[];  每一个下标就是信号的编号，能够得到其对应的名字。</p>
+<p>#include&lt;signal.h&gt;</p>
+<p>voidpsignal(int signo,const char* msg);</p>
+<p>void psiginfo(const siginfo*info,const char * msg);</p>
+<p>将signo或siginfo中的信息写到msg对应的字符串中。</p>
+<figure data-type="image" tabindex="28"><img src="file://C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/1588738459851.png?lastModify=1625624554" alt="" loading="lazy"></figure>
+<p>#include&lt;string.h&gt;</p>
+<p>char * strsignal(int signo);//返回指定signo的信号名的字符串，若无该信号，则返回空字符串</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apue-bi-ji-di-jiu-zhang-jin-cheng-guan-xi/">
+                <h3 class="post-title">
+                  APUE笔记-第九章-进程关系
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

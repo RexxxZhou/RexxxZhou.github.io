@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>git常用命令介绍-part2 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>git常用命令介绍-part2</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge success">
+                  git
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h1 id="git">git</h1>
+<p>git下对暂存区的所有更改，都需要commit后才会真正影响版本库的内容。</p>
+<h2 id="创建版本库">创建版本库</h2>
+<p>在想要创建库的目录下键入</p>
+<blockquote>
+<p>git init</p>
+</blockquote>
+<p>一个空库就创建好了，并且有一个.git文件</p>
+<p>git只能跟踪文本文件的变动，例如添加了“hello”，删除了“world”；git是无法跟踪图片、视频这些二进制文件的，只能跟踪他们大小的变化，具体更改了什么无从考证。</p>
+<p>所以使用git进行版本控制，我们要使用文本文件。</p>
+<h2 id="添加-提交修改">添加、提交修改</h2>
+<blockquote>
+<p>git add readme.txt</p>
+<p>git commit -m &quot;first commit&quot;</p>
+</blockquote>
+<p>我们可以多次add新文件，最终一次commit提交这些文件，提交后文件就写入到仓库当中</p>
+<h5 id="如果新建的文件从没有add过那么在git中显示的是untracked状态说明git还没有跟踪该文件的变化">如果新建的文件从没有add过，那么在git中显示的是untracked状态，说明git还没有跟踪该文件的变化</h5>
+<p>-m &quot;somewords&quot;后的字符串用来记录每一次提交的备注</p>
+<h5 id="在仓库里创建的文件必须add之后git才会管理该文件">在仓库里创建的文件，必须add之后，git才会管理该文件。</h5>
+<p>每一次修改文件之后必须先add，再commit才能真正提交修改的内容</p>
+<h2 id="查看库当前状态">查看库当前状态</h2>
+<blockquote>
+<p>git status</p>
+</blockquote>
+<p>该命令能够让我们看到当前库的状态</p>
+<h2 id="查看修改文件的修改">查看修改文件的修改</h2>
+<blockquote>
+<p>git diff readme.txt</p>
+</blockquote>
+<p>能够显示当前版本中文件内容和这次文件尚未add的内容的区别，得出修改了什么</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171424408-1.png" alt="image" loading="lazy"></figure>
+<h2 id="查看历史记录">查看历史记录</h2>
+<blockquote>
+<p>git log</p>
+</blockquote>
+<p>显示从近到远的提交记录。</p>
+<p>若只想显示每次commit的commit id：</p>
+<blockquote>
+<p>git log --pretty=oneline</p>
+</blockquote>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171433426-1.png" alt="image" loading="lazy"></figure>
+<p>commit ID是SHA1计算出来的一个值，避免commit ID冲突。可以使用commit ID来回退到某个修改位置。</p>
+<h2 id="版本回退">版本回退</h2>
+<blockquote>
+<p>git reset --hard HEAD^</p>
+</blockquote>
+<p>回退到上一次的版本，HEAD是一个指针，指向了某个分支的某个版本</p>
+<figure data-type="image" tabindex="3"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171439631-1.png" alt="image" loading="lazy"></figure>
+<h2 id="版本恢复">版本恢复</h2>
+<blockquote>
+<p>git reset --hard 02e1d</p>
+</blockquote>
+<p>02e1d是commit ID的前面几个字符，不需要给全，git会自动去寻找，但给太少可能会出现冲突。只要知道commit ID就能回退，若还在当前命令窗口，只要能找回之前打印显示的commit ID就会指定恢复到某个版本，若找不到或退出了窗口可以使用：</p>
+<blockquote>
+<p>git reflog</p>
+</blockquote>
+<p>来查看每一次的命令，每一行也有一个commit ID，便可恢复。</p>
+<figure data-type="image" tabindex="4"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171446051-1.png" alt="image" loading="lazy"></figure>
+<p>前面的字符串是commit ID的前缀，是当时执行完后面的命令后所在的版本。</p>
+<h2 id="工作区-暂存区">工作区、暂存区</h2>
+<p>我们创建版本库的本地仓库的目录，被称为工作区。在我们git init之后生成的隐藏目录.git，叫做版本库。</p>
+<p>版本库里有一个叫做stage的暂存区，还有我们的分支和一个HEAD指针。</p>
+<figure data-type="image" tabindex="5"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171502058-1.png" alt="image" loading="lazy"></figure>
+<p>我们的add操作就是把一个修改，一个新文件添加到暂存区中，commit实际上是把暂存区中的修改提交到当前分支。</p>
+<p>一旦我们提交了暂存区的修改，并且没有对工作区进行任何修改，那么我们的工作区就是干净的：</p>
+<figure data-type="image" tabindex="6"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/171508302-1.png" alt="image" loading="lazy"></figure>
+<p>每次的提交都是提交暂存区的修改，如果一个文件修改一次后add到暂存区后，又在工作区修改了，但是这次没有add到暂存区，然后commit了，第二次的修改并没有被提交，git跟踪的是修改，并非是文件。</p>
+<h5 id="只有add到了暂存区的文件才会被commit到最新版本库中">只有add到了暂存区的文件才会被commit到最新版本库中</h5>
+<h2 id="撤销修改">撤销修改</h2>
+<blockquote>
+<p>git checkout -- filename</p>
+</blockquote>
+<p>该命令使得工作区中文件回退到该文件最后一次add或者commit的状态。</p>
+<p>注意必须要加--，因为checkout命令可用于切换分支</p>
+<p>可用于撤销工作区的修改，回到与暂存区或版本库的版本。</p>
+<p>在add之后，commit之前，可以将add的操作回退</p>
+<blockquote>
+<p>git reset HEAD filename</p>
+</blockquote>
+<p>执行该命令后，filename文件从暂存区中取消，这时再执行checkout命令，便可回到之前的版本。</p>
+<h2 id="删除文件">删除文件</h2>
+<p>如果在工作区删除了一个文件，且该文件已经被添加到版本库了，那么git会跟踪该文件的改变，git status当前就不是clean的；如果想要在版本库中也删除这个文件，执行：</p>
+<blockquote>
+<p>git rm filename</p>
+</blockquote>
+<p>该指令和git add一样，都更改了暂存区的状态，需要commit才会对版本库进行更改。</p>
+<p>如果删除后想要恢复，可使用git checkout -- filename 命令恢复。</p>
+<p>如果一个文件没有被添加到版本库中，此时工作区直接删除文件是无法恢复的，只有被跟踪的文件才能恢复。</p>
+<h2 id="远端仓库">远端仓库</h2>
+<p>使用git可以把自己本地的修改推送到远端服务器，也可以从远端服务器拉取文件到本地，在此之前，必须配置好ssh key，因为git使用ssh进行验证，确保是你在读写你有权限的库。</p>
+<p>第1步：创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有<code>id_rsa</code>和<code>id_rsa.pub</code>这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：</p>
+<pre><code>$ ssh-keygen -t rsa -C &quot;youremail@example.com&quot;
+</code></pre>
+<p>你需要把邮件地址换成你自己的邮件地址，然后一路回车，使用默认值即可，由于这个Key也不是用于军事目的，所以也无需设置密码。</p>
+<p>如果一切顺利的话，可以在用户主目录里找到<code>.ssh</code>目录，里面有<code>id_rsa</code>和<code>id_rsa.pub</code>两个文件，这两个就是SSH Key的秘钥对，<code>id_rsa</code>是私钥，不能泄露出去，<code>id_rsa.pub</code>是公钥，可以放心地告诉任何人。</p>
+<p>第2步：登陆GitHub，打开“Account settings”，“SSH Keys”页面：</p>
+<p>然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴<code>id_rsa.pub</code>文件的内容。</p>
+<p>我们可以在GitHub的同一个账号上，添加多个key，例如我们可以将不同的电脑都添加到GitHub的ssh key中，我们就可以在这些任意一个电脑上进行git操作远端库。</p>
+<h2 id="添加远端库">添加远端库</h2>
+<p>在远端例如GitHub上建立了一个库后，可以将本地文件推导该库中：</p>
+<blockquote>
+<p>git remote add origin address</p>
+</blockquote>
+<p>address是远端库的http地址或ssh地址</p>
+<p>添加后，远端库的名字就叫origin，这是git的默认叫法，也可以改成别的名字，但origin具有一般标识含义，以看就知道是远端库。</p>
+<p>这里所谓的远端库名字origin是该库在本地的标识。</p>
+<p>下一步就可以把本地的内容推送到远端库上</p>
+<blockquote>
+<p>git push -u origin master</p>
+</blockquote>
+<p>平时推送的命令就是git push，但是在第一次初始化远端库时，库时空的，并没有master分支，我们需要加上-u参数，git不但会把本地master分支的内容推到远端的master下，还会把本地master和远端master关联起来，在以后的推送和拉取下就可简化命令。</p>
+<p>从现在开始，只要本地做了修改，就可以通过命令</p>
+<p>git push origin master</p>
+<p>把本地master分支的内容推到远端库中</p>
+<p>在第一次push或者clone操作时，git会给出一个警告，这是一个SSH警告，让我们确认ssh key的信息是否真的来自远端服务器，输入yes回车即可，这样git会输出一个警告，告诉自己已经把服务器的key添加到信任列表里了，以后就不会再出现这个警告了。（一个双端的确认，首先在GitHub上添加本地的ssh key，然后第一次push/clone时确认对端信息）</p>
+<p>如果实在担心有人冒充GitHub服务器，输入<code>yes</code>前可以对照GitHub的RSA Key的指纹信息是否与SSH连接给出的一致。</p>
+<h2 id="从远端库克隆">从远端库克隆</h2>
+<p>我们可以从一个远端库，把其所有内容都克隆到本地</p>
+<blockquote>
+<p>git clone address</p>
+</blockquote>
+<p>address可以是http的，也可以是ssh的，ssh的会更快些，克隆后，在本地就有该远端库的一个拷贝。</p>
+<p>如果有多个人协作开发，那么每个人各自从远程克隆一份就可以了，每个人在自己主机的修改再push到远端库即可。</p>
+<p>从远端库克隆后，本地生成了一个版本库，可以进行后续git操作；要与普通的下载内容区分开，git clone除了下载了文件，还是一个版本库。</p>
+<h3 id="git常用命令">git常用命令</h3>
+<p>git add 文件 : 追踪指定文件<br>
+git add . :追踪所有的文件<br>
+git commit -m &quot;注释&quot; : 提交报本地仓库<br>
+git push : 推送远程仓库<br>
+git pull : 拉取<br>
+git status : 查看当前的提交状态<br>
+.gitignore : 忽略文件夹<br>
+git checkout -b xiao_a : 创建xiao_a分支,并且切换到xiao_a分支<br>
+git branch 分支名 : 创建分支,不切换<br>
+git checkout 分支名 : 切换到某个分支<br>
+git branch: 查看分支<br>
+git branch -d 分支名 : 删除分支<br>
+git merge 要合并的分支名称 : 合并分支<br>
+git reset HEAD test2 : git add 后 撤销文件<br>
+git reflog : 查看所有操作的日志<br>
+git reset --hard HEAD : 版本回退<br>
+git stash : 讲文件放入暂存区<br>
+git stash list : 查看缓存区文件<br>
+git stash applly 缓存区id : 将指定的文件从缓存区拿出来<br>
+git stash pop : 将文件从缓存区拿出来,并删除缓存区的文件<br>
+git stash clear : 清除缓存区<br>
+git diff 文件名: 比较的事工作目录和暂存区的不同<br>
+git diff --cached 文件名 : 比较暂存区还远程仓库的不同<br>
+git diff commitID 文件名: 比较工作目录和远程仓库的不同<br>
+git stash branch 分子名称: 暂存区创建分支<br>
+git tag -a 标签名称 -m &quot;注释&quot; : 创建标签<br>
+git tag : 查看标签<br>
+git push origin 标签名称 : 推送标签到远程仓库<br>
+git push origin --tags : 推送所有的标签到远程仓库</p>
+<p>git pull origin master --allow-unrelated-histories //把远程仓库和本地同步，消除差异</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/git-chang-yong-ming-ling-jie-shao-part1/">
+                <h3 class="post-title">
+                  git常用命令介绍-part1
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge success">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge warning">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge success">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

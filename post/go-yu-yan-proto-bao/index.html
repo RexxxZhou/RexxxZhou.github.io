@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言proto包 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言proto包</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="package-proto">package proto</h2>
+<h4 id="在go代码中使用proto">在go代码中使用proto</h4>
+<p><code>import &quot;github.com/golang/protobuf/proto&quot;</code></p>
+<p>后面通过类似<code>proto.Marshall</code>的方法来使用proto包。</p>
+<p>至少需要使用到两个go的包，一个是proto编译出来的包，一个是proto包（主要用于序列化和反序列化）</p>
+<p>proto文件：</p>
+<pre><code class="language-protobuf">syntax = &quot;proto3&quot;;
+
+option go_package=&quot;pbtest/&quot;;
+
+message Test{
+    int32 i1=1;
+    enum NUMBER{
+        DEFAULT=0;
+        ACTIVATION=1;
+        SHUTDOWN=2;
+    }
+    NUMBER num=2;
+}
+</code></pre>
+<p>client端：</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;os&quot;
+	pbtest &quot;pblearn/pbtest&quot;
+
+	&quot;net&quot;
+
+	&quot;google.golang.org/protobuf/proto&quot;
+)
+
+func main() {
+	conn, err := net.Dial(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	msg := pbtest.Test{}
+	fmt.Println(msg)
+	msg.I1 = 2
+	fmt.Println(msg)
+	msg.Num = 2
+	data, _ := proto.Marshal(&amp;msg) //指针类型
+	conn.Write(data)
+}
+
+</code></pre>
+<p>sever端：</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;net&quot;
+	&quot;os&quot;
+	pbtest &quot;server/pbtest&quot;
+
+	&quot;google.golang.org/protobuf/proto&quot;
+)
+
+func main() {
+	listener, err := net.Listen(&quot;tcp4&quot;, &quot;127.0.0.1:9528&quot;)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	for {
+		conn, _ := listener.Accept()
+		defer conn.Close()
+		var buf [512]byte
+		n, _ := conn.Read(buf[0:])
+		var res pbtest.Test
+		proto.Unmarshal(buf[0:n], &amp;res) //指针类型
+		fmt.Println(res)
+	}
+}
+</code></pre>
+<p>protobuf编译出来的结构体<strong>以指针接收者方式</strong>都实现了proto.Message接口，例如Marshal和Unmarshal都用到了该类型的形参，所以.pb.go中的结构体需要<strong>传其指针类型给这些函数，才能进行序列化和反序列化</strong>。</p>
+<p><code>func proto.Unmarshal(b []byte, m protoreflect.ProtoMessage) error</code></p>
+<p><code>func proto.Marshal(m protoreflect.ProtoMessage) ([]byte, error)</code></p>
+<p><strong>编译出来的结构体都是以指针接收者的方式实现的各种方法</strong>，例如各种Getter和Setter。虽然指针对象和值对象都可以通过句号运算符访问这些方法，但是setter必须是指针对象，所以统一一下，都最好使用指针对象。</p>
+<pre><code class="language-go">var buf [512]byte
+n, _ := conn.Read(buf[0:])
+var res pbtest.Test
+proto.Unmarshal(buf[0:n], &amp;res)
+fmt.Println(res)
+fmt.Println(res.GetNum())  //1
+fmt.Println((&amp;res).GetNum()) //2
+//1和2都可以，但是如果是setter只能是2这种指针对象来进行
+</code></pre>
+<h3 id="proto包的变量和api">proto包的变量和api</h3>
+<h4 id="变量error">变量Error</h4>
+<p>在使用proto包时，所有的错误都会赋给该变量，类似于errno一样的存在，该变量有方法Error()，能够获得具体的错误信息。</p>
+<h4 id="函数">函数</h4>
+<h5 id="func-checkinitializedm-message-error">func CheckInitialized(m Message) error</h5>
+<p>检查message对象是否已经初始化，若无则error非空</p>
+<h5 id="func-equalxy-message-bool">func Equal(x,y Message) bool</h5>
+<p>判断两个message对象是否相等，如果两个message对象序列化后的二进制数据相同，则该函数返回true</p>
+<p>当两个message对象x和y都是无效的message时，Equal返回true，只有一个无效都返回false</p>
+<p>x，y要相等，则必须保证所有已知的、扩展（extension）字段和值相同，且未知的（Unknwon）字段的值也要相同，才能返回true</p>
+<p>标量类型（scalar type）使用==运算符进行判断，除了bytes类型使用底层的byte对比来判断。</p>
+<p>Equal and floating point values which specially <strong>treat NaNs as equal</strong>. Message values are compared by <strong>recursively calling Equal</strong>. Lists are equal if each element value is also equal. Maps are equal if they have the same set of keys, where the pair of values for each key is also equal.</p>
+<p>值相等的判断比较直观，如上英文所述。</p>
+<h5 id="func-hasextensionm-message-xt-protoreflectextensiontype-bool">func HasExtension(m Message, xt protoreflect.ExtensionType) bool</h5>
+<p>判断message对象是否有扩展</p>
+<h5 id="func-clearextensionm-messagext-protoreflectextension">func ClearExtension(m Message,xt protoreflect.Extension)</h5>
+<p>去掉message对象中的extension字段，因此后续的HasExtension函数会返回false，如果m不是有效的message，或者xt没有扩展m，则调用时会产生panic</p>
+<p>proto2中才有extension</p>
+<h5 id="func-getextensionm-message-xt-protoreflectextensiontype-interface">func GetExtension(m Message, xt protoreflect.ExtensionType) interface{}</h5>
+<p>函数取得message对象m得extension字段的值，如果该字段没有设置，对于scalar类型返回默认值，对于message类型和列表类型返回空的不可修改的值。当xt没有扩展m时，函数引发panic</p>
+<h5 id="func-setextensionm-messagext-protoreflectextensiontype-v-interface">func SetExtension(m Message,xt protoreflect.ExtensionType, v interface{})</h5>
+<p>对m设置扩展字段的值，如果m无效，xt没有不是m的扩展类型，v不是xt对应的值类型，三者有一个出现就会引起panic</p>
+<h5 id="func-rangeextensionsm-messagef-funcprotoreflectextensiontypeinterface-bool">func RangeExtensions(m Message,f func(protoreflect.ExtensionType,interface {})bool )</h5>
+<p>该函数对m的扩展字段进行迭代（迭代顺序不确定），对每个扩展字段都调用函数f，只要当f返回了false，则本函数立刻返回。</p>
+<h5 id="func-marshalm-message-byteerror">func Marshal(m Message) []byte,error</h5>
+<p>最关键的函数之一，将message对象编码成二进制，并返回该byte切片。</p>
+<h5 id="func-unmarshalb-bytem-message-error">func Unmarshal(b []byte,m Message) error</h5>
+<p>最关键的函数之一，将二进制的数据（byte切片）反序列化成message对象，传给m的实参必须是message对象的指针。</p>
+<h5 id="func-mergedst-src-message">func Merge(dst, src Message)</h5>
+<p>Merge函数将源message合并到目标message中，<strong>必须保证dst和src是同一个message类型的实例</strong>。</p>
+<p>源message中设置了的scalar字段会直接赋值给dst中的相应字段，如果是message类型的字段则会递归的调用Merge函数来实现合并。对于<strong>列表字段</strong>（例如repeated），则src中列表的值将<strong>append</strong>到dst的对应列表中；对于map类型的字段，将src的拷贝的dst中，因此可能会出现覆盖dst中map原有的某些key-value对（<strong>map的合并也相当于append，只不过重复的key会被src中的key覆盖掉</strong>）。src中<strong>未知的字段会被append</strong>到dst中的dst中的未知字段。</p>
+<p>该函数的作用等价于在Unmarshal时指定UnmarshalOptions.Merge选项，指定该选项后，在对编码的源message反序列化到目标message对象时采用合并的逻辑。</p>
+<h5 id="func-messagenamem-message-protoreflectfullname">func MessageName(m Message) protoreflect.FullName</h5>
+<p>返回message对象的类型名（<code>.proto</code>中定义的message名），如果m为nil，则返回空字符串</p>
+<p><code>protoreflect.FullName</code>该类型实现了String()方法，直接print就是message的名字。</p>
+<h5 id="func-resetm-message">func Reset(m Message)</h5>
+<p>重置清除message对象中的所有字段，对象m还在，只是字段全部清除了。</p>
+<h5 id="func-sizem-message-int">func Size(m Message) int</h5>
+<p>返回m编码后的二进制字节数</p>
+<h4 id="bool-int32-int64-uint32-uint64-float32-float64-and-string函数">Bool, Int32, Int64, Uint32, Uint64, Float32, Float64, and String函数</h4>
+<p>这些函数都是为了方便给optional field的字段进行设置而给出的，proto2中的optional和proto3中的singular字段，在protoc编译后是结构体中的该字段类型的指针，而这些函数都是根据一个值，创建一个新的同类型对象，将值赋给该对象后返回其指针，这样方便用户对message对象的成员进行赋值。</p>
+<p>函数的原型相似，下面仅给出Bool函数的解释，举一反三。</p>
+<h5 id="func-boolv-bool-bool">func Bool(v bool) *bool</h5>
+<p>传入一个bool值v，根据这个bool值分配新的空间，创建新的bool对象，赋为v，并返回其指针</p>
+<h3 id="proto包的类型">proto包的类型</h3>
+<h4 id="marshaloptions类型">MarshalOptions类型</h4>
+<pre><code class="language-go">type MarshalOptions struct {
+	pragma.NoUnkeyedLiterals
+
+	// AllowPartial allows messages that have missing required fields to marshal
+	// without returning an error. If AllowPartial is false (the default),
+	// Marshal will return an error if there are any missing required fields.
+    // 设为true后，允许required字段缺失，并且在marshal时不返回错误，默认情况下是false
+	AllowPartial bool
+
+	// Deterministic controls whether the same message will always be
+	// serialized to the same bytes within the same binary.
+	// 
+	// Setting this option guarantees that repeated serialization of
+	// the same message will return the same bytes, and that different
+	// processes of the same binary (which may be executing on different
+	// machines) will serialize equal messages to the same bytes.
+	// It has no effect on the resulting size of the encoded message compared
+	// to a non-deterministic marshal.
+	//
+	// Note that the deterministic serialization is NOT canonical across
+	// languages. It is not guaranteed to remain stable over time. It is
+	// unstable across different builds with schema changes due to unknown
+	// fields. Users who need canonical serialization (e.g., persistent
+	// storage in a canonical form, fingerprinting, etc.) must define
+	// their own canonicalization specification and implement their own
+	// serializer rather than relying on this API.
+	//
+	// If deterministic serialization is requested, map entries will be
+	// sorted by keys in lexographical order. This is an implementation
+	// detail and subject to change.
+    // 设为true后，使得同一个message编译后的二进制数据完全一致，存在一定的跨语言风险。
+	Deterministic bool
+
+	// UseCachedSize indicates that the result of a previous Size call
+	// may be reused.
+	//
+	// Setting this option asserts that:
+	//
+	// 1. Size has previously been called on this message with identical
+	// options (except for UseCachedSize itself).
+	//
+	// 2. The message and all its submessages have not changed in any
+	// way since the Size call.
+	//
+	// If either of these invariants is violated,
+	// the results are undefined and may include panics or corrupted output.
+	//
+	// Implementations MAY take this option into account to provide
+	// better performance, but there is no guarantee that they will do so.
+	// There is absolutely no guarantee that Size followed by Marshal with
+	// UseCachedSize set will perform equivalently to Marshal alone.
+    // 设为true后，复用上次对message调用Size函数计算的大小，但如果不满足1、2两点，则可能崩溃
+	UseCachedSize bool
+}
+</code></pre>
+<p>MarshalOptions是一个结构体，proto包为该结构体提供了许多方法，以给出用这些选项对message进行编码的能力。</p>
+<h5 id="func-o-marshaloptions-marshalm-message-byteerror">func (o MarshalOptions) Marshal(m Message) ([]byte,error)</h5>
+<p>使用MarshalOptions的选项来编码message，返回编码后的数据</p>
+<h5 id="func-o-marshaloptions-marshalappendb-bytem-message-byteerror">func (o MarshalOptions) MarshalAppend(b []byte,m Message) ([]byte,error)</h5>
+<p>对m编码，并将编码后的二进制数据添加到字节切片b后，然后返回该字节切片。</p>
+<h5 id="func-o-marshaloptions-marshalstatein-protoifacemarshalinput-protoifacemarshaloutputerror">func (o MarshalOptions) MarshalState(in protoiface.MarshalInput) (protoiface.MarshalOutput,error)</h5>
+<p>返回message对象编码后的结果，该函数允许更细粒度的编码控制，一般用户用Marshal就行</p>
+<h5 id="func-o-marshaloptions-sizem-message-int">func (o MarshalOptions) Size(m Message) int</h5>
+<p>返回m编码后的二进制字节大小</p>
+<h4 id="message类型">Message类型</h4>
+<pre><code class="language-go">type Message = protoreflect.ProtoMessage
+</code></pre>
+<p>这是一个接口类型，所有protoc编译出来的message结构体类型都以指针接收者的方式实现了该接口，所以这些对象的指针才能传给proto包的有关函数进行编解码等操作。</p>
+<h5 id="func-clonem-message-message">func Clone(m Message) Message</h5>
+<p>Clone函数返回一个m的深复制副本，相当于创建一个和m一模一样的message。</p>
+<p>如果m是无效的，则会返回一个无效的message</p>
+<h4 id="unmarshaloptions类型">UnmarshalOptions类型</h4>
+<pre><code class="language-go">type UnmarshalOptions struct {
+	pragma.NoUnkeyedLiterals
+
+	// Merge merges the input into the destination message.
+	// The default behavior is to always reset the message before unmarshaling,
+	// unless Merge is specified.
+    // 设为true后，解码的结果会和待写入的message对象进行合并
+    // 默认情况下是false，处理逻辑是先将待写入的message对象清空，再写入
+	Merge bool
+
+	// AllowPartial accepts input for messages that will result in missing
+	// required fields. If AllowPartial is false (the default), Unmarshal will
+	// return an error if there are any missing required fields.
+    // 设为true后，如果解码发现缺少required字段的信息，也不会报错
+	AllowPartial bool
+
+	// If DiscardUnknown is set, unknown fields are ignored.
+    // 设为true后，未知的字段信息都会丢弃
+	DiscardUnknown bool
+
+	// Resolver is used for looking up types when unmarshaling extension fields.
+	// If nil, this defaults to using protoregistry.GlobalTypes.
+	Resolver interface {
+		FindExtensionByName(field protoreflect.FullName) (protoreflect.ExtensionType, error)
+		FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error)
+	}
+}
+</code></pre>
+<p>UnmarshalOptions是一个结构体，proto包为其提供了许多方法，以实现按照这些设置的行为进行解码的相关操作。</p>
+<h5 id="funco-unmarshaloptions-unmarshalb-bytem-message-error">func(o UnmarshalOptions) Unmarshal(b []byte,m Message) error</h5>
+<p>对传入的二进制数据解析成message并写入到message中，</p>
+<h5 id="funco-unmarshaloptions-unmarshalstatein-protoifaceunmarshalinput-potoifaceunmarshaloutput-error">func(o UnmarshalOptions) UnmarshalState(in protoiface.UnmarshalInput) (potoiface.UnmarshalOutput, error)</h5>
+<p>对传入的二进制数据解析成message并写入到message中，该方法提供更细粒度的解析控制，但一般使用Unmarshal就行。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-protobuf-sheng-cheng-go-dai-ma/">
+                <h3 class="post-title">
+                  Go语言Protobuf生成go代码
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge success">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge secondary">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Perf性能定位工具 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Perf性能定位工具</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h1 id="perf">perf</h1>
+<p><strong>Perf主要基于性能事件的采集和分析，有两种采集方法：</strong></p>
+<p><strong>基于硬件的采集方法</strong>，此种方法需要<strong>采用CPU中的PMU</strong>（performance monitoring unit）部件，在特定的条件下探测性能事件是否发生以及发生的次数。每次的特定的性能时事件发生后，PMU的计数器便+1，当溢出时，会触发performance monitoring interrupt(PMI)，内核在PMI 中断的处理函数中保存PMC的计数值，触发中断时的指令地址（Register IP：Instruction Pointer），当前时间戳以及当前进程的PID，TID，comm 等信息。我们把这些信息统称为一个<strong>采样（sample）</strong>。内核会将收集到的sample 放入用于跟用户空间通信的Ring Buffer。用户空间里的perf 分析程序采用mmap 机制从ring buffer 中读入采样，并对其解析。</p>
+<p><strong>基于软件的采集方法</strong>，需要将代码内置于kernel，分布在各个功能模块中，统计和操作系统相关性能事件。内核在其源代码中有许多的tracepoint，这些tracepoint一旦使能，程序若执行到这些特定的点，便会通知perf，perf将tracepoint产生的事件记录下来，生成报告。</p>
+<p>https://www.cnblogs.com/arnoldlu/p/6241297.html  非常详细的命令介绍和使用</p>
+<h4 id="perf-help之后可以看到perf的二级命令">perf --help之后可以看到perf的二级命令。</h4>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>annotate</td>
+<td>解析perf record生成的perf.data文件，显示被注释的代码。</td>
+</tr>
+<tr>
+<td>2</td>
+<td>archive</td>
+<td>根据数据文件记录的build-id，将所有被采样到的elf文件打包。利用此压缩包，可以再任何机器上分析数据文件中记录的采样数据。</td>
+</tr>
+<tr>
+<td>3</td>
+<td>bench</td>
+<td>perf中内置的benchmark，目前包括两套针对调度器和内存管理子系统的benchmark。</td>
+</tr>
+<tr>
+<td>4</td>
+<td>buildid-cache</td>
+<td>管理perf的buildid缓存，每个elf文件都有一个独一无二的buildid。buildid被perf用来关联性能数据与elf文件。</td>
+</tr>
+<tr>
+<td>5</td>
+<td>buildid-list</td>
+<td>列出数据文件中记录的所有buildid。</td>
+</tr>
+<tr>
+<td>6</td>
+<td>diff</td>
+<td>对比两个数据文件的差异。能够给出每个符号（函数）在热点分析上的具体差异。</td>
+</tr>
+<tr>
+<td>7</td>
+<td>evlist</td>
+<td>列出数据文件perf.data中所有性能事件。</td>
+</tr>
+<tr>
+<td>8</td>
+<td>inject</td>
+<td>该工具读取perf record工具记录的事件流，并将其定向到标准输出。在被分析代码中的任何一点，都可以向事件流中注入其它事件。</td>
+</tr>
+<tr>
+<td>9</td>
+<td>kmem</td>
+<td>针对内核内存（slab）子系统进行追踪测量的工具</td>
+</tr>
+<tr>
+<td>10</td>
+<td>kvm</td>
+<td>用来追踪测试运行在KVM虚拟机上的Guest OS。</td>
+</tr>
+<tr>
+<td>11</td>
+<td>list</td>
+<td>列出当前系统支持的所有性能事件。包括硬件性能事件、软件性能事件以及检查点。</td>
+</tr>
+<tr>
+<td>12</td>
+<td>lock</td>
+<td>分析内核中的锁信息，包括锁的争用情况，等待延迟等。</td>
+</tr>
+<tr>
+<td>13</td>
+<td>mem</td>
+<td>内存存取情况</td>
+</tr>
+<tr>
+<td>14</td>
+<td>record</td>
+<td>收集采样信息，并将其记录在数据文件中。随后可通过其它工具对数据文件进行分析。</td>
+</tr>
+<tr>
+<td>15</td>
+<td>report</td>
+<td>读取perf record创建的数据文件，并给出热点分析结果。</td>
+</tr>
+<tr>
+<td>16</td>
+<td>sched</td>
+<td>针对调度器子系统的分析工具。</td>
+</tr>
+<tr>
+<td>17</td>
+<td>script</td>
+<td>执行perl或python写的功能扩展脚本、生成脚本框架、读取数据文件中的数据信息等。</td>
+</tr>
+<tr>
+<td>18</td>
+<td>stat</td>
+<td>执行某个命令，收集特定进程的性能概况，包括CPI、Cache丢失率等。</td>
+</tr>
+<tr>
+<td>19</td>
+<td>test</td>
+<td>perf对当前软硬件平台进行健全性测试，可用此工具测试当前的软硬件平台是否能支持perf的所有功能。</td>
+</tr>
+<tr>
+<td>20</td>
+<td>timechart</td>
+<td>针对测试期间系统行为进行可视化的工具</td>
+</tr>
+<tr>
+<td>21</td>
+<td>top</td>
+<td>类似于linux的top命令，对系统性能进行实时分析。</td>
+</tr>
+<tr>
+<td>22</td>
+<td>trace</td>
+<td>关于syscall的工具。</td>
+</tr>
+<tr>
+<td>23</td>
+<td>probe</td>
+<td>用于定义动态检查点。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="perf-list">perf list</h4>
+<p>列出所有perf可以采样的点，总体分为三类：</p>
+<p>Hardware Event 是由 PMU 硬件产生的事件，比如 cache 命中，当您需要了解程序对硬件特性的使用情况时，便需要对这些事件进行采样；</p>
+<p>Software Event 是内核软件产生的事件，比如进程切换，tick 数等 ;</p>
+<p>Tracepoint event 是内核中的静态 tracepoint 所触发的事件，这些 tracepoint 用来判断程序运行期间内核的行为细节，比如 slab 分配器的分配次数等。</p>
+<h4 id="perf-stat">perf stat</h4>
+<blockquote>
+<p>perf stat progName</p>
+</blockquote>
+<p>查看进程整体的一些统计数据</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170725750-1.png" alt="image" loading="lazy"></figure>
+<p>Task-clock-msecs：CPU 利用率，该值高，说明程序的多数时间花费在 CPU 计算上而非 IO。</p>
+<p>Context-switches：进程切换次数，记录了程序运行过程中发生了多少次进程切换，频繁的进程切换是应该避免的。</p>
+<p>CPU-migrations：表示进程 t1 运行过程中发生了多少次 CPU 迁移，即被调度器从一个 CPU 转移到另外一个 CPU 上运行。</p>
+<p>Cycles：处理器时钟，一条机器指令可能需要多个 cycles，</p>
+<p>Instructions: 机器指令数目。</p>
+<p>IPC：是 Instructions/Cycles 的比值，该值越大越好，说明程序充分利用了处理器的特性。</p>
+<p>Cache-references: cache 命中的次数</p>
+<p>Cache-misses: cache 失效的次数。</p>
+<h4 id="perf-top">perf top</h4>
+<p>类似于top命令，显示系统中所有进程当前的性能情况，用于观察当前系统的性能情况，可以找出对系统性能影响最大的进程。</p>
+<blockquote>
+<p>perf top -e eventname</p>
+</blockquote>
+<p>-e选项指定关注当前系统内的某个指标，该指标时perf list中的一项。</p>
+<h4 id="perf-record-收集采样信息并将其记录在数据文件中">perf record  收集采样信息，并将其记录在数据文件中。</h4>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170754810-1.png" alt="image" loading="lazy"></figure>
+<blockquote>
+<p>perf record -e eventname progname</p>
+<p>perf report // 读取perf record创建的数据文件，并给出热点分析结果。</p>
+</blockquote>
+<p>perf record可以按照某个事件，记录程序中每个函数的该指标统计信息</p>
+<figure data-type="image" tabindex="3"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170808944-1.png" alt="image" loading="lazy"></figure>
+<p>这里看的是单个函数的各种指标信息，但有时候看不出真正需要调优的函数；有时候会发现一些肯定要用的函数的指标偏高，例如STL容器的一些成员方法，但我们一般不需要去优化这类函数，我们应当去寻找到底是什么函数多次的调用了这些函数，对这些函数进行调优，便能提高程序的性能</p>
+<blockquote>
+<p>perf record -g -e eventname progname</p>
+<p>perf report -g // -g calling graph</p>
+</blockquote>
+<p>用calling graph显示每个函数的调用,配合指标信息来看便可指定应该减少哪个函数的调用可以提高性能</p>
+<figure data-type="image" tabindex="4"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170817134-1.png" alt="image" loading="lazy"></figure>
+<h4 id="perf-probe-自定义探测点">perf probe 自定义探测点</h4>
+<p>tracepoint是静态检查点,是内核代码设计了的检查位置,如果我们想自己添加新的检查点,可以使用perf probe,自定义动态tracepoint.</p>
+<figure data-type="image" tabindex="5"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170831248-1.png" alt="image" loading="lazy"></figure>
+<p>上图的perf probe 指定在shcedule函数的第十二行创建一个动态tracepoint,当执行到这里里,perf便会有相应的统计信息.</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/python-an-zhuang-he-conda-huan-jing-da-bao/">
+                <h3 class="post-title">
+                  python安装和conda环境打包
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言基础知识 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言基础知识</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>教程文档<br>
+https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-context/</p>
+<h1 id="go-tools">Go Tools</h1>
+<h2 id=""><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/165141795-1.png" alt="image" loading="lazy"></h2>
+<h3 id="goroot-gopath目录">GOROOT、GOPATH目录</h3>
+<p>GOROOT目录是go的安装目录，含有<strong>标准库</strong>的包；GOPATH是<strong>第三方库和开发的项目代码</strong>的目录（相当于工作区）。</p>
+<p>GOPATH可以设置多个，go get下载的包会放置道第一个GOPATH目录下的src目录中。go install安装的包会放到GOPATH/bin下； 使用 go install时，在哪个**<code>GOPATH</code>**中找到了这个包，就会在哪个<code>GOPATH</code>下的bin目录生成可执行文件</p>
+<p><strong>import查找包的顺序是先GOROOT，后GOPATH。</strong></p>
+<p>假设引入下面的包</p>
+<pre><code class="language-go">import &quot;Go-Player/src/chapter17/models&quot;
+</code></pre>
+<p>第一步：Go会先去<strong>GOROOT的src目录中</strong>查找，很显然它不是标准库的包，没找到。<br>
+第二步：继续在<strong>GOPATH的src目录</strong>去找，准确说是GOPATH/src/Go-Player/src/chapter17/models这个目录。如果该目录不存在，会报错找不到package。在使用GOPATH管理项目时，需要按照GO寻找package的规范来合理地保存和组织Go代码。<br>
+目前个人理解是$GOPATH/src下创建不同的目录，每个目录就是一个项目。</p>
+<p><strong>GoLand中可以设置项目GOPATH，与全局GOPATH区分。</strong></p>
+<hr>
+<h3 id="go111module参数设置说明">GO111MODULE参数设置说明</h3>
+<p>用环境变量 <code>GO111MODULE</code> 开启或关闭模块支持，它有三个可选值：<code>off</code>、<code>on</code>、<code>auto</code>，默认值是 <code>auto</code>。</p>
+<ul>
+<li>
+<p><code>GO111MODULE=off</code> 无模块支持，go 会从 GOPATH 和 vendor 文件夹寻找包。</p>
+<p>go在GOROOT和GOPATH中搜索所需的模块</p>
+</li>
+<li>
+<p><code>GO111MODULE=on</code> 模块支持，go 会忽略 GOPATH 和 vendor 文件夹，只根据 <code>go.mod</code> 下载依赖。</p>
+<p>此时，即使在GOPATH下有模块，也不能导入，go只会在GOROOT中搜索</p>
+</li>
+<li>
+<p><code>GO111MODULE=auto</code> 在 <code>$GOPATH/src</code> 外面且根目录有 <code>go.mod</code> 文件时，开启模块支持。</p>
+</li>
+</ul>
+<p>在使用模块的时候，<code>GOPATH</code> 是无意义的，不过它还是会把下载的依赖储存在 <code>$GOPATH/src/mod</code> 中，也会把 <code>go install</code> 的结果放在 <code>$GOPATH/bin</code> 中。</p>
+<p>模块的根目录和子目录所有的包组成一个模块，在根目录下存在go.mod文件，子目录会一直向上寻找go.mod。</p>
+<p>模块路径指模块根目录的导入路径，是子目录路径的前缀</p>
+<p>go.mod文件的第一行定义了模块路径，模块子目录都相对于该路径，若需要import子模块， <strong>直接导入go.mod中模块地址+子目录</strong> ，代码为：</p>
+<p><code>import &quot;mymod/sub_mod&quot;</code></p>
+<p>这个mymod是通过go mod init mymod指定的：</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/165209014-1.png" alt="image" loading="lazy"></figure>
+<p>此时，mymod这个标识符就代表了模块路径，如果go.mod文件所在的目录下，有一个子模块test，则在go文件中的导入代码为：</p>
+<p><code>import &quot;mymod/test&quot;</code></p>
+<p>go.mod文件中会定义当前模块所需的依赖，以及可以排除和替换依赖：</p>
+<pre><code class="language-go">module example.com/m 
+
+require ( //模块所需依赖
+    golang.org/x/text v0.3.0
+    gopkg.in/yaml.v2 v2.1.0 
+)
+
+replace ( //替换依赖
+    golang.org/x/text =&gt; github.com/golang/text v0.3.0
+)
+</code></pre>
+<p>go.mod不用手写，可以用 <code>go mod init example.com/m</code> 生成 <code>go.mod</code> 的第一行，文件的剩余部分也不用担心，在执行 <code>go build</code>、<code>go test</code>、<code>go list</code> 命令时会根据需要的依赖自动生成 <code>require</code> 语句。</p>
+<hr>
+<h3 id="go语言结构">Go语言结构</h3>
+<p>https://cloud.tencent.com/developer/doc/1101 go语言手册</p>
+<p>基本的组成包含：</p>
+<p>1.包声明</p>
+<p>​	关键字 package</p>
+<p>​	每个go文件的第一行都要声明该文件是哪个包，要进行包声明(e.x. package main)</p>
+<p>​	package main 表示一个可独立执行的应用程序，每个go程序都包含一个main包（类似int main() 只有一个，程序的入口函数）</p>
+<p>Go语言的代码通过<strong>包</strong>（package）组织，包类似于其它语言里的库（libraries）或者模块（modules）。**一个包由位于单个目录下的一个或多个.go源代码文件组成，目录定义包的作用。**每个源文件都以一条<code>package</code>声明语句开始，这个例子里就是<code>package main</code>，表示该文件属于哪个包。</p>
+<p>2.引入包</p>
+<p>​	import 包名</p>
+<p>​	类似python的import，引入包后使用包的函数和变量</p>
+<p>​	可以import一个目录，或者目录中的目录都可以</p>
+<p>3.函数</p>
+<p>​	func main() {<br>
+​	/* code */</p>
+<p>​    }</p>
+<p>​	main函数，程序的入口，要<strong>注意函数的左大括号一定要和函数名在同一行</strong>。</p>
+<p>4.变量</p>
+<p>5.语句与表达式</p>
+<p>​	与python一样，句尾<strong>无需加分号</strong>，若想一行写多个语句，则需要加分号进行分割</p>
+<p>6.注释</p>
+<p><strong>Note：<strong>标识符（函数名、变量名等）如果首字母大写，表示该对象是全局可见的，是</strong>已导出</strong>的标识符，其他文件引入该包体后可以使用该标识符，相当于public；而如果是小写开头，则不可见，为<strong>未导出</strong>的标识符，相当于private，无法在包外被访问。</p>
+<p><strong>文件名和包名没有直接关系，不需要一致。</strong></p>
+<p><strong>同一目录下的多个go文件，只能有一个包名。</strong> import引用的是目录名，而不是包名，因此一个目录就代表了一个包， 对于导入的包，例如tempconv导入的fmt包，则是对应源文件级的作用域，因此只能在当前的文件中访问导入的fmt包，当前包的其它源文件无法访问在当前源文件导入的包。</p>
+<hr>
+<h3 id="go语言关键字">Go语言关键字</h3>
+<p>下面列举了 Go 代码中会使用到的 25 个关键字或保留字：</p>
+<table>
+<thead>
+<tr>
+<th>break</th>
+<th>default</th>
+<th>func</th>
+<th>interface</th>
+<th>select</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>case</td>
+<td>defer</td>
+<td>go</td>
+<td>map</td>
+<td>struct</td>
+</tr>
+<tr>
+<td>chan</td>
+<td>else</td>
+<td>goto</td>
+<td>package</td>
+<td>switch</td>
+</tr>
+<tr>
+<td>const</td>
+<td>fallthrough</td>
+<td>if</td>
+<td>range</td>
+<td>type</td>
+</tr>
+<tr>
+<td>continue</td>
+<td>for</td>
+<td>import</td>
+<td>return</td>
+<td>var</td>
+</tr>
+</tbody>
+</table>
+<p>除了以上介绍的这些关键字，Go 语言还有 36 个预定义标识符：</p>
+<table>
+<thead>
+<tr>
+<th>append</th>
+<th>bool</th>
+<th>byte</th>
+<th>cap</th>
+<th>close</th>
+<th>complex</th>
+<th>complex64</th>
+<th>complex128</th>
+<th>uint16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>copy</td>
+<td>false</td>
+<td>float32</td>
+<td>float64</td>
+<td>imag</td>
+<td>int</td>
+<td>int8</td>
+<td>int16</td>
+<td>uint32</td>
+</tr>
+<tr>
+<td>int32</td>
+<td>int64</td>
+<td>iota</td>
+<td>len</td>
+<td>make</td>
+<td>new</td>
+<td>nil</td>
+<td>panic</td>
+<td>uint64</td>
+</tr>
+<tr>
+<td>print</td>
+<td>println</td>
+<td>real</td>
+<td>recover</td>
+<td>string</td>
+<td>true</td>
+<td>uint</td>
+<td>uint8</td>
+<td>uintptr</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="go语言基本类型">Go语言基本类型</h3>
+<p>Go语言支持<strong>复数</strong>类型：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">类型和描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left"><strong>布尔型</strong> 布尔型的值只可以是常量 true 或者 false。一个简单的例子：var b bool = true。</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left"><strong>数字类型</strong> 整型 int 和浮点型 float32、float64，Go 语言支持整型和浮点型数字，并且支持复数，其中位的运算采用补码。</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left"><strong>字符串类型:</strong> 字符串就是一串固定长度的字符连接起来的字符序列。Go 的字符串是由单个字节连接起来的。Go 语言的字符串的字节使用 UTF-8 编码标识 Unicode 文本。<strong>strings包的api可用于处理字符串</strong></td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left"><strong>派生类型:</strong> 包括：(a) 指针类型（Pointer）(b) 数组类型(c) 结构化类型(struct)(d) Channel 类型(e) 函数类型(f) 切片类型(g) 接口类型（interface）(h) Map 类型</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">类型和描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left"><strong>float32</strong> IEEE-754 32位浮点型数</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left"><strong>float64</strong> IEEE-754 64位浮点型数</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left"><strong>complex64</strong> 32 位实数和虚数</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left"><strong>complex128</strong> 64 位实数和虚数</td>
+</tr>
+</tbody>
+</table>
+<p><strong>浮点数的相等比较是比较危险的，因为存在精度问题。</strong></p>
+<p>尽量使用float64，因为float32的表示范围不是很大，在计算时累积后可能导致溢出，（ 因为float32的有效bit位只有23个，其它的bit位用于指数和符号；当整数大于23bit能表达的范围时，float32的表示将出现误差 ）</p>
+<p>小数点前面或后面的数字都可能被省略（例如.707或1.）。很小或很大的数最好用科学计数法书写，通过e或E来指定指数部分：</p>
+<pre><code class="language-Go">const Avogadro = 6.02214129e23  // 阿伏伽德罗常数
+const Planck   = 6.62606957e-34 // 普朗克常数
+</code></pre>
+<p>用Printf函数的**%g参数打印浮点数**，将采用更紧凑的表示形式打印，并提供足够的精度，但是对应表格的数据，<strong>使用%e（带指数）或%f的形式打印可能更合适</strong>。所有的这三个打印形式都可以指定打印的宽度和控制打印精度。</p>
+<p>函数math.IsNaN用于测试一个数是否是非数NaN，math.NaN则返回非数对应的值。虽然可以用math.NaN来表示一个非法的结果，但是测试一个结果是否是非数NaN则是充满风险的，<strong>因为NaN和任何数都是不相等的</strong>（译注：在浮点数中，NaN、正无穷大和负无穷大都不是唯一的，每个都有非常多种的bit模式表示）：</p>
+<pre><code class="language-Go">nan := math.NaN()
+fmt.Println(nan == nan, nan &lt; nan, nan &gt; nan) // &quot;false false false&quot;
+</code></pre>
+<h4 id="其他数字类型">其他数字类型</h4>
+<p>以下列出了其他更多的数字类型：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">类型和描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left"><strong>byte</strong> 类似 uint8</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left"><strong>rune</strong> 类似 int32</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left"><strong>uint</strong> 32 或 64 位</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left"><strong>int</strong> 与 uint 一样大小</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left"><strong>uintptr</strong> 无符号整型，用于存放一个指针</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="变量">变量</h3>
+<p>如果声明了一个<strong>局部变</strong>量，但<strong>没有使用</strong>（即使赋值了也不行，一定要使用），则会<strong>编译失败</strong>。。。</p>
+<p>全局变量允许只声明不适用</p>
+<h4 id="1普通声明变量的方式">1.普通声明变量的方式</h4>
+<p><code>var name type</code></p>
+<p>一次声明多个命令：</p>
+<p><code>var name1,name2 int = 1,2</code></p>
+<p>在变量声明时，若<strong>没有</strong>进行<strong>初始化</strong>，则<strong>默认为零值</strong>，对于不同的类型，零值的值不同：</p>
+<ul>
+<li>
+<p>数值类型（包括complex64/128）为 <strong>0</strong></p>
+</li>
+<li>
+<p>布尔类型为 <strong>false</strong></p>
+</li>
+<li>
+<p>字符串为 <strong>&quot;&quot;</strong>（空字符串）</p>
+</li>
+<li>
+<p>以下几种类型为 <strong>nil</strong> ，只有chan、interface、func、slice、map、pointer可直接与nil比较和用nil赋值。 ：</p>
+<pre><code class="language-go">var a *int
+var a []int
+var a map[string] int
+var a chan int
+var a func(string) int
+var a error // error 是接口
+</code></pre>
+</li>
+</ul>
+<h4 id="2也可通过初始化的对象来推测类型">2.也可通过初始化的对象来推测类型</h4>
+<p><code>var name = &quot;helloworld&quot;</code></p>
+<h4 id="3省略var通过声明这种不带声明格式的只能在函数体内出现短变量声明">3.省略var，通过:=声明（这种不带声明格式的，<strong>只能在函数体内出现</strong>）短变量声明</h4>
+<p>声明变量+初始化</p>
+<p>要注意这是一个声明语句，如果同一变量已经声明了，使用:=会编译失败，后续可用=进行赋值，修改变量的值</p>
+<p><code>name:=1 </code></p>
+<p><code>name2:=&quot;helloworld&quot;</code></p>
+<p>正常来说，在同一个作用域中，是不允许对同一变量进行重复声明的，也即不允许redefinition的存在</p>
+<p>在<code>:=</code>声明中，<code>v</code>即使已经声明了变量，也可以再对该变量进行一次短变量声明，但前提条件是：</p>
+<ul>
+<li>此声明与的现有声明在同一范围内<code>v</code> （如果<code>v</code>已经在外部范围中声明，则该声明将创建一个新变量§），</li>
+<li>初始化中的对应值可分配给<code>v</code>和</li>
+<li>**声明创建了至少一个其他变量。**也即必须同时声明了别的变量。</li>
+</ul>
+<p>所以以下这种情况是允许的：</p>
+<pre><code class="language-go">a1,b1:=123,456
+a1,b2:=777,999
+</code></pre>
+<p>上面第三点的反例：</p>
+<pre><code class="language-go">a1,b2:=123,456
+a1:=777 //wrong
+</code></pre>
+<p>这种重复声明的方式常见于获取函数多个返回值，例如获取错误信息：</p>
+<pre><code class="language-go">f, err := os.Open(name)
+if err != nil {
+    return err
+}
+d, err := f.Stat()
+if err != nil {
+    f.Close()
+    return err
+}
+</code></pre>
+<h4 id="4多重变量声明">4.多重变量声明</h4>
+<p><code>var name1,name2,name3 type = val1,val2,val3</code></p>
+<p><code>var name1,name2,name3 = val1,val2,val3</code></p>
+<pre><code class="language-go">var (
+	name1 type
+	name2 type
+) //这种因式分解关键子的变量声明一般用在声明全局变量
+</code></pre>
+<p>还可以使用:=对多个变量声明不同的类型</p>
+<p><code>aa,bb,cc:=1,&quot;hello&quot;,true</code> 这称作并行声明</p>
+<p><code>aa,bb,cc=1,&quot;hello&quot;,true</code>这称为并行赋值</p>
+<p>并行赋值可用于接收多个函数返回值，类似于python</p>
+<p>可用下划线来表示抛弃值，这种用法一方面可以用于保证声明的变量被使用，另一方面，有时函数的多个返回值我们并不需要每个值可以用这种方式来接收返回值。</p>
+<p><code>_=aa</code>使用了aa这个变量，保证编译能过</p>
+<p><code>_,need=func(a,b)</code>假设func有两个返回值，但不需要第一个返回值，可以这么写</p>
+<p><strong>交换两个变量的值</strong>，在go中不需要借助辅助变量：</p>
+<p><code>a,b=b,a</code>前提必须保证两个变量的类型相同</p>
+<hr>
+<h3 id="常量">常量</h3>
+<p>http://books.studygolang.com/gopl-zh/ch3/ch3-06.html</p>
+<p>Go语言的常量有个不同寻常之处。<strong>虽然一个常量可以有任意一个确定的基础类型</strong>，例如int或float64，或者是类似time.Duration这样命名的基础类型，<strong>但是许多常量并没有一个明确的基础类型</strong>。编译器为这些没有明确基础类型的数字常量提供比基础类型更高精度的算术运算；你可以认为至少有256bit的运算精度。这里有六种未明确类型的常量类型，分别是无类型的布尔型、无类型的整数、无类型的字符、无类型的浮点数、无类型的复数、无类型的字符串。</p>
+<p>通过延迟明确常量的具体类型，<strong>无类型的常量不仅可以提供更高的运算精度，而且可以直接用于更多的表达式而不需要显式的类型转换。</strong> 更像是字面值常量。。</p>
+<pre><code class="language-go">var f float64 = 3 + 0i // untyped complex -&gt; float64
+f = 2                  // untyped integer -&gt; float64
+f = 1e123              // untyped floating-point -&gt; float64
+f = 'a'                // untyped rune -&gt; float64
+</code></pre>
+<p><strong>如果对象的类型是确定的，则不会有隐式转换，必须显示转换。</strong></p>
+<p>对于一个没有显式类型的变量声明（包括简短变量声明），<strong>常量的形式将隐式决定变量的默认类型</strong>，就像下面的例子：</p>
+<pre><code class="language-Go">i := 0      // untyped integer;        implicit int(0)
+r := '\000' // untyped rune;           implicit rune('\000')
+f := 0.0    // untyped floating-point; implicit float64(0.0)
+c := 0i     // untyped complex;        implicit complex128(0i)
+</code></pre>
+<p>当尝试将这些无类型的常量<strong>转为一个接口值</strong>时（例如将这些对象传给interface{}），这些<strong>默认类型将显得尤为重要</strong>，因为要靠它们明确接口对应的动态类型（用接口来判断承载的类型）。</p>
+<p><strong>无类型整数常量转换为int，它的内存大小是不确定的</strong>，但是无类型浮点数和复数常量则转换为内存大小明确的float64和complex128。 如果要给变量一个不同的类型，我们必须显式地将无类型的常量转化为所需的类型，或给声明的变量指定明确的类型，像下面例子这样：</p>
+<pre><code class="language-Go">var i = int8(0)
+var i int8 = 0
+</code></pre>
+<p>**不管是全局常量还是在函数中声明的常量，常量是在编译器创建的，而且只能是数字类型、字符、字符串或布尔类型。**因为编译时的限制，定义常量的表达式必须是常量表达式，这样编译器在编译时才能计算常量的值，而不能是一些例如函数计算值，因为调用函数是在代码运行阶段才执行的。</p>
+<p>与变量声明相似，但不使用:=进行声明</p>
+<pre><code class="language-go">const identifier [type] = value
+</code></pre>
+<p>一个未指定类型的常量（也即省略了[type]的声明），其类型由上下文决定：</p>
+<pre><code class="language-go">const c1=100
+func test1(a int) int{
+	return a*10
+}
+func test2(a float32) float32{
+	return a*1.2
+}
+func main(){
+    fmt.Println(test1(c1))
+    fmt.Println(test2(c1))
+}
+//output
+1000
+120.00001
+</code></pre>
+<p>常量也可用下列方式声明</p>
+<pre><code class="language-go">const (
+	a = 1
+	b = 2
+	c = 3
+)
+</code></pre>
+<p>常量还可使用内置的函数进行计算，注意必须为内置函数，否则编译不过</p>
+<pre><code class="language-go">const (
+	a = &quot;hello&quot;
+	b = len(a)
+	c = unsafe.Sizeof(b)
+)
+</code></pre>
+<p>在定义常量组时，如果<strong>不提供初始值</strong>，则后续的常量会使用上一行的值</p>
+<pre><code class="language-go">const(
+	a = 1
+	b
+	c
+	d
+)
+//则a,b,c,d均为1
+</code></pre>
+<h4 id="iota-特殊常量">iota 特殊常量</h4>
+<p>这是一个特殊的常量， 在 <strong>const关键字出现时将被重置为 0</strong>(const 内部的第一行之前)，const 中每新增一行常量声明将使 iota <strong>计数一次</strong>(iota 可理解为 const 语句块中的行索引)。</p>
+<pre><code class="language-go">const (
+    a = iota
+    b = iota
+    c = iota
+)// a=0 b=1 c=2
+</code></pre>
+<pre><code class="language-go">const (
+    a = iota
+    b
+    c
+) //a=0 b=1 c=2
+</code></pre>
+<p>搭配常量组不初始化时的特性，有</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+
+func main() {
+    const (
+            a = iota   //0
+            b          //1
+            c          //2
+            d = &quot;ha&quot;   //独立值，iota += 1
+            e          //&quot;ha&quot;   iota += 1
+            f = 100    //iota +=1
+            g          //100  iota +=1
+            h = iota   //7,恢复计数
+            i          //8
+    )
+    fmt.Println(a,b,c,d,e,f,g,h,i)
+} //输出结果 0 1 2 ha ha 100 100 7 8
+</code></pre>
+<pre><code class="language-go">//一个有趣的例子，k和l分别为数值3左移3和4位
+const (
+    i=1&lt;&lt;iota
+    j=3&lt;&lt;iota
+    k
+    l
+)// 输出结果 i= 1 j= 6 k= 12 l= 24
+
+const(
+	a = 5*iota
+    b
+    c
+) //输出结果 a=0 b=5 c=10
+</code></pre>
+<p>这里其实是后续没有给初始化的常量保持了上一行的运算规则</p>
+<p><strong>iota只在同一个常量组中计数自增；别的常量中的iota重置，重新计数。</strong></p>
+<hr>
+<h3 id="运算符">运算符</h3>
+<p>各类符号、优先级与C++相同</p>
+<p>要注意自增、自减只有后置，没有前置用法，且自增与赋值不能同时使用：</p>
+<p><code>a=b++</code>这是错误的语法，编译不过</p>
+<p><code>++</code> <code>--</code>都是声明，不是表达式，所以只能够单独a++或a--，不存在其与其他运算符搭配在一起形成表达式</p>
+<p>Go语言中的逗号跟C++中的不一样，C++中的是一个表达式，例如1+2,3+4得到的是3（计算完两侧的表达式后，返回左表达式的值），而Go中的逗号就是一个分隔作用，没有表达式的含义。</p>
+<pre><code>&amp;      位运算 AND
+|      位运算 OR
+^      位运算 XOR
+&amp;^     位清空（AND NOT）
+&lt;&lt;     左移
+&gt;&gt;     右移
+</code></pre>
+<p>其中&amp;<sup>的含义是按位置零，例如x&amp;</sup>y，若y中某位为1，则x的相应位置为0后作为返回值。</p>
+<hr>
+<h4 id="命令行参数">命令行参数</h4>
+<p>通过 程序名 arg1 arg2 arg3 来输入命令函参数的，Go语言提供了os包，命令函参数存在了os.Args切片中，这是一个string类型的切片，第一个元素为程序名，后面的则为参数的值。</p>
+<pre><code class="language-go">import &quot;os&quot;
+func main(){
+	for i:=1;i&lt;len(os.Args);i++{
+		fmt.Println(os.Args[i])
+	}
+}
+go build hello.go
+./hello nihao rex
+nihao
+rex
+</code></pre>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">
+                <h3 class="post-title">
+                  Go语言函数
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge warning">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge ">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

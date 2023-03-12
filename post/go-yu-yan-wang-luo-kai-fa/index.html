@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言网络开发 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言网络开发</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>**io.Writer接口的Write函数在实际写的字节数小于给定的byte切片长度时，会返回非空错误。**对于Write函数而言，可以直接根据返回的err信息来判断是否发送了完整数据。</p>
+<p><strong>io.Reader接口</strong>的Read函数返回读到的字节数，如果已经快读到流的末端，返回的字节数大于0，则返回的错误可能是EOF也可能是nil，此时下次Read操作返回的是0，EOF；因此对于Read操作，需要先判断读取的字节数是否大于0来判断是否读取正常，然后再根据err来判断读取的状态信息。</p>
+<p><strong>net.Conn是一个接口</strong>，Accept()函数返回的就是该接口对象，只是在返回前，该接口对象已经包含了具体的套接字信息，所以通过这个接口的方法可以直接操作该网络连接：</p>
+<pre><code class="language-go">//假设类型A实现了接口myinter
+var inter myinter=A{}
+inter.Read() //就是执行了A实现的接口方法，因此Conn的处理同理
+</code></pre>
+<p>而<strong>带有具体协议名的Conn</strong>，例如TCPConn<strong>就是一个结构体类型</strong>，这些具体协议名的连接类型，<strong>都实现了net.Conn接口</strong>，所以可以直接传给参数为net.Conn类型的函数：</p>
+<pre><code class="language-go">func main(){
+	conn,err:=net.DialTCP(&quot;tcp&quot;,nil,tcpAddr) //conn is TCPCoon
+	Sending(conn)
+}
+
+
+func Sending(net.Conn){
+ /*code*/
+}
+</code></pre>
+<p>Go语言的网络开发中，Dial函数用于连接对端服务器，服务器端使用Listen函数返回的监听者对象，调用监听者对象的Accept函数在服务端得到该连接的句柄。</p>
+<p>整体上Dial，Listen，listener.Accept()，三个函数（方法）就能建立连接，前置的则是地址的处理。</p>
+<p>对于没有协议名的Dial和Listen函数，地址是一形如“127.0.0.1:9528”的字符串，函数会自动解析地址信息</p>
+<p>而有协议名的Dial和Listen函数，则需要传入相应协议的地址结构体，例如TCPAddr类型的对象，需要先通过ResolveTCPAddr函数获得TCPAddr类型的对象，传给解析函数的是形如“127.0.0.1:9528”的字符串。</p>
+<p>只有对具体协议的连接对象（例如TCPConn）调用方法，才能设置该连接的设置，例如TCP的SetNoDelay。如果是形如TCPListener的监听者，可以调用AcceptTCP的方法来得到TCPConn对象，而Accept函数一律返回的是net.Conn的对象，所以通过前者得到TCPConn，服务端才能设置该连接的套接字设置。而客户端调用DialTCP返回的就是TCPConn类型。</p>
+<pre><code class="language-go">listener,err:=net.ListenTCP(&quot;tcp&quot;,peerTCPAddr)
+tcpconn,err:=listener.AcceptTCP()
+tcpconn.SetNoDelay()
+</code></pre>
+<h3 id="go语言网络编程">Go语言网络编程</h3>
+<p>官网的net包说明文档：</p>
+<p>https://golang.org/pkg/net/#pkg-examples</p>
+<p>net包支持TCP/IP，UDP，DNS域名解析，Unix域套接字编程，甚至有http编程。</p>
+<p>虽然包支持了低层次的网络编程原语，但一般只需要基本的接口就可以实现网络编程，例如函数Dial，Listen，Accept和接口Conn，Listener等。</p>
+<pre><code class="language-go">//client connect server
+conn,err:=net.Dial(&quot;tcp&quot;,&quot;127.0.0.1:9527&quot;) //返回的conn就是套接字的句柄
+</code></pre>
+<pre><code class="language-go">//server deals with connection
+listen_fd,err:=net.Listen(&quot;tcp&quot;,&quot;127.0.0.1:9527&quot;)
+conn,conn_err:=listen_fd.Accept()//accept连接，服务端得到套接字句柄conn
+</code></pre>
+<p>在Unix系统下，DNS域名解析有两种方式，一种是使用Go自带的解析器，另一种是使用C语言库的解析器，两者最大的区别在于前者使用一个goroutine去解析，而后者要使用一个线程，效率上前者更优。默认情况下是使用前者。</p>
+<p><code>net.Listen</code>这一系列函数，<strong>完成了C++中的socket，bind和listen三个函数的工作</strong>，返回的是一个监听者listener的句柄，通过这个listener来accept，在Go语言层面没有fd的说法。</p>
+<p>net包中处理具体协议的api和通用网络通信api，例如Listen和ListenTCP之间的区别就是，带了协议名称的api，返回的是相应协议链接的类型，例如TCPConn，而没带的则返回的是Conn类型的对象。不带协议名的api可以实现带协议名api的功能，只需要补充一些参数即可。Conn类型可以用于网络通信，只是带协议名的具体Conn类型则可能支持协议的某些操作，例如TCPConn支持SetKeepAlive操作。</p>
+<p><strong>By default the pure Go resolver is used,</strong> because a blocked DNS request consumes only a goroutine, while a blocked C call consumes an operating system thread. When cgo is available, the cgo-based resolver is used instead under a variety of conditions: on systems that do not let programs make direct DNS requests (OS X), when the LOCALDOMAIN environment variable is present (even if empty), when the RES_OPTIONS or HOSTALIASES environment variable is non-empty, when the ASR_CONFIG environment variable is non-empty (OpenBSD only), when /etc/resolv.conf or /etc/nsswitch.conf specify the use of features that the Go resolver does not implement, and when the name being looked up ends in .local or is an mDNS name.</p>
+<p>The resolver decision can be overridden by setting the netdns value of the GODEBUG environment variable (see package runtime) to go or cgo, as in:</p>
+<pre><code>export GODEBUG=netdns=go    # force pure Go resolver
+export GODEBUG=netdns=cgo   # force cgo resolver
+</code></pre>
+<p>The decision can also be forced while building the Go source tree by setting the netgo or netcgo build tag.</p>
+<p><strong>A numeric netdns setting, as in GODEBUG=netdns=1, causes the resolver to print debugging information about its decisions.</strong> To force a particular resolver while also printing debugging information, join the two settings by a plus sign, as in GODEBUG=netdns=go+1.</p>
+<h5 id="函数netjoinhostport">函数net.JoinHostPort</h5>
+<pre><code class="language-go">func JoinHostPort(host string,port string) string// 拼接ip地址和端口得到&quot;host:port&quot;
+</code></pre>
+<h5 id="函数netlookupaddress">函数net.LookUpAddress</h5>
+<pre><code class="language-go">func LookUpAddress(addr string) ([]string,error)//反向查找地址对应的域名
+//example
+names, lk_err := net.LookupAddr(&quot;127.0.0.1&quot;)
+fmt.Println(names)
+//output
+[VM-0-14-centos VM-0-14-centos localhost.localdomain. localhost localhost4.localdomain4. localhost4]
+</code></pre>
+<h5 id="函数netlookuphost">函数net.LookUpHost</h5>
+<pre><code class="language-go">func LookupHost(host string) (addrs []string, err error)//查询主机名对应的ip地址
+//example
+addr, lk_err := net.LookupCNAME(&quot;localhost&quot;)
+fmt.Println(addr)
+//output
+[::1 127.0.0.1]
+</code></pre>
+<h5 id="函数netparsecidr">函数net.ParseCIDR</h5>
+<pre><code class="language-go">func ParseCIDR(s string) (IP, *IPNet, error)
+//解析CIDR地址，得到相应的IP和网络
+ParseCIDR(&quot;192.0.2.1/24&quot;) returns the IP address 192.0.2.1 and the network 192.0.2.0/24.
+</code></pre>
+<h5 id="函数netpipe">函数net.Pipe</h5>
+<pre><code class="language-go">func Pipe() (Conn, Conn) //返回全双工的、同步的、在内存中的网络通信
+//看到返回值是两个net.Conn类型；这类似于POSIX的pipe函数，只不过这里是通过Conn类型来进行通信的
+//要注意的是这两个Conn是没有缓存的，有点类似Go中的channel类型。
+</code></pre>
+<h5 id="函数netsplithostport">函数net.SplitHostPort</h5>
+<pre><code class="language-go">func SplitHostPort(hostport string) (host, port string, err error)
+//将ip:port地址转换返回ip和port
+</code></pre>
+<p>Go中暴露给用户的网络接口函数是建立在POSIX网络接口的基础上的，但由于Go语言通过runtime来实现各goroutine的调度，所以这些网络接口与POSIX有一定的区别。</p>
+<p><strong>Go的开发者无需关注sockfd是阻塞还是非阻塞的，也无需注册sockfd的回调函数，只需要在每个连接对应的goroutine中以阻塞I/O的方式处理套接字即可。</strong>（这是由于runtime和goroutine的GPM调度决定的）</p>
+<p>一个简单的server端</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;net&quot;
+)
+
+func handler(conn net.Conn) { //传的是接口对象，而由于实现该接口的tcpConn是通过指针方式实现的，所以其实本质上是个引用传递
+	defer conn.Close()
+	buf := make([]byte, 20)
+	for {
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(&quot;Read failed&quot;)
+			fmt.Println(err.Error())
+			break
+		}
+		fmt.Println(conn.RemoteAddr().String())
+		fmt.Println(&quot;Recevied &quot;, n, &quot; bytes&quot;)
+		recv_str := string(buf)
+		fmt.Println(&quot;Received str: &quot;, recv_str)
+		//time.Sleep(time.Second * 4)
+	}
+}
+
+func main() {
+	listen, err := net.Listen(&quot;tcp&quot;, &quot;127.0.0.1:9235&quot;)
+	if err != nil {
+		fmt.Println(&quot;Create listen sockfd failed&quot;)
+		fmt.Println(err.Error())
+		return
+	}
+	for {
+		conn, listen_err := listen.Accept()
+		if listen_err != nil {
+			fmt.Println(&quot;accept failed&quot;)
+			continue
+		}
+		go handler(conn)
+	}
+}
+
+</code></pre>
+<p>一个简单的client端</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;net&quot;
+)
+
+func main() {
+	conn, err := net.Dial(&quot;tcp&quot;, &quot;127.0.0.1:9235&quot;)
+	if err != nil {
+		fmt.Println(&quot;Connect failed&quot;)
+		fmt.Println(err.Error())
+		return
+	}
+	defer conn.Close()
+	str := &quot;nihao&quot;
+	n, write_err := conn.Write([]byte(str))
+	if write_err != nil {
+		fmt.Println(&quot;Write failed&quot;)
+		fmt.Println(write_err.Error())
+		return
+	}
+	fmt.Printf(&quot;Sent %d bytes&quot;, n)
+	//time.Sleep(time.Second * 10)
+}
+
+</code></pre>
+<p>用户层眼中看到的goroutine中的“block socket”，实际上是通过Go runtime中的netpoller通过Non-block socket + I/O多路复用机制“模拟”出来的，<strong>真实的底层socket实际上是non-block的</strong>，只是<strong>runtime拦截了底层socket系统调用的错误码，并通过netpoller和goroutine 调度让goroutine“阻塞”在用户层得到的Socket fd上</strong>。比如：当用户层针对某个socket fd发起read操作时，如果该socket fd中尚无数据，那么runtime会将该socket fd加入到netpoller中监听，同时对应的goroutine被挂起，直到runtime收到socket fd 数据ready的通知，runtime才会重新唤醒等待在该socket fd上准备read的那个Goroutine。而这个过程从Goroutine的视角来看，就像是read操作一直block在那个socket fd上似的。</p>
+<p>若在客户端连接时发现对端不可达，或者对端没有监听指定端口，则net.Dial函数会立刻返回错误。</p>
+<p>而<strong>在对端listen backlog（监听队列）未满之前</strong>，即使对端没有调用accept函数获取应用层使用的句柄（net.Conn对象），客户端的Dial连接服务端是成功返回的，出现这种情况的原因是TCP底层已经完成了连接，只是应用层代码还没有获取该套接字信息而已，客户端可以进行数据的发送。</p>
+<p>直接使用net.Dial函数进行网络连接，可能会由于网络异常，或对端监听队列已满，导致无法连接，但该api是阻塞的，会一直等待网络连接的建立直到超时，而这个超时时间一般较长，以POSIX的api为例，connect的默认超时时间为75s。因此，可以使用net.DialTimeout这个函数指定连接的等待时间t，如果通过DNS解析出来的ip地址有多个，则等待时间t会被均分到每个ip的连接上。</p>
+<h4 id="对端关闭连接">对端关闭连接</h4>
+<p>若一端调用conn.Close()，关闭了连接，且该套接字接收缓冲去还有数据未读完，则另一端在读完剩余数据后，再进行读取，会得到EOF错误：</p>
+<p>Read failed<br>
+EOF</p>
+<p>和POSIX一样，一旦对端关闭连接，则套接字状态是可读的，不会阻塞，可立刻进行读取。</p>
+<h4 id="不要使用多个goroutine操作同一个conn">不要使用多个goroutine操作同一个conn</h4>
+<p>这个和C++多线程网络开发是一样的，虽然可以用多线程去操作同一个套接字，但是由于TCP是字节流传输，线程调度顺序会影响读取的字节的顺序，所以不要这么做。</p>
+<p>同理，虽然go语言里conn的read和write函数每次调用是加锁的，goroutine安全的，但是一样由于GPM调度顺序会影响得到的字节流的顺序，所以保证一个goroutine处理一个conn连接。</p>
+<h4 id="socket属性">socket属性</h4>
+<p>go语言基于原生的socket设置，也提供了一系列设置套接字属性的api，例如：</p>
+<p>SetKeepAlive<br>
+SetKeepAlivePeriod<br>
+SetLinger<br>
+SetNoDelay （默认no delay）<br>
+SetWriteBuffer<br>
+SetReadBuffer</p>
+<p>上述这些设置是针对TCP的，所以在对conn进行设置前，需要进行类型断言：</p>
+<pre><code class="language-go">tcpConn, ok := conn.(*TCPConn)
+if !ok {
+    //error handle
+}
+
+tcpConn.SetNoDelay(true)
+
+</code></pre>
+<h4 id="go为监听套接字默认设置了reuseaddr">Go为监听套接字默认设置了reuseaddr</h4>
+<p>golang默认采用了 SO_REUSEADDR，这样当你重启 listener程序时，不会因为address in use的错误而启动失败。而listen backlog的默认值是通过获取系统的设置值得到的。不同系统不同：mac 128, linux 512等</p>
+<h4 id="关闭连接">关闭连接</h4>
+<p>当A端关闭连接后，该conn上的所有read和write操作都会失败返回：</p>
+<pre><code>Write failed
+write tcp 127.0.0.1:43222-&gt;127.0.0.1:9235: use of closed network connection
+Read failed
+read tcp 127.0.0.1:43222-&gt;127.0.0.1:9235: use of closed network connection
+
+</code></pre>
+<p>而B端读取会读到EOF，读取返回的字节数为0；但却可以继续向该连接进行write，这是因为发送的内容会写入到B端这边该conn的发送缓冲区，即使对面收不到。因此，一旦发现对端关闭了连接，则应立刻做好善后工作，B端也要进行连接的关闭。</p>
+<h4 id="发送的数据长度">发送的数据长度</h4>
+<p>发送的数据长度由切片[]byte的<strong>长度len</strong>决定，如果不通过类似buf[:5]这种方式进行指定发送那部分数据，而是将buf直接传给write函数，则发送的数据长度大小为该切片的长度大小（len函数的返回值），在Go中conn的Write接口是不需要指定发送多少个字节的，是自动判断的。</p>
+<pre><code class="language-go">str := &quot;nihao&quot;
+buf := make([]byte, 20)
+buf = append(buf, []byte(str)[0])
+_, write_err := conn.Write(buf)
+//实际上发送了20个字节
+//由于第二个字节开始就是空白符，服务端打印字符串的话只能打印出'n'
+
+</code></pre>
+<h4 id="读取的数据长度">读取的数据长度</h4>
+<p>在使用conn.Read函数时，传入的切片对象的长度就是指定要读取的字节大小：</p>
+<pre><code class="language-go">buf:=make([]byte,10)
+conn.Read(buf[:3]) //指定读取3个字节
+conn.Read(buf)//指定读取10个字节（切片的长度）
+
+buf:=[20]byte{}
+conn.Read(buf[:3])//指定读取3个字节
+conn.Read(buf[:])//指定读取20个字节（切片的长度）
+
+</code></pre>
+<p><strong>所以不管读取还是发送，都要注意传给函数的切片参数要设置相应的长度，否则按照切片的容量大小去读取和发送了。</strong></p>
+<hr>
+<h4 id="nethttp">net.http</h4>
+<p>注册handler的方式：</p>
+<p>http.HandlerFunc(&quot;/&quot;,SomeFunc)</p>
+<p>func SomeFunc(w http.ResponseWriter, r *http.Request) //SomeFunc的函数原型</p>
+<p>这条路径匹配的含义是，所有host/的路径都匹配SomeFunc</p>
+<p>如果同时有注册</p>
+<p>http.HandlerFunc(&quot;/counter&quot;,AnotherFunc)</p>
+<p>则host/pathname，除了pathname=counter以外，其他的均由SomeFunc处理，而pathname=counter则由AnotherFunc处理。</p>
+<p>而如果注册的路径是http.HandlerFunc(&quot;/counter/&quot;,AnotherFunc)</p>
+<p>则host/counter/pathname均由AnotherFunc处理。</p>
+<hr>
+<h4 id="json">JSON</h4>
+<p>go语言自带的encoding/json包，可以实现json格式的序列化和反序列化，可以序列化的类型有对象(ex.结构体)、数组和基础类型，基础类型包括字符串、数值类型、布尔型和空（NULL）型。</p>
+<p>对象，以序列化结构体为例，json格式下，是一个花括号括起来的整体。</p>
+<p>对于不同类型的对象，json序列化的处理方式不同，如下所示：</p>
+<p>1.Boolean values encode as JSON booleans.</p>
+<p>2.Floating point and integer values encode as JSON numbers.</p>
+<p>3.String values encode as JSON strings, with each invalid UTF-8 sequence replaced by the encoding of the<br>
+Unicode replacement character U+FFFD.</p>
+<p>4.Array and slice values encode as JSON arrays, except that []byte encodes as a base64-encoded string.</p>
+<p>5.Struct values encode as JSON objects. Each struct field becomes a member of the object. By default the<br>
+object's key name is the struct field name converted to lower case. If the struct field has a tag, that tag will<br>
+be used as the name instead.</p>
+<p>Json序列化结构体，默认将结构体的字段作为key_value对的key，并取小写，除非在struct定义中指定某个字段使用哪个key（这是成员的Tag， 通常是一系列用空格分隔的key:&quot;value&quot;键值对序列 ，对于用于指定json字段名的，key就是json，Tag一般为字符串面值，通过``来给出，因为value是&quot;&quot;括起来的）：</p>
+<pre><code class="language-go">type Person  struct{
+   　　Name  string   `json:&quot;name&quot;`　  //标记json名字为name　　　
+   　　Age    int     `json:&quot;age&quot;`
+   　　Time int64    `json:&quot;-&quot;`        // 标记忽略该字段
+
+}
+
+</code></pre>
+<p>**只有字段首字母大写了，该字段信息才能序列化，否则序列化结果是没有这个字段的信息的。**如果字段名首字母不是大写，即使后面使用tag指定了json的字段名，也不会序列化。</p>
+<p>6.Map values encode as JSON objects. The map's key type must be string; the object keys are used directly<br>
+as map keys.</p>
+<p>7.Pointer values encode as the value pointed to. (Note: this allows trees, but not graphs!). A nil pointer<br>
+encodes as the null JSON object.</p>
+<p>8.Interface values encode as the value contained in the interface. A nil interface value encodes as the null<br>
+JSON object.</p>
+<p>9.Channel, complex, and function values cannot be encoded in JSON. Attempting to encode such a value<br>
+cause Marshal to return an InvalidTypeError .</p>
+<p>10.JSON cannot represent cyclic data structures and Marshal does not handle them. Passing cyclic structures to Marshal will result in an infinite recursion.</p>
+<h5 id="序列化">序列化</h5>
+<p>json.NewEncoder(w io.Writer) 返回一个jsonEncoder对象的指针，然后通过这个对象进行编码：</p>
+<pre><code class="language-go">encoder:=json.NewEncoder(conn)
+encoder.Encode(content) // 将content对象的数据进行序列化
+
+</code></pre>
+<p>所有实现了io.Writer接口的对象都可以用于生成一个jsonEncoder，json编码的过程包含两部分，一是将内容序列化，而是调用对象的Write函数，进行写入。</p>
+<p>所以如果传给NewEncoder，用于生成jsonEncoder的实参是一个网络conn类型，那么编码就相当于对该套接字发送序列化后的数据到对端。</p>
+<h5 id="反序列化">反序列化</h5>
+<p>json.NewDecoder(r io.Reader)返回一个jsonDecoder对象的指针，然后通过这个指针来进行解码：</p>
+<pre><code class="language-go">decoder:=json.NewDecoder(conn)
+decoder.Decode(&amp;obj)  //将反序列化后的内容写入到obj中，注意有取址符
+
+</code></pre>
+<p>所有实现了io.Reader接口的类型都可以用于生成jsonDecoder，反序列化也包含两部分，一是将序列化后的数据解码得到某个类型对象的数据，二是将该数据赋值给传入Decode方法的参数。反序列化调用了对象的Read函数，所以上述代码中，decoder反序列化时调用了conn的Read函数，从网络上读取了数据，再进行解码。</p>
+<p>所以如果传给NewDecoder，用于生成jsonDecoder的实参是一个网络conn类型，那么解码就相当于对该套接字接受网络数据后再反序列化后写入到本地对象中。</p>
+<p>根据源码分析，<strong>Encode和Decode方法都是处理了一个完整的json包之后才返回</strong>，所以调用这两个函数，goroutine会一直循环直到处理完完整的json包，因此发送和接受的网络数据都是一个完整的数据包，并且api已经帮我们做好了一切缓存的问题。</p>
+<p>但需要注意的是，以Decode为例，假设一个包体总大小为20字节，存在Decode过程中向网络conn读取了超过20字节的情况（最小的读取长度为512字节），所以此时不要自己单独使用Read，会与json的Decode冲突，<strong>可能部分数据在Decoder的缓存中，保持只用一种方式来读取数据。</strong></p>
+<p>Go语言特有的序列化和反序列化的package：gob，好处是在go语言编写的程序之间的通信较为高效，而且可以适应结构体的变化，例如：</p>
+<p>This inclusion of type information makes Gob marshalling and unmarshalling fairly robust to changes or<br>
+differences between the marshaller and unmarshaller. For example, a struct</p>
+<p><strong>NewEncoder、NewDecoder是基于流式的编码解码器。</strong></p>
+<h5 id="jsonmarshalv-interface-byteerror">json.Marshal(v interface{}) ([]byte,error)</h5>
+<p>将传入的参数编码，返回编码后的字节切片。 Marshal函数返回一个编码后的字节slice，包含很长的字符串，并且没有空白缩进:</p>
+<pre><code>[{&quot;Title&quot;:&quot;Casablanca&quot;,&quot;released&quot;:1942,&quot;Actors&quot;:[&quot;Humphrey Bogart&quot;,&quot;Ingr
+id Bergman&quot;]},{&quot;Title&quot;:&quot;Cool Hand Luke&quot;,&quot;released&quot;:1967,&quot;color&quot;:true,&quot;Ac
+tors&quot;:[&quot;Paul Newman&quot;]},{&quot;Title&quot;:&quot;Bullitt&quot;,&quot;released&quot;:1968,&quot;color&quot;:true,&quot;
+Actors&quot;:[&quot;Steve McQueen&quot;,&quot;Jacqueline Bisset&quot;]}]
+
+</code></pre>
+<h5 id="jsonmarshalindentv-interfaceprefix-indentation-string-byteerror">json.MarshalIndent(v interface{},prefix, indentation string ) ([]byte,error)</h5>
+<p>函数将产生整齐缩进的输出。该函数有两个额外的字符串参数用于表示每一行输出的前缀和每一个层级的缩进：</p>
+<pre><code class="language-Json">[
+    {
+        &quot;Title&quot;: &quot;Casablanca&quot;,
+        &quot;released&quot;: 1942,
+        &quot;Actors&quot;: [
+            &quot;Humphrey Bogart&quot;,
+            &quot;Ingrid Bergman&quot;
+        ]
+    },
+    {
+        &quot;Title&quot;: &quot;Cool Hand Luke&quot;,
+        &quot;released&quot;: 1967,
+        &quot;color&quot;: true,
+        &quot;Actors&quot;: [
+            &quot;Paul Newman&quot;
+        ]
+    },
+    {
+        &quot;Title&quot;: &quot;Bullitt&quot;,
+        &quot;released&quot;: 1968,
+        &quot;color&quot;: true,
+        &quot;Actors&quot;: [
+            &quot;Steve McQueen&quot;,
+            &quot;Jacqueline Bisset&quot;
+        ]
+    }
+]
+
+</code></pre>
+<h5 id="jsonunmarshaldata-bytev-interface-error">json.Unmarshal(data []byte,v interface{}) error</h5>
+<p>将经过marshal序列化的字节切片反序列化，并将结果写入到v中。</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;encoding/json&quot;
+	&quot;fmt&quot;
+)
+
+type Name struct {
+	FirstName string
+	LastName  string
+}
+
+type FName struct {
+	FirstName string
+}
+
+func main() {
+	names := []Name{Name{FirstName: &quot;Rex&quot;, LastName: &quot;Zhou&quot;}, Name{FirstName: &quot;Chloe&quot;, LastName: &quot;Wang&quot;}}
+	encoded, err := json.Marshal(names)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(encoded)
+
+	var FNames []FName
+	json.Unmarshal(encoded, &amp;FNames)
+	for _, val := range FNames {
+		fmt.Println(val)
+	}
+}
+
+</code></pre>
+<p>output：</p>
+<pre><code>[91 123 34 70 105 114 115 116 78 97 109 101 34 58 34 82 101 120 34 44 34 76 97 115 116 78 97 109 101 34 58 34 90 104 111 117 34 125 44 123 34 70 105 114 115 116 78 97 109 101 34 58 34 67 104 108 111 101 34 44 34 76 97 115 116 78 97 109 101 34 58 34 87 97 110 103 34 125 93]
+{Rex}
+{Chloe}
+
+</code></pre>
+<p>可以看到，传给Unmarshal的对象，通过指定其结构体的字段，可以选择性的解码，上面只解码了FirstName，LastName没有解码。</p>
+<h5 id="关于结构体中有指针类型的json编码和解码">关于结构体中有指针类型的json编码和解码</h5>
+<p>一开始认为，如果结构体有指针，不管是自定义类型还是基础类型的指针，就是一个地址值而已，以为server传给client的就只有这个地址，而对于client而言，server的传来的地址值跟client是无关的，是server中局部变量的地址而已，所以对该现象表示疑问，因为有例子确实这样传输过来，client可以解引用该地址，得到正确的值。</p>
+<p>经过测试发现，假设在server中变量A的地址为a，而实际client收到的地址值并不是a，而是别的值，假设为b；这是因为不只是简单的传了个十六进制的地址值过来，而是连同server中指针指向的对象值也传过来了：</p>
+<p>server：</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;encoding/json&quot;
+	&quot;fmt&quot;
+	&quot;net&quot;
+	&quot;os&quot;
+)
+
+type Res struct {
+	A *int
+	B *int
+}
+
+func main() {
+	listener, _ := net.Listen(&quot;tcp4&quot;, os.Args[1])
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+		a, b := 123, 456
+		sendData := Res{&amp;a, &amp;b}
+		fmt.Println(&amp;a, &amp;b)
+		encoder := json.NewEncoder(conn)
+		encoder.Encode(sendData)
+		conn.Close()
+	}
+}
+
+</code></pre>
+<p>client：</p>
+<pre><code class="language-go">package main
+
+import (
+	&quot;encoding/json&quot;
+	&quot;fmt&quot;
+	&quot;net&quot;
+	&quot;os&quot;
+)
+
+type Res struct {
+	A *int
+	B *int
+}
+
+func main() {
+	conn, err := net.Dial(&quot;tcp4&quot;, os.Args[1])
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	decoder := json.NewDecoder(conn)
+	var result Res
+	decoder.Decode(&amp;result)
+	fmt.Println(result.A, *result.A)
+	fmt.Println(result.B, *result.B)
+	conn.Close()
+}
+
+</code></pre>
+<p>同一台机器下测试</p>
+<p>在server中打印的局部变量的地址值为：</p>
+<p>0xc0000182d0 0xc0000182d8</p>
+<p>而在client中打印收到的地址值为：</p>
+<p>0xc000018350 0xc000018360</p>
+<p>可以看到两者是不同的，且client可以正常的进行解引用，知道传来的值分别为123和456.</p>
+<p>所以使用json来传结构体中有指针的情况，不论指针有多少层（例如结构体A中有结构体B的指针，结构体B中有结构体C中的指针），不需要担心，它连同指向的底层数据也传过去了，并能够正确解码，在接收端能获取到具体数据。</p>
+<p>虽然没有看具体api的源码，但猜测是发送端同时将指针和其指向的数据一同序列化发给对端，而对端在接收时，应该是先创建相应的数据对象，根据传来的数据对这些对象赋值，然后再对这些对象取址赋给对端的指针。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">
+                <h3 class="post-title">
+                  Go语言数组与切片
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge success">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

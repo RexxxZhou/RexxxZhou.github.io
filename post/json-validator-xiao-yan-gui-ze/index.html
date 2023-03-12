@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>json validator 校验规则 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>json validator 校验规则</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>http://json-schema.org/understanding-json-schema/about.html</p>
+<p>json schema validation是用来校验请求的json格式是否为约定的格式，类似于一种协议检查，可以检查字段的类型，默认值，字段名等等，保证通过校验的json数据就是符合预期可以正常使用，不会导致程序core的一种工具。</p>
+<p>先来看一个schema的例子，json schema本身就是一个json描述的东西，所以内容上按照json直接解读就行了</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/MIUGxwcVf8XvYt2.png" alt="" loading="lazy"></figure>
+<h2 id="基础认识">基础认识</h2>
+<p>在json schema validator中，我们可以使用空对象{}或者true来表示任何符合json格式的数据都可通过校验，用false来表示任何数据校验都不通过</p>
+<figure data-type="image" tabindex="2"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE37b264f8e5f1613b14b1bee62bc955eb.png" alt="" loading="lazy"></figure>
+<p>在json schema validator中，type是用于描述某个字段的类型的，type关键字的用法：</p>
+<p>http://json-schema.org/understanding-json-schema/reference/type.html#type</p>
+<p>甚至还可以直接使用别人的schema，不需要自己再写一次schema：</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/08/28/c34R7yLHetFsm6o.png" alt="" loading="lazy"></figure>
+<h2 id="validator的详细文档">validator的详细文档</h2>
+<p>http://json-schema.org/understanding-json-schema/reference/index.html</p>
+<p>基本上看最开始的那个例子能够知道是怎么校验的，这里只补充一些平时开发中遇到的特殊信息描述，若还遇到新的，查上面的链接，继续补充文档</p>
+<h3 id="type">type</h3>
+<p>类似{&quot;type&quot;:&quot;string&quot;}表示字段是一个字符串，还有这种写法{&quot;type&quot;:[&quot;number&quot;,&quot;string&quot;]}，表示这个字段可以是数字，也可以是字符串</p>
+<h3 id="string字段校验">string字段校验</h3>
+<p>可以校验长度</p>
+<p>{&quot;type&quot;:&quot;string&quot;,&quot;minLength&quot;:2,&quot;maxLength&quot;:3}，字符串字段，并且长度为2-3个字符才能通过校验</p>
+<p>还可以正则匹配，只要字符串能正则匹配上，就会通过校验，不论匹配多少处</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/08/28/MfhSFxcZW4UiKud.png" alt="" loading="lazy"></figure>
+<p>校验格式</p>
+<p>{&quot;type&quot;:&quot;string&quot;,&quot;format&quot;:&quot;date&quot;} 类似这种的都是内置的格式校验（有多种，需要具体去看格式要求）：</p>
+<figure data-type="image" tabindex="5"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE8ef976ff8fd524465da9b84872dfffe6.png" alt="" loading="lazy"></figure>
+<h3 id="number字段校验">number字段校验</h3>
+<p>数值为某个数的倍数</p>
+<p>{&quot;type&quot;:&quot;number&quot;,&quot;multipleOf&quot;:10}</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/08/28/xmjLIw9WAkHe6B1.png" alt="" loading="lazy"></figure>
+<p>限制数值范围</p>
+<p>{&quot;type&quot;:&quot;number&quot;,&quot;minimum&quot;:10,&quot;maximum&quot;:20}</p>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/08/28/c8JX9bimUlHAD6O.png" alt="" loading="lazy"></figure>
+<p>exclusiveMaximum和exclusiveMinimum在新版的validator中是一个bool含义的字段，见下图</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/08/28/JhnyAZQSWqftDx7.png" alt="" loading="lazy"></figure>
+<h3 id="object对象字段">object对象字段</h3>
+<p>properties属性，表示这个obj有什么字段，可以对子对象进行嵌套判断，所有的属性规则都是适用于判断的。</p>
+<p>{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;key1&quot;:{&quot;type&quot;:&quot;string&quot;}}}</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/08/28/YMcX7FsQtjlH4U9.png" alt="" loading="lazy"></figure>
+<p>patternProperties对象的正则字段名</p>
+<p>{&quot;type&quot;:&quot;object&quot;,&quot;patternProperties&quot;:{&quot;^I_&quot;:{&quot;type&quot;:&quot;string&quot;}}}</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/08/28/3O7p4JtVgTQlzBC.png" alt="" loading="lazy"></figure>
+<p>additionalProperties是否有schema定义外的额外字段</p>
+<p>是一个bool量，false表示不允许，所有字段都必须出现在schema定义中，没有给出这个属性时，默认是允许有额外字段的。</p>
+<p>也可以给这个属性给一个schema的值，例如</p>
+<p>{&quot;type&quot;:&quot;object&quot;,&quot;additionalProperties&quot;:{&quot;type&quot;:&quot;string&quot;}}</p>
+<p>表示允许有额外的字段，但是必须是字符串，addtionalProperties可以和上面几个属性一起用</p>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/08/28/op3UAyl2tYHuKD9.png" alt="" loading="lazy"></figure>
+<p>要注意additonalProperties属性所在的层级，它只会限制它所在的object的schema定义</p>
+<p>required必填字段</p>
+<p>{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{&quot;key1&quot;:{&quot;type&quot;:&quot;number&quot;},&quot;key2&quot;:{&quot;type&quot;:&quot;string&quot;}</p>
+<p>},&quot;required&quot;:[&quot;key1&quot;,&quot;key2&quot;]} 表示字段key1 key2都必填，并且不能是null</p>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/08/28/AWxVT9OPwajhibv.png" alt="" loading="lazy"></figure>
+<p>还可以指定object的字段数量</p>
+<p>{&quot;type&quot;:&quot;object&quot;,&quot;minProperties&quot;:2,&quot;maxProperties&quot;:3}</p>
+<p>字段数必须是2-3</p>
+<h3 id="array数组字段">array数组字段</h3>
+<p>简单的数组检查{&quot;type&quot;:&quot;array&quot;}，这样任何数组json都可以通过校验，例如[1,2,3,4],[&quot;hello&quot;,&quot;world&quot;],[3, &quot;different&quot;, { &quot;types&quot; : &quot;of values&quot; }]</p>
+<p>数组检查有以下两种，一种是数组，一种是元组tuple（固定长度的数组）</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/08/28/w4dk6m1ZYVSEFIG.png" alt="" loading="lazy"></figure>
+<p>数组检查-items属性</p>
+<p>如果想要对数组内的元素有校验要求，可以使用items</p>
+<p>{&quot;type&quot;:&quot;array&quot;,&quot;items&quot;:{&quot;type&quot;:&quot;number&quot;}}</p>
+<p>items属性下可以是一个普通的schema值</p>
+<p>tuple检查-prefixItems属性</p>
+<p>tuple是一个固定长度的数组，往往是一些有固定含义的内容，使用prefixItems可以对这种情况进行校验</p>
+<p>下面的表示数组（tuple）中开头的四个元素必须是规定的类型</p>
+<figure data-type="image" tabindex="14"><img src="https://s2.loli.net/2022/08/28/ke8AFmTXis5qS6G.png" alt="" loading="lazy"></figure>
+<p>此时可以搭配items属性，表示是否允许有prefixItems定义的数量外的元素，此时和additionalProperties作用相当</p>
+<pre><code>{
+  &quot;type&quot;: &quot;array&quot;,
+  &quot;prefixItems&quot;: [
+    { &quot;type&quot;: &quot;number&quot; },
+    { &quot;type&quot;: &quot;string&quot; },
+    { &quot;enum&quot;: [&quot;Street&quot;, &quot;Avenue&quot;, &quot;Boulevard&quot;] },
+    { &quot;enum&quot;: [&quot;NW&quot;, &quot;NE&quot;, &quot;SW&quot;, &quot;SE&quot;] }
+  ],
+  &quot;items&quot;: false
+}
+</code></pre>
+<figure data-type="image" tabindex="15"><img src="https://s2.loli.net/2022/08/28/fsAx1XSeML9Rknp.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="16"><img src="https://s2.loli.net/2022/08/28/cPrhtgyeOwjMAWG.png" alt="" loading="lazy"></figure>
+<p>items属性强限制了数组中的元素类型和描述，可以使用contains属性表示只要数组中有符合指定类型的元素就行，不需要每个元素都满足</p>
+<pre><code>{
+   &quot;type&quot;: &quot;array&quot;,
+   &quot;contains&quot;: {
+     &quot;type&quot;: &quot;number&quot;
+   }
+}
+
+</code></pre>
+<figure data-type="image" tabindex="17"><img src="https://s2.loli.net/2022/08/28/obBxLwsZtqPgdIC.png" alt="" loading="lazy"></figure>
+<p>minContains、maxContains，限制contains的元素的数量</p>
+<figure data-type="image" tabindex="18"><img src="https://s2.loli.net/2022/08/28/kFnsqpOTXDJrVuU.png" alt="" loading="lazy"></figure>
+<p>minItems,maxItems限制元素数量，uniqueness限制是否允许重复</p>
+<figure data-type="image" tabindex="19"><img src="G:/youdaoyun-export/youdaonote-pull/export_files/youdaonote-images/WEBRESOURCE9f71d2f630a8fd3da83977471368d419.png" alt="" loading="lazy"></figure>
+<h3 id="composition复合schema">composition复合schema</h3>
+<p>这个是用于构建复杂的schema</p>
+<figure data-type="image" tabindex="20"><img src="https://s2.loli.net/2022/08/28/mIMGTt3BCYdl5qy.png" alt="" loading="lazy"></figure>
+<p>allOf表示所有的都必须满足，oneOf表示只能满足一个，anyOf表示需要满足一个或以上的schema，not表示不能是指定的schema</p>
+<p>要注意一些字段的特有关键词可以直接用，例如下面的allOf示例，首先要求是字符串，其次要求字符串的长度不能超过5（maxLength是字符串字段的特有属性）</p>
+<figure data-type="image" tabindex="21"><img src="https://s2.loli.net/2022/08/28/lmKV7QzR4jMahft.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="22"><img src="https://s2.loli.net/2022/08/28/2hNUsQuKgBVEqW7.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="23"><img src="https://s2.loli.net/2022/08/28/l9WsUPX2RBdrIH6.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="24"><img src="https://s2.loli.net/2022/08/28/ZyxeOBJcrVPLNqA.png" alt="" loading="lazy"></figure>
+<h3 id="条件判断-遇到再补充">条件判断。。遇到再补充</h3>
+<p>可以说json validator是无所不能了，校验的方式很全面，很丰富，能力很强</p>
+<p>https://json-schema.org/understanding-json-schema/reference/conditionals.html</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/apisix-api-wang-guan-xiang-jie/">
+                <h3 class="post-title">
+                  APISIX-api网关详解
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge secondary">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge secondary">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge secondary">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge warning">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

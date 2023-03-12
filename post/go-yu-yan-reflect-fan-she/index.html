@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言reflect反射 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言reflect反射</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h2 id="reflect">reflect</h2>
+<p>反射reflect是go标准库的一个包，可用于获取对象的类型和值。</p>
+<p><strong>反射是指在程序运行期对程序本身进行访问和修改的能力</strong>。程序在编译时，变量被转换为内存地址，变量名不会被编译器写入到可执行部分。在运行程序时，程序无法获取自身的信息。</p>
+<p>支持反射的语言可以在程序编译期将变量的反射信息，如字段名称、类型信息、结构体信息等整合到可执行文件中，并给程序提供接口访问反射信息，这样就可以在程序运行期获取类型的反射信息，并且有能力修改它们。</p>
+<p><strong>Go程序在运行期使用reflect包访问程序的反射信息</strong>。</p>
+<p>reflect包实现了运行时反射，允许程序操作任意类型的对象。典型用法是用静态类型interface{}保存一个值，通过调用TypeOf获取其动态类型信息，该函数返回一个Type类型值。调用ValueOf函数返回一个Value类型值，该值代表运行时的数据。Zero接受一个Type类型参数并返回一个代表该类型零值的Value类型值。</p>
+<p>Go 程序的反射系统无法获取到一个可执行文件空间中或者是一个包中的所有类型信息，需要配合使用标准库中对应的词法、语法解析器和抽象语法树（AST）对源码进行扫描后获得这些信息。</p>
+<p><strong>对于一个interface对象</strong>，通过reflect包可以获取interface对象实际承载的动态对象的类型和值信息；而<strong>对于非interface对象</strong>，则是获取该对象自身的类型和值信息。</p>
+<h4 id="通过reflect获取类型信息">通过reflect获取类型信息</h4>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170326374-1.png" alt="image" loading="lazy"></figure>
+<h5 id="reflecttypeofobj">reflect.Typeof(obj)</h5>
+<p>该函数获取任意值的类型对象，返回一个<strong>reflect.Type类型</strong>，通过这个返回值可以访问obj的类型信息</p>
+<h4 id="reflecttype类型的方法">reflect.Type类型的方法：</h4>
+<h5 id="iname-返回obj对象的类型名字符串如果obj是个指针那么该方法返回空字符串">i.Name() ：返回obj对象的类型名字符串，如果obj是个指针，那么该方法返回空字符串。</h5>
+<h5 id="iikind返回一个reflectkind类型的对象这个对象具有方法string返回obj类型种类的字符串">ii.Kind()：返回一个reflect.Kind类型的对象，这个对象具有方法String()，返回obj类型种类的字符串</h5>
+<p>需要区分Type和Kind</p>
+<p>1.类型Type指的是编译器推导出来，或者编码时我们声明的<strong>类型名</strong></p>
+<p>Go 程序中的类型（Type）指的是系统原生数据类型，如 int、string、bool、float32 等类型，以及使用 type 关键字定义的类型，这些类型的名称就是其类型本身的名称。例如使用 type A struct{} 定义结构体时，A 就是 struct{} 的类型。</p>
+<p>2.种类Kind是类型的归属，有以下分类</p>
+<pre><code class="language-go">type Kind uint
+
+const (
+	Invalid Kind = iota  // 非法类型
+	Bool								 // 布尔型
+	Int								   // 有符号整型
+	Int8								 // 有符号8位整型
+	Int16								 // 有符号16位整型
+	Int32								 // 有符号32位整型
+	Int64								 // 有符号64位整型
+	Uint								 // 无符号整型
+	Uint8								 // 无符号8位整型
+	Uint16							 // 无符号16位整型
+	Uint32							 // 无符号32位整型
+	Uint64							 // 无符号64位整型
+	Uintptr							 // 指针
+	Float32							 // 单精度浮点数
+	Float64							 // 双精度浮点数
+	Complex64						 // 32位复数类型
+	Complex128					 // 64位复数类型
+	Array								 // 数组
+	Chan								 // 通道
+	Func								 // 函数
+	Interface						 // 接口
+	Map								   // 映射
+	Ptr								   // 指针
+	Slice								 // 切片
+	String							 // 字符串
+	Struct							 // 结构体
+	UnsafePointer				 // 底层指针
+)
+</code></pre>
+<p>举例，一个指针类型，例如*A，它的Type为*A，而Kind则为Ptr，所有的指针对象的Kind都是Ptr；type B struct，B的类型Type为B，而其Kind为struct。</p>
+<h5 id="iiielem">iii.Elem()</h5>
+<p>该方法返回obj对象中元素的reflect.Type类型，因此只有当obj是array，slice，map，channel和指针的情况下才能使用，否则会panic。</p>
+<p>对于容器obj而言很好理解，就是获取容器装的数据的类型；而对于指针，则是获取其指向的对象的类型（这有特殊的用法）。</p>
+<h4 id="通过反射获取结构体的成员类型">通过反射获取结构体的成员类型</h4>
+<p>在通过reflect.TypeOf(obj)得到结构体对象的reflect.Type对象后，通过Type的下列方法，可以获取obj结构体中的成员类型。</p>
+<p>任意值通过 reflect.TypeOf() 获得反射对象信息后，如果它的类型是结构体，可以通过反射值对象（reflect.Type）的 NumField() 和 Field() 方法获得结构体成员的详细信息。</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Field(i int) StructField</td>
+<td>根据索引，返回索引对应的结构体字段的信息。当值不是结构体或索引超界时发生panic</td>
+</tr>
+<tr>
+<td>NumField() int</td>
+<td>返回结构体成员字段数量。当类型不是结构体或索引超界时发生panic</td>
+</tr>
+<tr>
+<td>FieldByName(name string) (StructField, bool)</td>
+<td>根据给定字符串返回字符串对应的结构体字段的信息。没有找到时 bool 返回 false，当类型不是结构体或索引超界时发生panic</td>
+</tr>
+<tr>
+<td>FieldByIndex(index []int) StructField</td>
+<td>**多层成员访问时，根据 []int 提供的每个结构体的字段索引，**返回字段的信息。没有找到时返回零值。当类型不是结构体或索引超界时 发生panic</td>
+</tr>
+<tr>
+<td>FieldByNameFunc( match func(string) bool) (StructField,bool)</td>
+<td>根据匹配函数匹配需要的字段。当值不是结构体或索引超界时发生panic</td>
+</tr>
+</tbody>
+</table>
+<p>reflect.StructField类型包含了结构体字段类型的信息，成员Name是字段名，成员Type是字段类型名，成员Index是该字段在结构体中的索引顺序，按照从0开始。</p>
+<pre><code class="language-go">type StructField struct {
+    Name string          // 字段名
+    PkgPath string       // 字段路径
+    Type      Type       // 字段反射类型对象
+    Tag       StructTag  // 字段的结构体标签
+    Offset    uintptr    // 字段在结构体中的相对偏移
+    Index     []int      // Type.FieldByIndex中的返回的索引值
+    Anonymous bool       // 是否为匿名字段
+}
+</code></pre>
+<h4 id="通过反射获取值信息">通过反射获取值信息</h4>
+<p>**反射不仅可以获取值的类型信息，还可以动态地获取或者设置变量的值。**Go语言中使用 reflect.Value 获取和设置变量的值。变量、interface{}和reflect.Value是可以相互转换的。</p>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/rexxxzhou/mdpicsrepo/raw/master/pic/20210622/170341802-1.png" alt="image" loading="lazy"></figure>
+<h4 id="通过reflectvalueofobj获取obj的值信息">通过reflect.ValueOf(obj)获取obj的值信息</h4>
+<p>该函数返回一个reflect.Value类型的对象，包含有obj的值相关的信息。</p>
+<p>从Value类型获取值信息的方法：</p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>说 明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interface() interface{}</td>
+<td>将值以 interface{} 类型返回，可以通过类型断言转换为指定类型</td>
+</tr>
+<tr>
+<td>Int() int64</td>
+<td>将值以 int 类型返回，所有有符号整型均可以此方式返回</td>
+</tr>
+<tr>
+<td>Uint() uint64</td>
+<td>将值以 uint 类型返回，所有无符号整型均可以此方式返回</td>
+</tr>
+<tr>
+<td>Float() float64</td>
+<td>将值以双精度（float64）类型返回，所有浮点数（float32、float64）均可以此方式返回</td>
+</tr>
+<tr>
+<td>Bool() bool</td>
+<td>将值以 bool 类型返回</td>
+</tr>
+<tr>
+<td>Bytes() []bytes</td>
+<td><strong>将值以字节数组 []bytes 类型返回</strong></td>
+</tr>
+<tr>
+<td>String() string</td>
+<td>将值以字符串类型返回</td>
+</tr>
+</tbody>
+</table>
+<p><strong>反射值对象（reflect.Value）提供对结构体访问的方法</strong>，通过这些方法可以完成对结构体任意值的访问，</p>
+<p>若obj是结构体，通过Value对象获取obj成员的值信息：</p>
+<table>
+<thead>
+<tr>
+<th>方 法</th>
+<th>备 注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Field(i int) Value</td>
+<td>根据索引，返回索引对应的结构体成员字段的反射值对象。当值不是结构体或索引超界时发生宕机</td>
+</tr>
+<tr>
+<td>NumField() int</td>
+<td>返回结构体成员字段数量。当值不是结构体或索引超界时发生宕机</td>
+</tr>
+<tr>
+<td>FieldByName(name string) Value</td>
+<td>根据给定字符串返回字符串对应的结构体字段。没有找到时返回零值，当值不是结构体或索引超界时发生宕机</td>
+</tr>
+<tr>
+<td>FieldByIndex(index []int) Value</td>
+<td>多层成员访问时，根据 []int 提供的每个结构体的字段索引，返回字段的值。 没有找到时返回零值，当值不是结构体或索引超界时发生宕机</td>
+</tr>
+<tr>
+<td>FieldByNameFunc(match func(string) bool) Value</td>
+<td>根据匹配函数匹配需要的字段。找到时返回零值，当值不是结构体或索引超界时发生宕机</td>
+</tr>
+</tbody>
+</table>
+<p>通过反射值对象（reflect.Value）判断值是否为空和有效性：</p>
+<table>
+<thead>
+<tr>
+<th>方 法</th>
+<th>说 明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IsNil() bool</td>
+<td>返回值是否为 nil。如果值类型不是通道（channel）、函数、接口、map、指针或 切片时发生 panic，类似于语言层的<code>v== nil</code>操作</td>
+</tr>
+<tr>
+<td>IsValid() bool</td>
+<td>判断值是否有效。 当值本身非法时，返回 false，例如 reflect Value不包含任何值，值为 nil 等。</td>
+</tr>
+</tbody>
+</table>
+<p>通过通过反射值对象（reflect.Value）修改obj的值</p>
+<p><strong>使用 reflect.Value 对包装的值进行修改时</strong>，需要遵循一些规则。如果没有按照规则进行代码设计和编写，轻则无法修改对象值，重则程序在运行时会发生宕机。</p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>备 注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Elem() Value</td>
+<td>取值指向的元素值，<strong>类似于语言层<code>*</code>操作</strong>。当值类型不是指针或接口时发生宕 机，空指针时返回 nil 的 Value</td>
+</tr>
+<tr>
+<td>Addr() Value</td>
+<td>对可寻址的值返回其地址，<strong>类似于语言层<code>&amp;</code>操作</strong>。当值不可寻址时发生宕机</td>
+</tr>
+<tr>
+<td>CanAddr() bool</td>
+<td>表示值是否可寻址</td>
+</tr>
+<tr>
+<td>CanSet() bool</td>
+<td>返回值能否被修改。<strong>要求值可寻址且是导出的字段</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="值修改相关方法">值修改相关方法</h4>
+<p>使用 reflect.Value 修改值的相关方法如下表所示。</p>
+<p>反射值对象修改值的方法</p>
+<table>
+<thead>
+<tr>
+<th>Set(x Value)</th>
+<th>将值设置为传入的反射值对象的值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setlnt(x int64)</td>
+<td>使用 int64 设置值。当值的类型不是 int、int8、int16、 int32、int64 时会发生宕机</td>
+</tr>
+<tr>
+<td>SetUint(x uint64)</td>
+<td>使用 uint64 设置值。当值的类型不是 uint、uint8、uint16、uint32、uint64 时会发生宕机</td>
+</tr>
+<tr>
+<td>SetFloat(x float64)</td>
+<td>使用 float64 设置值。当值的类型不是 float32、float64 时会发生宕机</td>
+</tr>
+<tr>
+<td>SetBool(x bool)</td>
+<td>使用 bool 设置值。当值的类型不是 bod 时会发生宕机</td>
+</tr>
+<tr>
+<td>SetBytes(x []byte)</td>
+<td>设置字节数组 []bytes值。当值的类型不是 []byte 时会发生宕机</td>
+</tr>
+<tr>
+<td>SetString(x string)</td>
+<td>设置字符串值。当值的类型不是 string 时会发生宕机</td>
+</tr>
+</tbody>
+</table>
+<p><strong>通过反射值对象来修改obj需要满足下面的条件：</strong></p>
+<p><strong>1.值可被寻址</strong></p>
+<p>reflect.ValueOf(x)实际上用的是x的副本来生成一个反射值对象，该反射值对象跟踪的是x的副本，而不是原始的x，也即跟踪的是一个匿名对象，所以这个对象是没办法寻址的，所以不能修改它的值。</p>
+<p>而reflect.ValueOf(&amp;x)则可以，虽然本质上是跟踪的是x指针的副本，但是由于是地址，可以通过下面的方式进行修改：</p>
+<pre><code class="language-go">x:=123
+valOfx:=reflect.ValueOf(&amp;x)
+modifyX:=valOfX.Elem()
+modifyX.SetInt(456)
+fmt.Println(x)
+//output
+456
+</code></pre>
+<p>因为Value.Elem()方法是获取obj指向的对象的反射值（reflect.Value），然后通过这个反射值对象进行修改。</p>
+<p><strong>2.结构体中的成员必须是导出的，不然无法修改这些成员的值</strong></p>
+<p>下面的代码会panic</p>
+<pre><code class="language-go">type Name struct {
+	firstName string `json:&quot;FirstName&quot;`
+	LastName  string
+	Ptr       *int
+}
+func main(){
+    sname:=Name{&quot;rex&quot;,&quot;feng&quot;}
+    NameVal:=reflect.ValueOf(&amp;sname)
+    NameVal=NameVal.Elem()
+    NameVal.Field(0).SetString(&quot;hello&quot;) //panic firstName是未导出的字段
+}
+</code></pre>
+<p>正确的是：</p>
+<pre><code class="language-go">func main(){
+    sname:=Name{&quot;rex&quot;,&quot;feng&quot;}
+    NameVal:=reflect.ValueOf(&amp;sname)
+    NameVal=NameVal.Elem()
+    NameVal.Field(1).SetString(&quot;hello&quot;) //没问题，因为LastName是导出的字段
+}
+</code></pre>
+<p>值的修改从表面意义上叫可寻址，换一种说法就是值必须“可被设置”。那么，想修改变量值，一般的步骤是：</p>
+<ol>
+<li>取这个变量的地址或者这个变量所在的结构体已经是指针类型。</li>
+<li>使用 reflect.ValueOf 进行值包装。（reflect.ValueOf(&amp;x)）</li>
+<li>通过 Value.Elem() 获得指针值指向的元素值对象（Value），因为值对象（Value）内部对象为指针时，使用 set 设置时会报出宕机错误。</li>
+<li>使用 Value.SetXXX 设置值。</li>
+</ol>
+<h4 id="通过类型信息创建实例">通过类型信息创建实例</h4>
+<p>函数原型 reflect.New(r reflect.Type) reflect.Value</p>
+<p>根据一个reflect.Type来创建该类型的Value，例如如果有一个reflect.Type跟踪的是int类型，那么根据这个函数，能够得到int的指针类型的反射值对象：</p>
+<pre><code class="language-go">y := 777
+typeOfY := reflect.TypeOf(y)
+valOfNewY := reflect.New(typeOfY)
+fmt.Println(valOfNewY.Type(), valOfNewY.Kind())
+//output
+*int ptr
+</code></pre>
+<h4 id="通过反射调用函数">通过反射调用函数</h4>
+<p>如果反射值reflect.Value中值的类型是一个函数，那么可以通过Value的方法Call来调用该函数，但是传给Call的参数是一个反射值对象的切片，这个切片是函数每个参数的反射值对象：</p>
+<p>Call方法的原型： func (reflect.Value).Call(in []reflect.Value) []reflect.Value</p>
+<p>例子：</p>
+<pre><code class="language-go">func Add(a, b int) int {
+	return a + b
+}
+
+func main(){
+	valOfAdd := reflect.ValueOf(Add)
+	list := []reflect.Value{reflect.ValueOf(1), reflect.ValueOf(2)}
+	fmt.Println(valOfAdd.Call(list)[0].Int())
+}
+//output
+3
+</code></pre>
+<p>反射调用函数的过程需要构造大量的 reflect.Value 和中间变量，对函数参数值进行逐一检查，还需要将调用参数复制到调用函数的参数内存中。调用完毕后，还需要将返回值转换为 reflect.Value，用户还需要从中取出调用值。因此，<strong>反射调用函数的性能问题尤为突出，不建议大量使用反射函数调用</strong>。</p>
+<h4 id="通过反射调用方法">通过反射调用方法</h4>
+<p>和上面调用函数相似，只不过需要先得到通过结构体的反射值对象的Method方法来得到结构体的方法：</p>
+<pre><code class="language-go">type Name struct {
+	firstName string `json:&quot;FirstName&quot;`
+	LastName  string
+	Ptr       *int
+}
+func (n Name) Print() {
+	fmt.Println(n.firstName, n.LastName)
+}
+func main(){
+	valOfName := reflect.ValueOf(Name{})
+	fmt.Println(valOfName.NumMethod())
+	valOfName.Method(0).Call([]reflect.Value{})
+}
+</code></pre>
+<p><strong>方法必须是导出的，大写开头才行</strong>，如果是print而不是Print，NumMethod返回的是0。</p>
+<p>注意:在反射值对象中方法索引的顺序并不是结构体方法定义的先后顺序 ，而是根据方法的ASCII码值来从小到大，从0开始排序。</p>
+<hr>
+<p>可以在interface和reflect对象之间进行转换，详细可看：</p>
+<p>https://blog.golang.org/laws-of-reflection，谈到了reflect包的三种规律。</p>
+<pre><code class="language-go">// Interface returns v's value as an interface{}.
+func (v Value) Interface() interface{}
+
+</code></pre>
+<p>通过reflect.Value的Interface方法，能够得到一个interface对象，其承载的值就是Value对象跟踪的值。</p>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-proto-bao/">
+                <h3 class="post-title">
+                  Go语言proto包
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge warning">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge success">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge ">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge secondary">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge warning">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

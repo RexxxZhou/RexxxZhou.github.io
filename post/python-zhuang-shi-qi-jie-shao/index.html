@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Python装饰器介绍 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Python装饰器介绍</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+                  python
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>python装饰器，简单来说就是一个返回函数的函数或者实现了__call__函数的返回函数的类装饰器。和闭包函数很像，每个都是一个独立的实例</p>
+<p>通过@符号来扩展函数能力</p>
+<p>https://www.cnblogs.com/mark-zh/p/11384546.html</p>
+<p>如果装饰器不带参数：</p>
+<pre><code class="language-javascript">def my_decorator(func):
+    def inner_func(*args,**kwargs):
+        print('in inner func')
+        return func(*args,**kwargs)
+    return inner_func
+    
+@my_decorator
+def my_func(string):
+    print(string)
+    
+my_func('nihao') # 等价于my_decorator(my_func)('nihao')
+# output: 
+in inner func
+nihao
+</code></pre>
+<p>如果装饰器带参数：</p>
+<pre><code class="language-javascript">def my_decorator(dec_var):
+    def dec(func):
+        def inner_func(*args,**kwargs):
+            print('in inner func')
+            print(dec_var)
+            return func(*args,**kwargs)
+        return inner_func
+    return dec
+    
+@my_decorator('dec_var=hello')
+def my_func(string):
+    print(string)
+    
+my_func('nihao') #等价于 my_decorator('dec_var=hello')(my_func)('nihao')
+#output
+in inner func
+dec_var=hello
+nihao
+</code></pre>
+<p>如果是装饰器类，不带参数的话，需要满足：</p>
+<p>基于类装饰器的实现，必须实现__call__和__init__两个内置函数。</p>
+<p><strong>init</strong>：接收被装饰函数</p>
+<p><strong>call</strong>：实现装饰逻辑</p>
+<pre><code class="language-javascript">class logger(object):
+    def __init__(self,func):
+        self._func=func
+    
+    def __call__(self,*args,**kwargs):
+        print('in logger class')
+	     return self._func(*args,**kwargs)
+        
+@logger
+def my_func(string):
+    print(string)
+    
+my_func('nihao')
+#output
+in logger class
+nihao
+</code></pre>
+<p>如果是装饰器类，带参数的话，需要满足：</p>
+<p>基于类装饰器的实现，必须实现__call__和__init__两个内置函数。</p>
+<p><strong>init</strong>：不再接收被装饰函数，而是接收传入的参数</p>
+<p><strong>call</strong>：接收被装饰的函数，实现装饰逻辑</p>
+<pre><code class="language-javascript">class logger(object):
+    def __init__(self,level):
+        self.level=level
+    
+    def __call__(self,func,*args,**kwargs):
+        def my_decorator(*args,**kwargs):
+            print('in logger class')
+    	func(*args,**kwargs)
+        return my_decorator
+        
+@logger
+def my_func(string):
+    print(string)
+    
+#output
+in logger class
+nihao
+</code></pre>
+<p>被类装饰之后，还可以直接访问类的方法，像继承一样,__call__就像是为类扩展了新的函数能力（my_func），然后通过my_func又可以访问别的类成员，又反过来扩展了my_func的能力，其实可以这么理解，被类装饰的函数，他需要先生成类的实例，所以自然而然这个被装饰的函数就成为了一个入口来访问类的方法和成员：</p>
+<pre><code class="language-javascript">class Deco(object):
+    local_val='helloworld'
+    def __init__(self,func):
+        self._func=func
+    def __call__(self,*args,**kwargs):
+        print('in Deco class')
+        return self._func(*args,**kwargs)
+    def local_func(self):
+        print('it is local func')
+@Deco
+def my_func(val):
+    print(val)
+my_func('nihao')
+my_func.local_func()
+print(my_func.local_val)
+
+#output
+in Deco class
+nihao
+it is local func
+helloworld
+</code></pre>
+<p>总之就是包几层的问题而已，使用装饰器后，函数的__name__属性会成为return的函数名，例如my_func.__name__会变成my_decorator，可以使用functools.wraps这个装饰器来获取原函数信息：</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/08/28/xVXyWdpNuKhJZR7.png" alt="" loading="lazy"></figure>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/python-zheng-ze-pi-pei/">
+                <h3 class="post-title">
+                  Python正则匹配
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge success">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge ">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge ">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge ">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge secondary">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge success">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge ">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge warning">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言类型 | Rexxxx&#39;s Blog</title>
+<meta name="description" content="Life is a fucking movie, enjoy.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://rexxxzhou.github.io/favicon.ico?v=1678621911113">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://rexxxzhou.github.io/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://rexxxzhou.github.io">Rexxxx&#39;s Blog</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>Go语言类型</h1>
+            <p class="article-meta">
+              2022-08-28
+              
+                <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge warning">
+                  Golang
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <h3 id="go语言的指针类型">Go语言的指针类型</h3>
+<p>声明指针：</p>
+<pre><code class="language-go">var ptr *int
+var p_array [5]*int
+</code></pre>
+<h4 id="指针数组">指针数组</h4>
+<pre><code class="language-go">const max = 3
+
+func main() {
+    number := [max]int{5, 6, 7}
+    var ptrs [max]*int //指针数组
+    //将number数组的值的地址赋给ptrs
+    for i, x := range number {
+        ptrs[i] = &amp;x
+    }
+    for i, x := range ptrs {
+        fmt.Printf(&quot;指针数组：索引:%d 值:%d 值的内存地址:%d\n&quot;, i, *x, x)
+    }
+}
+//输出如下
+指针数组：索引:0 值:7 值的内存地址:824634204304
+指针数组：索引:1 值:7 值的内存地址:824634204304
+指针数组：索引:2 值:7 值的内存地址:824634204304
+</code></pre>
+<p>上述写法中，之所以值和地址都一样，是因为这种写法中，每次往指针数组里存的都是局部变量x的地址和值，到最后一次循环的时候x=7，所以最终结果如输出结果一样。<strong>与range一起使用来对指针数组赋值时尤其要注意这点</strong>。</p>
+<p>正确写法应为：</p>
+<pre><code class="language-go">const max = 3
+
+func main() {
+    number := [max]int{5, 6, 7}
+    var ptrs [max]*int //指针数组
+    //将number数组的值的地址赋给ptrs
+    for i := 0; i &lt; max; i++ {
+        ptrs[i] = &amp;number[i]
+    }
+    for i, x := range ptrs {
+        fmt.Printf(&quot;指针数组：索引:%d 值:%d 值的内存地址:%d\n&quot;, i,*x, x)
+    }
+}
+</code></pre>
+<h4 id=""></h4>
+<h4 id="指向指针的指针">指向指针的指针</h4>
+<p>声明方式</p>
+<pre><code>var ptr **int
+</code></pre>
+<h4 id="函数的指针形参">函数的指针形参</h4>
+<pre><code class="language-go">func myfun(ptr *int) [return type]{/* code */}
+</code></pre>
+<hr>
+<h3 id="go语言的结构体">Go语言的结构体</h3>
+<p>声明结构体</p>
+<pre><code>type mystruct struct{
+	member1 type
+	member2 type
+	...
+	member3 type
+}
+</code></pre>
+<p>初始化结构体</p>
+<pre><code>s1:=mystruct{val1,val2,val3...}
+
+key value形式初始化
+s2:=mystruct{member1:val1,member2:val2...}
+忽略的成员字段为零值
+s3:=mystruct{member1:val1}
+</code></pre>
+<p>访问结构体的成员</p>
+<p>通过句号运算符来访问</p>
+<pre><code>s1:=mystruct{1,2,3}
+s1.member2=6
+fmt.Println(s1.member1)//输出1
+</code></pre>
+<p>结构体的指针</p>
+<pre><code>var sp *mystruct
+sp1:=&amp;s1
+//指针访问结构体成员也是句号运算符：
+//s1.member1和sp.member1等价 这点和C++有所区别
+
+</code></pre>
+<p><strong>结构体成员的可见性（public和private）</strong></p>
+<p>首字母大写的是public成员，小写的是private成员</p>
+<p><strong>这里的可见性是包与包之间的可见性</strong>，包A中有个结构体S，包B中想要访问S的成员的话，必须S中的成员变量名是首字母大写的</p>
+<p>当要将结构体对象转换为 JSON 时，对象中的属性首字母必须是大写，才能正常转换为 JSON。</p>
+<pre><code class="language-go">type Person struct {
+　　　Name string　　　　　　//Name字段首字母大写
+　　　age int               //age字段首字母小写
+}
+
+func main() {
+　　person:=Person{&quot;小明&quot;,18}
+　　if result,err:=json.Marshal(&amp;person);err==nil{  //json.Marshal 将对象转换为json字符串
+　　　　fmt.Println(string(result))
+　　}
+}
+
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-go">{&quot;Name&quot;:&quot;小明&quot;}    //只有Name，没有age
+
+</code></pre>
+<p>那这样 JSON 字符串以后就只能是大写了么？ 当然不是，可以使用 tag 标记要返回的字段名。</p>
+<pre><code class="language-go">type Person  struct{
+   　　Name  string   `json:&quot;name&quot;`　  //标记json名字为name　　　
+   　　Age    int     `json:&quot;age&quot;`
+   　　Time int64    `json:&quot;-&quot;`        // 标记忽略该字段
+
+}
+
+func main(){
+　　person:=Person{&quot;小明&quot;,18, time.Now().Unix()}
+　　if result,err:=json.Marshal(&amp;person);err==nil{
+　　　fmt.Println(string(result))
+　　}
+}
+
+</code></pre>
+<p>控制台输出：</p>
+<pre><code class="language-go">{&quot;name&quot;:&quot;小明&quot;,&quot;age&quot;:18}
+
+</code></pre>
+<p><strong>结构体嵌套，实现继承关系</strong></p>
+<pre><code class="language-go">type s1 struct{
+	radius float32
+}
+type s2 struct{
+	s1 //匿名父类
+	height float32
+}
+
+func main(){
+	mystruct:=s2{s1{radius:1.23},5.666}
+	fmt.Println(mystruct.radius,mystruct.height)
+}
+//output 1.23 5.666
+
+</code></pre>
+<p>在子结构体中使用匿名父类，实现继承关系，子结构体可访问父类中的所有成员，父类如同在子结构体中展开了一般。<strong>子结构体不仅继承了父类的所有成员，也继承了父类的所有方法（相当于子类也实现了这些方法一样）</strong>，子结构体的对象都可以访问父类的方法和成员。</p>
+<p><code>s2{s1{radius:1.23},5.666}</code>这里的父类s1的初始化很像C++中子类构造函数指定如何初始化父类一样:</p>
+<pre><code class="language-go">type s1 struct{
+	radius float32
+}
+type s2 struct{
+	s1
+	height float32
+}
+
+func main(){
+	my_struct:=s2{s1:s1{123},height:456} //这个是指定字段初始化
+    my_struct2:=s2{s1{123},456} //这个是按照s2声明的成员顺序初始化
+}
+
+</code></pre>
+<p>如果父类与子结构体有<strong>相同的字段</strong>，则访问父类中的同名字段时，<strong>需要加上父类的类名</strong>，而子结构体的则直接访问：</p>
+<pre><code class="language-go">type s1 struct{
+	same string
+}
+type s2 struct{
+	s1
+	same string
+}
+func main(){
+	mystruct:=s2{}
+	mystruct.s1.same=&quot;hello&quot;
+	mystruct.same=&quot;world&quot;
+	fmt.Println(mystruct.s1.same,mystruct.same) //output hello world
+}
+
+</code></pre>
+<hr>
+<h3 id="go语言的范围range">Go语言的范围（range）</h3>
+<p>关键字range在go中是用来迭代数组、切片、channel和map元素（可迭代对象）的，对于数组和切片而言，得到是索引和元素的值，而对于map而言，得到的是键值对</p>
+<pre><code class="language-go">//example1
+slice:=[]int{1,2,3,4,5}
+sum：=0
+for idx,_:=range slice{
+	sum+=slice[idx]
+}
+fmt.Println(sum) //output 15
+
+//example2
+m := map[string]string{&quot;a&quot;: &quot;hello&quot;, &quot;b&quot;: &quot;world&quot;}
+for k, v := range m {
+    fmt.Printf(&quot;key: %s value: %s &quot;, k, v)
+} //output key: a value: hello key: b value: world
+
+</code></pre>
+<p>range还可用于迭代字符串，<strong>返回每个字符的下标和该字符对应unicode的值(也即一个rune类型的值)</strong></p>
+<pre><code class="language-go">str := &quot;你好&quot;
+for idx, val := range str {
+fmt.Println(idx, val)
+}
+// output 
+//0 20320
+//3 22909
+for idx:=range str{
+    fmt.Println(idx)
+}//output 0 3 返回的是每个字符的索引，由于你好两个字是三个字节为单位，所以返回的是0，3
+//对于数组和切片而言，这种写法都是返回的下标索引
+
+</code></pre>
+<p>通过range实现范围for也可以不需要使用range的返回值：</p>
+<pre><code class="language-go">slice:=[]int{1，2，3，4，5}
+count:=0
+for range slice{
+	count++
+}
+fmt.Println(count) //输出5
+
+</code></pre>
+<hr>
+<h3 id="go语言的map类型">Go语言的map类型</h3>
+<p>map是<strong>无序的</strong>键值对存储容器，底层使用<strong>hash_table实现</strong>，与C++的map有区别，与python的字典相似，遍历map时并不知道键值对谁先谁后。</p>
+<p>声明方式：</p>
+<pre><code class="language-go">var my_map map[key_type] value_type//这种方式不初始化的话声明了一个nil的map，无法进行键值对的存储
+my_map:=make(map[key_type]value_type)//这种方式不初始化虽然是空map，但是可以进行键值对的插入
+
+</code></pre>
+<p><strong>通过make创建map时，已经完成了初始化</strong>，是一个空map；此外，下面这种方式也是初始化了：</p>
+<pre><code class="language-go">another_map:=map[int]string{1:&quot;hhh&quot;,2:&quot;www&quot;}
+my_map:=map[int]string{}//空map，但初始化了，可以存储kv
+my_map[1]=&quot;helloworld&quot;//此时和C++的字典使用方法一样，已存在的key则会赋予新的值，不存在的key则生成一个新的kv对，存入map中
+
+</code></pre>
+<p>但单纯只是声明的话，得到的是一个nil，无法进行存储：</p>
+<pre><code class="language-go">var map1 map[int]string // nil
+map1[1]=&quot;helloworld&quot; //runtime error
+
+</code></pre>
+<p>可以通过下面的方法取判断map中是否存在某个key，如果不存在，则通过下标访问符得到的是个空值：</p>
+<pre><code class="language-go">my_map := make(map[int]string)
+my_map[1] = &quot;helloworld&quot; //插入kv对
+fmt.Println(my_map)
+v1 := my_map[2] //因为key 2不存在，v1是一个value类型的空值=&quot;&quot;
+if v1 == &quot;&quot; {
+fmt.Println(&quot;empty key 2&quot;)
+}
+fmt.Println(my_map)
+_, exists := my_map[3] //_是键值对的value，这里不使用，exists是一个bool类型，map中有该key则为true，否则为false
+if exists {
+fmt.Println(&quot;key 3 exists&quot;)
+} else {
+fmt.Println(&quot;key 3 doesn't exists&quot;)
+}
+fmt.Println(my_map)
+//output:
+//map[1:helloworld]
+//empty key 2
+//map[1:helloworld]
+//key 3 doesn't exists
+//map[1:helloworld]
+
+</code></pre>
+<p>在C++中，map通过中括号的访问会新增kv对或者修改key对应的value值，而在上述的代码中，两次通过[]获取map中的元素，都<strong>没有增加map中新的kv对</strong>，这与C++是不同的。C++的结果如下：</p>
+<pre><code class="language-c++"> #include&lt;map&gt;
+ #include&lt;iostream&gt;
+ #include&lt;string&gt;
+ int main(){
+         std::map&lt;int,std::string&gt; my_map;
+         std::cout&lt;&lt;my_map[1];
+         std::cout&lt;&lt;my_map.size()&lt;&lt;std::endl;
+         if(my_map[1]==&quot;&quot;)
+                 std::cout&lt;&lt;&quot;key 1 == empty&quot;&lt;&lt;std::endl;
+}//output
+//1
+//key 1 == empty
+
+</code></pre>
+<p>对map的range for循环</p>
+<pre><code class="language-go">my_map:=map[string]string{&quot;hello&quot;:&quot;world&quot;,&quot;nihao&quot;:&quot;dajiahao&quot;}
+for k,v:=range my_map{ //kv分别为键和值
+	/* code */
+}
+for k:=range my_map{  //k 是key
+	/* code */
+}
+
+</code></pre>
+<h4 id="delete函数">delete函数</h4>
+<p>delete函数用于删除map中的元素，参数为map和想要删除的key</p>
+<pre><code class="language-go">my_map1:=map[string]string{&quot;hello&quot;:&quot;world&quot;,&quot;nihao&quot;:&quot;dajiahao&quot;}
+delete(my_map1,&quot;hello&quot;)
+fmt.Println(my_map1)
+//output
+//map[nihao:dajiahoa]
+
+</code></pre>
+<hr>
+<h3 id="go语言类型转换">Go语言类型转换</h3>
+<p>类型强制转换（显式）和C++的写法很像</p>
+<pre><code class="language-go">type(expression)
+//example
+var i1 int32=5
+var i2 int32=10
+f1:=float32(i1)/float32(i2)  //0.5
+
+</code></pre>
+<p>go<strong>不支持类型隐式转换</strong></p>
+<pre><code class="language-go">var f1 float32=0.1
+var f2 float64=0.2
+res:=f1/f2 //wrong msg: invalid operation: mismatched types float64 and float32
+//除非 res:=f1/float32(f2)才能过编译
+
+</code></pre>
+<hr>
+<h3 id="go语言接口类型">Go语言接口类型</h3>
+<p>接口和直观上的理解一样，很多内置的函数，或者自己编写的函数，可能存在对某个类调用同名的方法（形参、返回类型都一样），就可以实现多态。此时，为一个类型实现接口的方法，在后续别的地方使用时，就可以实现回调。</p>
+<p>接口类型是声明了一系列共性方法的一种类型，声明方式为：</p>
+<pre><code class="language-go">type my_interface interface{
+	func1(params) [return type]
+	func2(params) [return type]
+}
+
+</code></pre>
+<p>任何其他类型实现了上述的这些方法（func_i），则是实现了这个接口：</p>
+<pre><code class="language-go">func(ms mystruct) func1(){   //自定义结构体类型mystruct
+	/* code */    
+}
+
+func(ms newStruct) func1(){ //自定义结构体类型newStruct
+	/* code */
+}
+//其实和之前函数教程中写某个类的方法的方式是一样的，本质上都是一样的
+
+</code></pre>
+<p>上述的代码中，两个自定义的类都实现了接口中的func1函数，通过接口对象来调用这个函数的过程如下</p>
+<pre><code class="language-go">var inter my_interface
+inter=new(mystruct)
+inter.func1()  //调用mystruct实现的函数
+inter=new(newStruct)
+inter.func1()  //调用newStruct实现的函数
+
+</code></pre>
+<p>这种方式<strong>有点像基类指针指向派生类</strong>，而接口中的函数相当于虚函数一样，然后通过接口对象（基类）访问自定义的类（派生类）实现的方法（虚函数）。但使用这种方法的前提是，自定义的类（派生类）<strong>必须把接口中所有声明的函数都实现</strong>了，不然无法过编译（以这里的例子而言，还需实现func2函数）。</p>
+<p><strong>接口类型的变量可以保存任何实现了该接口的类型的值</strong>，自定义的类型实现接口中的方法可以是值也可以是指针作为接收者，而没有硬性要求必须全为值或全为指针接收者，但只要有一个方法是指针接收者实现的，则在赋给接口变量的时候，就必须取址：</p>
+<pre><code class="language-go">type MyInterface interface {
+	read()
+	write()
+}
+
+func (m MyStruct) read() {  //这里是值接收者
+	fmt.Println(m.radius)
+}
+func (m *MyStruct) write() { //这里是指针接收者
+	fmt.Println(m.radius)
+}
+func main() {
+	ms := &amp;MyStruct{1.2, 2.4}  //ms是指针
+	var inter MyInterface
+	inter = ms //因为有指针接收者实现的方法，则赋给接口对象的必须是个指针
+	inter.read()
+	inter.write()
+}
+
+</code></pre>
+<p><strong>接口本身也是一个值，它可以看作一个包含具体值和类型的元组（value,type）</strong>，这里的value指的是赋给接口的对象的值，而type即为该对象的类型，<strong>可用于做类型断言（下面的笔记有写）</strong>。接口对象调用接口中的方法实际上调用的就是底层对象value的方法，如上main函数中的inter。</p>
+<p>如果将变量A通过值赋给接口对象，那么接口对象底层的具体值是个A的副本；而如果是通过指针赋给接口对象，则接口底层对象是A的指针，此时接口对底层具体值的修改会影响变量A本身。</p>
+<p>假设类型A使用指针接收者实现了接口，<strong>如果赋给接口对象inter的是一个A的nil指针，这时候接口对象并不为nil</strong>，只是底层的value是个nil指针，类型type是*A。当然这是如果inter调用了方法，可能出现panic，可以通过如下方式进行保护：</p>
+<pre><code class="language-go">type I interface {
+	M()
+}
+
+type T struct {
+	S string
+}
+
+func (t *T) M() {
+	if t == nil {
+		fmt.Println(&quot;&lt;nil&gt;&quot;)
+		return
+	}
+	fmt.Println(t.S)
+}
+func main(){
+	var tp *T //这里的tp是类型T的nil指针，
+	var inter I
+	inter=tp //接受了类型T的nil指针
+	inter.M() //函数M进入if语句块，保证程序不panic
+}
+
+</code></pre>
+<p><strong>nil的接口</strong>：<code>var inter MyInterface</code>这时inter为一个nil接口，既没有保存底层具体值value，也没有类型type信息，不能对其进行方法调用，例如此时的inter.func1()是错误的。</p>
+<p>由上所述，这种实现接口方法的方式和为自定义类添加方法的方式是一样的，所以通过类对象自己访问方法也是可以的，这时候就不需要所有的接口方法都实现：</p>
+<pre><code class="language-go">ms:=mystruct{}
+ms.func1() //这样，即使没有实现func2，照样可以运行
+
+</code></pre>
+<p>若实现接口方法不是通过类型指针实现的，则通过接口访问类型方法的方式为：</p>
+<pre><code class="language-go">func(ms mystruct) func1(){
+	/* code */
+}
+var inter my_interface=mstruct{}
+
+</code></pre>
+<p>若用到了类型指针，则访问方式为：</p>
+<pre><code class="language-go">func(ms *mystruct) func1(){
+	/* code */
+}
+var inter my_interface=&amp;mstruct{}
+
+</code></pre>
+<p>两者的区别为，用到指针了，则将类型对象赋给接口对象时<strong>需要取址&amp;</strong>。</p>
+<p>接口对象可以接受值或者指针赋值，用指针赋值永远不会错，<strong>推荐写代码时都取址</strong>，避免多余记忆点。</p>
+<p>接口还可以组合：</p>
+<pre><code class="language-go">type outer_inter1 interface {
+	read()
+}
+
+type outer_inter2 interface {
+	write()
+}
+
+type my_interface interface {
+	outer_inter1
+	outer_inter2
+}
+
+func (m mystruct) read() {
+	fmt.Println(&quot;mystruct running read function from interface&quot;)
+}
+
+func (m mystruct) write() {
+	fmt.Println(&quot;mystruct running write function from interface&quot;)
+}
+
+func main(){
+	var inter my_interface
+	inter = &amp;mystruct{}
+	inter.read()
+	inter.write()
+}
+//output
+//mystruct running read function from interface
+//mystruct running write function from interface
+
+</code></pre>
+<p>组合的接口看起来难理解，可以直接把它看作多个接口的展开，一个组合的接口就等于是声明了其中组分接口的每个方法（因此，上面的代码中同时实现了read和write方法）。</p>
+<p>在结构体中，可以通过使用匿名结构体进行继承，继承父类的所有方法和成员，因此，<strong>如果父类实现了接口，则相应的子结构体也实现了接口</strong></p>
+<pre><code class="language-go">type s1 struct{
+}
+type s2 struct{
+	s1
+}
+type myinter interface{
+	helloworld()
+}
+func(s s1) helloworld(){
+	fmt.Println(&quot;helloworld&quot;)
+}
+func main(){
+	var inter myinter
+	myinter=new(s2)
+	myinter.helloworld() //output helloworld
+}
+
+</code></pre>
+<p><strong>interface{}叫做空接口</strong>，<strong>所有类型都实现了空接口</strong>，所以空接口实例化的对象可以承载任何对象类型。因此，使用interface{}作为函数的形参，可以接收所有的类型对象，然后再对接收的对象进行类型断言，实现相应的功能。<strong>这个特性可用于实现go语言的多态。</strong></p>
+<p>声明一个空接口：<code>var inter interface{}</code></p>
+<pre><code class="language-go">func universe(inter interface{}) string {
+	if _, ok := inter.(string); ok {
+		return &quot;oh yea&quot;
+	} else {
+		return &quot;not good&quot;
+	}
+
+}
+func main(){
+	b := &quot;hhh&quot;
+	c := 132
+	fmt.Println(universe(b))
+	fmt.Println(universe(c))
+}
+//output 
+//oh yea 
+//not good
+
+</code></pre>
+<hr>
+<h3 id="go语言的断言type-assertion">Go语言的断言（type assertion）</h3>
+<p>接口除了像上一节中一样，还有一种方式也是接口，但更像是一种容器一样：</p>
+<pre><code class="language-go">var inter interface{}
+inter=123 //可以是任何一种类型
+fmt.Println(inter) // output 123
+
+</code></pre>
+<p>通过接口，可以进行断言，进行接口对象所承载的类型的判断，</p>
+<p>语法：<code>val,ok:=inter.(type)</code>，val是inter承载类型对象的值，ok为bool值，表示是否是type类型。（<strong>安全断言</strong>）</p>
+<p><strong>不安全断言</strong>：<code>val:=inter.(type)</code>，这种情况下，如果断言失败，程序会panic</p>
+<pre><code class="language-go">var inter interface{}
+inter=123
+if val,ok:=inter.(int);ok{  //在本例中，val=123 ok=true
+	fmt.Println(val) 
+}  
+//output 123
+
+</code></pre>
+<p><strong>interface{}叫做空接口</strong>，<strong>所有类型都实现了空接口</strong>，所以空接口实例化的对象可以承载任何对象类型，如下所示。这种接口变量可以形成接口数组/切片：</p>
+<pre><code class="language-go">var inter_slice []interface{}
+inter_slice=append(inter_slice,123,&quot;nihao&quot;,[]int{1,2,3},map[int]string{1:&quot;hello&quot;,2:&quot;world&quot;})
+fmt.Println(inter_slice)
+for _, element := range inter_slice {
+    if _, ok := element.(int); ok {
+        fmt.Println(&quot;find int element&quot;)
+    }
+}//output
+//[123 nihao [1 2 3] map[1:hello 2:world]]
+//find int element
+
+</code></pre>
+<p>像上一节中接口类型的用法，也可以用来作类型判断，有种判断基类指针指向的是什么派生类类型的味道：</p>
+<pre><code class="language-go">type my_inter interface{
+	read()
+}
+
+func(m mystruct) read(){
+	fmt.Println(&quot;helloworld&quot;)
+}
+
+func main(){
+	var inter my_inter=mystruct{}
+	if _,ok:=inter.(mystruct){
+		fmt.Println(&quot;it's mystruct&quot;)
+	}
+}//output it's mystruct
+
+</code></pre>
+<p>搭配type switch，可用于判断类型，inter.(type)只能搭switch形成type switch语句：</p>
+<pre><code class="language-go">var inter my_interface
+inter = &amp;mystruct{}
+switch inter.(type) {
+case *mystruct:
+fmt.Println(&quot;it's mystruct&quot;)
+}//output it's mystruct
+
+</code></pre>
+<hr>
+<h3 id="go语言rune类型">Go语言rune类型</h3>
+<p>rune类型其实就是int32，源码中是int32的别名，常用来处理unicode，因为unicode一般有三个字节组成一个字符，所以一个rune就可以对应一个unicode，而这个rune其实就是该字符对应的编码值：</p>
+<pre><code class="language-go">str := &quot;nihao你好&quot;
+fmt.Println(len(str))
+fmt.Println(len([]rune(str)))
+for _, val := range []rune(str) {
+fmt.Println(val)
+}
+//output
+11  //字符串对应的字节数 11
+7   //rune切片的长度 7=nihao(5)+你好(2)
+110
+105
+104
+97
+111
+20320 //&quot;你&quot;的编码值
+22909 //&quot;好&quot;的编码值
+
+</code></pre>
+<p>从例子中可以看到，其实rune就是每个字符的对应的编码值，因为其本质就是一个int32，然后可以再根据这个编码值进行编码，得到相应的字符：</p>
+<pre><code class="language-go">output := make([]byte, 20)
+utf8.EncodeRune(output, 20320)
+fmt.Println(string(output))
+//output 你
+
+</code></pre>
+<hr>
+<h3 id="go语言map类型">Go语言map类型</h3>
+<pre><code class="language-go">var m map[int]string
+m2:=map[int]string{1:&quot;hello&quot;}
+
+</code></pre>
+<p>只要实现了=号运算符的类型，都可以作为map的键类型，例如integers, floating point and complex numbers, strings, pointers, interfaces (as long as the dynamic type supports equality), structs and arrays。</p>
+<p><strong>而切片不能作为键类型，因为切片是没有实现=号运算符的。</strong></p>
+<p>和切片一样，map拥有底层数据结构的引用，如果将map传参给函数，其实是按照引用进行了传递，在函数内的修改会导致传递的map发生变化：</p>
+<pre><code class="language-go">func changeMap(m map[int]string) {
+	for k := range m {
+		m[k] = &quot;changed&quot;
+	}
+}
+func main(){
+	m1 := map[int]string{2: &quot;hello&quot;}
+	fmt.Println(m1)
+	changeMap(m1)
+	fmt.Println(m1)
+}
+//output
+map[2:hello]
+map[2:changed]
+
+</code></pre>
+<p>由于map是引用传递，所以所有涉及到赋值、参数传递的行为都和切片的类似，例如将map1赋值给map2，然后对map2进行修改，map1的值也相应发生了变化：</p>
+<pre><code class="language-go">m1 := map[int]string{2: &quot;hello&quot;}
+fmt.Println(m1)
+m2 := m1
+fmt.Println(m2)
+m2[2] = &quot;world&quot;
+fmt.Print(m1, m2)
+//output
+map[2:hello]
+map[2:hello]
+map[2:world] map[2:world]
+
+</code></pre>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">
+                <h3 class="post-title">
+                  Go语言控制流
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://rexxxzhou.github.io/images/avatar.png?v=1678621911113" class="no-responsive avatar">
+    <div class="text-muted">Life is a fucking movie, enjoy.</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/effectivego-bi-ji/">EffectiveGo笔记</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-wang-luo-kai-fa/">Go语言网络开发</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-shu-zu-yu-qie-pian/">Go语言数组与切片</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-lei-xing/">Go语言类型</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-kong-zhi-liu/">Go语言控制流</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-ji-chu-zhi-shi/">Go语言基础知识</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-han-shu/">Go语言函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-de-yi-xie-nei-zhi-han-shu/">Go语言的一些内置函数</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-cuo-wu-chu-li/">Go语言错误处理</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://rexxxzhou.github.io/post/go-yu-yan-bing-fa/">Go语言并发</a>
+            </li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://rexxxzhou.github.io/tag/bzcKfnF8X/" class="badge ">
+          Golang
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/Jnf5LaxTP/" class="badge secondary">
+          apue读书笔记
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/hPjfg7vfX/" class="badge ">
+          python
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/fOn--vI2w/" class="badge warning">
+          日常开发知识沉淀
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/ESBJ9vM7t/" class="badge secondary">
+          apisix
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/R9r12TtWy/" class="badge success">
+          lua
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/MF20Z50u8/" class="badge secondary">
+          git
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/e43sinOSt/" class="badge warning">
+          MySQL
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m7J2bceGd/" class="badge secondary">
+          HTTP
+        </a>
+      
+        <a href="https://rexxxzhou.github.io/tag/m3a3xDoDi/" class="badge ">
+          ElasticSearch
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://rexxxzhou.github.io/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5746490084885111"
+     crossorigin="anonymous"></script>
+
+
+
+
+  </body>
+</html>
